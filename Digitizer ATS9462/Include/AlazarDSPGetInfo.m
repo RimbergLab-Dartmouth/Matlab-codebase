@@ -1,2 +1,0 @@
-function [retCode, dspHandle, pDspModuleId, pVersionMajor, pVersionMinor, pMaxLength, pReserved0, pReserved1] = AlazarDSPGetInfo(dspHandle, pDspModuleId, pVersionMajor, pVersionMinor, pMaxLength, pReserved0, pReserved1)
-[retCode, dspHandle, pDspModuleId, pVersionMajor, pVersionMinor, pMaxLength, pReserved0, pReserved1] = calllib('ATSApi', 'AlazarDSPGetInfo', dspHandle, pDspModuleId, pVersionMajor, pVersionMinor, pMaxLength, pReserved0, pReserved1);
