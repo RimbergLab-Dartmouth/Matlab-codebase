@@ -1,24 +1,27 @@
 if ~exist('bias_point', 'var')
-   load_directory = uigetdir('enter directory where bias_point_struct.mat is saved');
+    disp('enter directory where bias_point_struct.mat is saved')
+   load_directory = uigetdir;
    load([load_directory '\bias_point_struct.mat'], 'bias_point')
    clear load_directory
 end
 %% input params
 input_params.flux_value = 0.5;
 input_params.ng_value = 0;
-input_params.twpa_pump.freq_start = 6.655e9;
-input_params.twpa_pump.freq_stop = 6.695e9;
-input_params.twpa_pump.freq_number = 11;
-input_params.twpa_pump.power_start = -3.45; % this is power on the actual sig gen itself, assumed to be the HP83711B
-input_params.twpa_pump.power_stop = -1.35; 
-input_params.twpa_pump.power_number = 11; 
+input_params.twpa_pump.freq_start = 6.670e9;
+input_params.twpa_pump.freq_stop = 6.682e9;
+input_params.twpa_pump.freq_number = 13;
+input_params.twpa_pump.power_start = -2.34; % this is power on the actual sig gen itself, assumed to be the HP83711B
+input_params.twpa_pump.power_stop = -2.2; 
+input_params.twpa_pump.power_number = 15; 
 input_params.twpa_pump.freqs = linspace(input_params.twpa_pump.freq_start, input_params.twpa_pump.freq_stop, input_params.twpa_pump.freq_number);
 input_params.twpa_pump.powers = linspace(input_params.twpa_pump.power_start, input_params.twpa_pump.power_stop, input_params.twpa_pump.power_number);
-input_params.center_freq = [5.7e9; 5.75e9; 7.775e9; 5.8e9];
+input_params.center_freq = [5.7e9; 5.75e9; 5.775e9; 5.8e9];
 input_params.center_freq_number = length(input_params.center_freq);
 input_params.input_attenuation = 83.1; % includes input cable attenuation
 input_params.constants.planck = 6.626e-34;
 input_params.constants.boltzmann = 1.38e-23;
+input_params.save_figures = 1;
+input_params.figures_visible = 1;
 
 %% vna params 
 input_params.vna.average_number = 35;
@@ -27,7 +30,8 @@ input_params.vna.IF_BW = 10e3;
 input_params.vna.number_points = 1601;
 input_params.vna.electrical_delay = 62.6e-9; 
 input_params.vna.power = -65;
-
+input_params.vna.smoothing_aperture_amp = 1; % percent
+input_params.vna.smoothing_aperture_phase = 1.5; % percent
 %% sa params
 input_params.sa.span = 1e3;
 input_params.sa.number_points = 1001;
@@ -41,6 +45,14 @@ vna_set_IF_BW(vna,input_params.vna.IF_BW,1)
 vna_set_sweep_points(vna,input_params.vna.number_points,1)
 vna_set_average(vna,input_params.vna.average_number,1)
 vna_set_power(vna,input_params.vna.power,1)
+if isfield(input_params.vna, 'smoothing_aperture_amp')
+    vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.smoothing_aperture_amp)
+    vna_turn_smoothing_on_off(vna, 1, 1, 'on')
+end
+if isfield(input_params.vna, 'smoothing_aperture_phase')
+    vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.smoothing_aperture_phase)
+    vna_turn_smoothing_on_off(vna, 1, 2, 'on')
+end
 
 %% set SA
 fclose(sa)
@@ -148,6 +160,52 @@ for m_twpa_freq = 1 : input_params.twpa_pump.freq_number
         end
     end
     clear_instruments
+    analysis.added_noise_watts_average = mean(analysis.added_noise_watts, 3);
+    analysis.added_noise_temp_average = mean(analysis.added_noise_temp, 3);
+    analysis.added_noise_photons_average = mean(analysis.added_noise_photons, 3);
+    analysis.gain_average = mean(analysis.gain, 3);
+    [analysis.min_added_noise_photons_average,idx]=min(analysis.added_noise_photons_average(:));
+    [pump_freq_index,pump_power_index]=ind2sub(size(analysis.added_noise_photons_average),idx);
+    analysis.min_added_noise_twpa_pump_freq = input_params.twpa_pump.freqs(pump_freq_index);
+    analysis.min_added_noise_twpa_pump_power = input_params.twpa_pump.powers(pump_power_index);
+    clear idx ...
+          pump_freq_index ...
+          pump_power_index
     save('gain_added_noise_data.mat')
 end
 switch_vna_measurement
+
+%% plotting
+if input_params.figures_visible == 1
+    added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+else
+    added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+end
+surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.added_noise_photons_average')
+colorbar
+view(0,90)
+caxis([1 5])
+xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
+ylabel('Pump power (dBm)', 'interpreter', 'latex')
+title('Average added noise photons')
+if input_params.save_figures == 1
+    saveas(added_noise_figure, 'added_noise_vs_twpa_pump.fig')
+    saveas(added_noise_figure, 'added_noise_vs_twpa_pump.png')
+end
+
+if input_params.figures_visible == 1
+    gain_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+else
+    gain_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+end
+surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.gain_average')
+colorbar
+view(0,90)
+caxis([75 95])
+xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
+ylabel('Pump power (dBm)', 'interpreter', 'latex')
+title('Average gain')
+if input_params.save_figures == 1
+    saveas(gain_figure, 'gain_vs_twpa_pump.fig')
+    saveas(gain_figure, 'gain_vs_twpa_pump.png')
+end

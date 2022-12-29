@@ -143,7 +143,9 @@ for m_flux = 1 : flux_number
     
     pause(wait_time);
     m_flux = m_flux+1;
-    toc
+    elapsed_time = toc;
+    disp(['Elapsed time since start of run : ' num2str(floor(elapsed_time/3600)) 'hrs, ' num2str(floor(mod(elapsed_time, 3600)/60)) 'mins, ' ...
+                num2str(mod(mod(elapsed_time, 3600),60)) 'seconds'])
 end
 vna_turn_output_off(vna_handle)
 vna_set_trigger_source(vna_handle,'INT');

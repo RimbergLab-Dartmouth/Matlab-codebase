@@ -15,6 +15,8 @@ input_params.desired_gate_bias = 0;   %units of ng
 input_params.vna.power = -65;
 input_params.vna.average_number = 35;
 input_params.vna.IF_BW = 10e3; %Hz
+input_params.vna.smoothing_aperture_amp = 1; % percent
+input_params.vna.smoothing_aperture_phase = 1.5; % percent
 input_params.vna.number_points = 1601;
 input_params.vna.average_number_zoom = 50;
 input_params.vna.IF_BW_zoom = 1e3; %Hz
@@ -32,6 +34,14 @@ vna_set_sweep_points(vna, input_params.vna.number_points, 1)
 vna_set_center_span(vna, input_params.vna.center, input_params.vna.span, 1)
 vna_set_electrical_delay(vna, input_params.vna.electrical_delay, 1, 2)
 vna_set_power(vna, input_params.vna.power)
+if isfield(input_params.vna, 'smoothing_aperture_amp')
+    vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.smoothing_aperture_amp)
+    vna_turn_smoothing_on_off(vna, 1, 1, 'on')
+end
+if isfield(input_params.vna, 'smoothing_aperture_phase')
+    vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.smoothing_aperture_phase)
+    vna_turn_smoothing_on_off(vna, 1, 2, 'on')
+end
 %%%%%%%%%%%
 
 %%% do flux scan %%%%%%%%%
