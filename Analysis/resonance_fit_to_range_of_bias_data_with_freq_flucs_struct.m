@@ -1,7 +1,12 @@
 function[resonance_fits,data_real,data_imag,theory_real,theory_imag,bias_values,err, resonance_fits_min]=resonance_fit_to_range_of_bias_data_with_freq_flucs_struct(data_struct, ...
-    gain_prof_struct,plot_display) %,...
+    gain_prof_struct, flucs_angle_selector, plot_display) %,...
     %gain_profile_log_mag_by_hand,gain_profile_pos_phase_by_hand)
+    % flucs_angle_selector can be : 'no_flucs', 'flucs', flucs_and_angle'
  
+if ~exist('flucs_angle_selector', 'var')
+    flucs_angle_selector = 'flucs';
+end
+    
 if ~exist('plot_display','var')
     plot_display=0;
 end
@@ -22,9 +27,14 @@ bias_values = reshape(data_struct.dc_bias, [], 2);
     theory_real=ones(num_bias_points,num_points);
     theory_imag=ones(num_bias_points,num_points);
     err=ones(num_bias_points,1);
-    
+    if strcmp(flucs_angle_selector, 'flucs')
+        resonance_fits=ones(num_bias_points,4); 
+    elseif strcmp(flucs_angle_selector, 'no_flucs')
+        resonance_fits=ones(num_bias_points,3); 
+    elseif strcmp(flucs_angle_selector, 'flucs_and_angle')
+        resonance_fits=ones(num_bias_points,5); 
+        
 % guesses for fits    
-    resonance_fits=ones(num_bias_points,4); % guesses the minimum of the log mag as the resonance freq
     gamma_int_guess=1e6;
     gamma_ext_guess=1.4e6;
     sigma_guess = 1.5e6;
@@ -49,13 +59,23 @@ gain_prof_phase_interp = gain_prof_amp_interp;
  %scatter to fit parameters
  disp('fitting q circles')
     for m_bias_point=1:num_bias_points
-        [temp_fit_struct]=...
-            fit_q_circle_with_freq_flucs(subtracted_log_mag(m_bias_point,:),subtracted_phase(m_bias_point,:),freq_data(m_bias_point,:),gamma_int_guess,gamma_ext_guess,sigma_guess);%,angle_guess);
+        if strcmp(flucs_angle_selector, 'flucs')
+            [temp_fit_struct]=...   
+                fit_q_circle_with_freq_flucs(subtracted_log_mag(m_bias_point,:),subtracted_phase(m_bias_point,:),freq_data(m_bias_point,:),gamma_int_guess,gamma_ext_guess,sigma_guess);%,angle_guess);
+                resonance_fits(m_bias_point,4) = temp_fit_struct.sigma_fit;
+        elseif strcmp(flucs_angle_selector, 'no_flucs')
+            [temp_fit_struct]=...   
+                fit_q_circle(subtracted_log_mag(m_bias_point,:),subtracted_phase(m_bias_point,:),freq_data(m_bias_point,:),gamma_int_guess,gamma_ext_guess);
+        elseif strcmp(flucs_angle_selector, 'flucs_and_angle')
+            [temp_fit_struct]=...   
+                fit_q_circle_with_freq_flucs_and_angle(subtracted_log_mag(m_bias_point,:),subtracted_phase(m_bias_point,:),freq_data(m_bias_point,:),gamma_int_guess,gamma_ext_guess,sigma_guess);
+                resonance_fits(m_bias_point,4) = temp_fit_struct.sigma_fit;
+                resonance_fits(m_bias_point,5) = temp_fit_struct.angle_fit;
+        end
         err(m_bias_point,1) = temp_fit_struct.goodness_fit;
         resonance_fits(m_bias_point,1) = temp_fit_struct.res_freq_fit;
         resonance_fits(m_bias_point,2) = temp_fit_struct.gamma_int_fit;
         resonance_fits(m_bias_point,3) = temp_fit_struct.gamma_ext_fit;
-        resonance_fits(m_bias_point,4) = temp_fit_struct.sigma_fit;
         data_real(m_bias_point,:) = temp_fit_struct.data_real;
         data_imag(m_bias_point,:) = temp_fit_struct.data_imag;
         theory_real(m_bias_point,:) = temp_fit_struct.theory_real;
@@ -138,9 +158,24 @@ gain_prof_phase_interp = gain_prof_amp_interp;
             ylabel('S21 (degs)')
         end
     end   
-    user=input('continue?. 0/1');
-    if user == 1
-        close all
-        return
+    if plot_display
+        user=input('continue?. 0/1');
+        if user == 1
+            close all
+            return
+        end
+    end
+    
+    %%% reshape output structures to original bias point dimensions if flux
+    %%% and gate bias input separately (as for q_circle bias point scans)
+    if ndims(data_struct.freq_zoom) == 3
+        resonance_fits = reshape(resonance_fits, size(data_struct.freq_zoom, 1), size(data_struct.freq_zoom, 2), []);
+        data_real = reshape(data_real, size(data_struct.freq_zoom, 1), size(data_struct.freq_zoom, 2), []);
+        data_imag = reshape(data_imag, size(data_struct.freq_zoom, 1), size(data_struct.freq_zoom, 2), []);
+        theory_real = reshape(theory_real, size(data_struct.freq_zoom, 1), size(data_struct.freq_zoom, 2), []);
+        theory_imag = reshape(theory_imag, size(data_struct.freq_zoom, 1), size(data_struct.freq_zoom, 2), []);
+        bias_values = reshape(bias_values, size(data_struct.freq_zoom, 1), size(data_struct.freq_zoom, 2), []);
+        err = reshape(err, size(data_struct.freq_zoom, 1), size(data_struct.freq_zoom, 2), []);
+        resonance_fits_min = reshape(resonance_fits_min, size(data_struct.freq_zoom, 1), size(data_struct.freq_zoom, 2), []);    
     end
 end

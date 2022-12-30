@@ -49,11 +49,11 @@ input_params.vna.power = -65;
 
 %% sa params
 input_params.sa.span = 100e3;
-input_params.sa.number_points = 100001;
+input_params.sa.number_points = 10001;
 input_params.sa.average_number = 10;
 input_params.sa.average_type = 'RMS';
 input_params.sa.trace_type = 'average';
-input_params.sa.RBW = 100;
+input_params.sa.RBW = 1;
 
 %% sig gen params
 input_params.sig_gen.model = 'n5183'; % n5183 or e8257c
@@ -80,10 +80,10 @@ data.vna.rough_freq = zeros(input_params.flux_number, input_params.ng_number, ..
     input_params.vna.rough_number_points);
 data.vna.rough_amp = data.vna.rough_freq;  
 data.vna.rough_phase = data.vna.rough_freq;  
-data.vna.zoom_freq = zeros(input_params.flux_number, input_params.ng_number, ...
+data.vna.freq_zoom = zeros(input_params.flux_number, input_params.ng_number, ...
     input_params.vna.zoom_number_points);
-data.vna.zoom_amp = data.vna.zoom_freq;  
-data.vna.zoom_phase = data.vna.zoom_freq;  
+data.vna.amp_zoom = data.vna.freq_zoom;  
+data.vna.phase_zoom = data.vna.freq_zoom;  
 data.sa.freq = zeros(input_params.flux_number, input_params.ng_number, ...
     input_params.sa.number_points);
 data.sa.amp = data.sa.freq;
@@ -93,6 +93,7 @@ data.bias_point_set.gate_voltage_desired = zeros(input_params.flux_number, input
 data.bias_point_set.gate_voltage_measured = data.bias_point_set.gate_voltage_desired;
 data.bias_point_set.res_freq_expected = zeros(input_params.flux_number, input_params.ng_number);
 data.bias_point_set.res_freq_error_measured = zeros(input_params.flux_number, input_params.ng_number);
+data.vna.dc_bias = zeros(input_params.flux_number, input_params.ng_number, 2);
 tic
 
 %% data acquisition loop
@@ -113,7 +114,9 @@ for m_flux = 1 : input_params.flux_number
         data.bias_point_set.res_freq_error_measured (m_flux, m_ng) = temp_expected_bias_point_params_struct.freq_error;        
         data.bias_point_set.flux_voltage_measured (m_flux, m_ng) = dmm_get_voltage(dmm_1);
         data.bias_point_set.gate_voltage_measured (m_flux, m_ng) = dmm_get_voltage(dmm_2);
-        
+        data.vna.dc_bias (m_flux, m_ng, 2) = data.bias_point_set.flux_voltage_measured (m_flux, m_ng);
+        data.vna.dc_bias (m_flux, m_ng, 1) = data.bias_point_set.gate_voltage_measured (m_flux, m_ng);
+        clear temp_expected_bias_point_params_struct
         %% set rough VNA 
         vna_set_center_span(vna, input_params.vna.rough_center, input_params.vna.rough_span, 1)
         vna_set_IF_BW(vna,input_params.vna.rough_IF_BW,1)
@@ -172,9 +175,9 @@ for m_flux = 1 : input_params.flux_number
         data.vna.rough_freq (m_flux, m_ng, :) = temp.rough.vna_freq;
         data.vna.rough_amp (m_flux, m_ng, :)= temp.rough.vna_amp;
         data.vna.rough_phase (m_flux, m_ng, :)= temp.rough.vna_phase;
-        data.vna.zoom_freq (m_flux, m_ng, :)= temp.zoom.vna_freq;
-        data.vna.zoom_amp (m_flux, m_ng, :)= temp.zoom.vna_amp;
-        data.vna.zoom_phase (m_flux, m_ng, :) = temp.zoom.vna_phase;
+        data.vna.freq_zoom (m_flux, m_ng, :)= temp.zoom.vna_freq;
+        data.vna.amp_zoom (m_flux, m_ng, :)= temp.zoom.vna_amp;
+        data.vna.phase_zoom (m_flux, m_ng, :) = temp.zoom.vna_phase;
         
         %% switch to SA and sig gen line, perform measurement
 %             disp('switch to SA')
@@ -198,16 +201,21 @@ for m_flux = 1 : input_params.flux_number
         elseif strcmp(input_params.sig_gen.model, 'e8257c')
             e8257c_toggle_output(e8257c_sig_gen, 'off')
         end
+        [temp.sa.freq_carrier_off, temp.sa.amp_carrier_off] = n9000_get_freq_and_amp(sa);
         %% transfer SA data to permanent array
         data.sa.freq (m_flux, m_ng, :) = temp.sa.freq;
         data.sa.amp (m_flux, m_ng, :) = temp.sa.amp;
+%         data.sa.freq_carrier_off (m_flux, m_ng, :) = temp.sa.freq_carrier_off;
+%%%% not saving carrier off freq to save on memory 
+        data.sa.amp_carrier_off (m_flux, m_ng, :) = temp.sa.amp_carrier_off;
         elapsed_time = toc;
         data.data_point_time(m_flux, m_ng) = elapsed_time;
         disp(['Elapsed time since start of run : ' num2str(floor(elapsed_time/3600)) 'hrs, ' num2str(floor(mod(elapsed_time, 3600)/60)) 'mins, ' ...
             num2str(mod(mod(elapsed_time, 3600),60)) 'seconds'])
-        clear temp
+        clear temp elapsed_time
     end
     clear_instruments
+    clear m_ng m_flux
     save([cd '/d' input_params.file_name_time_stamp '_q_circles/q_circle_and_freq_flucs_data.mat'])
 end
 switch_vna_measurement

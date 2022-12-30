@@ -6,6 +6,7 @@ if ~exist('bias_point', 'var')
 end
 
 if ~exist('gain_prof', 'var')
+    disp('enter directory where gain_prof_struct.mat is saved')
    load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
@@ -13,16 +14,18 @@ end
 %% input params
 input_params.flux_start = -1; % units of \Phi_0
 input_params.flux_stop = 0.1;
-input_params.flux_number = 1;%12;
+input_params.flux_number = 23;
 input_params.ng_start = -.7; % units of number electrons
 input_params.ng_stop = .7;
-input_params.ng_number = 1;%15;
+input_params.ng_number = 29;
 input_params.flux_values = linspace(input_params.flux_start, input_params.flux_stop, input_params.flux_number);
 input_params.ng_values = linspace(input_params.ng_start, input_params.ng_stop, input_params.ng_number);
 input_params.constants.planck = 6.626e-34;
 input_params.constants.boltzmann = 1.38e-23;
 input_params.save_figures = 1;
 input_params.figures_visible = 1;
+input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
+mkdir([cd '/d' input_params.file_name_time_stamp '_q_circles']);
 
 %% vna params 
 input_params.vna.rough_center = 5.76e9;
@@ -50,7 +53,7 @@ input_params.sa.number_points = 100001;
 input_params.sa.average_number = 10;
 input_params.sa.average_type = 'RMS';
 input_params.sa.trace_type = 'average';
-input_params.sa.RBW = 1e3;
+input_params.sa.RBW = 100;
 
 %% sig gen params
 input_params.sig_gen.model = 'n5183'; % n5183 or e8257c
@@ -77,10 +80,10 @@ data.vna.rough_freq = zeros(input_params.flux_number, input_params.ng_number, ..
     input_params.vna.rough_number_points);
 data.vna.rough_amp = data.vna.rough_freq;  
 data.vna.rough_phase = data.vna.rough_freq;  
-data.vna.zoom_freq = zeros(input_params.flux_number, input_params.ng_number, ...
+data.vna.freq_zoom = zeros(input_params.flux_number, input_params.ng_number, ...
     input_params.vna.zoom_number_points);
-data.vna.zoom_amp = data.vna.zoom_freq;  
-data.vna.zoom_phase = data.vna.zoom_freq;  
+data.vna.amp_zoom = data.vna.freq_zoom;  
+data.vna.phase_zoom = data.vna.freq_zoom;  
 data.sa.freq = zeros(input_params.flux_number, input_params.ng_number, ...
     input_params.sa.number_points);
 data.sa.amp = data.sa.freq;
@@ -90,6 +93,7 @@ data.bias_point_set.gate_voltage_desired = zeros(input_params.flux_number, input
 data.bias_point_set.gate_voltage_measured = data.bias_point_set.gate_voltage_desired;
 data.bias_point_set.res_freq_expected = zeros(input_params.flux_number, input_params.ng_number);
 data.bias_point_set.res_freq_error_measured = zeros(input_params.flux_number, input_params.ng_number);
+data.vna.dc_bias = zeros(input_params.flux_number, input_params.ng_number, 2);
 tic
 
 %% data acquisition loop
@@ -108,8 +112,10 @@ for m_flux = 1 : input_params.flux_number
         data.bias_point_set.gate_voltage_desired (m_flux, m_ng) = temp_expected_bias_point_params_struct.desired_gate_voltage;
         data.bias_point_set.res_freq_expected (m_flux, m_ng) = temp_expected_bias_point_params_struct.expected_freq;
         data.bias_point_set.res_freq_error_measured (m_flux, m_ng) = temp_expected_bias_point_params_struct.freq_error;        
-        data.bias_point_set.flux_voltage_measured (m_flux, m_ng) = dmm_get_voltage(dmm_handle_1);
-        data.bias_point_set.gate_voltage_measured (m_flux, m_ng) = dmm_get_voltage(dmm_handle_2);
+        data.bias_point_set.flux_voltage_measured (m_flux, m_ng) = dmm_get_voltage(dmm_1);
+        data.bias_point_set.gate_voltage_measured (m_flux, m_ng) = dmm_get_voltage(dmm_2);
+        data.vna.dc_bias (m_flux, m_ng, 2) = data.bias_point_set.flux_voltage_measured (m_flux, m_ng);
+        
         
         %% set rough VNA 
         vna_set_center_span(vna, input_params.vna.rough_center, input_params.vna.rough_span, 1)
@@ -142,8 +148,8 @@ for m_flux = 1 : input_params.flux_number
         
         %%%%%% use log mag to find resonance and zoom in %%%%%%%%%
         [~,temp.rough.index_col] = min(temp.rough.sub_amp);
-        data.rough_resonance_freq (m_flux, m_ng) = temp.rough.vna_freq(temp.index_col);
-        vna_set_marker_freq(vna_handle, 1,data.rough_resonance_freq (m_flux, m_ng),1);
+        data.rough_resonance_freq (m_flux, m_ng) = temp.rough.vna_freq(temp.rough.index_col);
+        vna_set_marker_freq(vna, 1,data.rough_resonance_freq (m_flux, m_ng),1);
         %% set VNA zoom data
         vna_set_center_span(vna, data.rough_resonance_freq (m_flux, m_ng), input_params.vna.zoom_span, 1)
         vna_set_IF_BW(vna,input_params.vna.zoom_IF_BW,1)
@@ -162,16 +168,16 @@ for m_flux = 1 : input_params.flux_number
         
         %% collect VNA zoom data
         vna_send_average_trigger(vna);
-        [temp.zoom.vna_rough_freq, temp.zoom.vna_rough_amp] = vna_get_data(vna,1,1);
-        [~, temp.zoom.vna_rough_phase]=vna_get_data(vna,1,2);
+        [temp.zoom.vna_freq, temp.zoom.vna_amp] = vna_get_data(vna,1,1);
+        [~, temp.zoom.vna_phase]=vna_get_data(vna,1,2);
         
         %% transfer VNA data to permanent array
         data.vna.rough_freq (m_flux, m_ng, :) = temp.rough.vna_freq;
         data.vna.rough_amp (m_flux, m_ng, :)= temp.rough.vna_amp;
         data.vna.rough_phase (m_flux, m_ng, :)= temp.rough.vna_phase;
-        data.vna.zoom_freq (m_flux, m_ng, :)= temp.zoom.vna_freq;
-        data.vna.zoom_amp (m_flux, m_ng, :)= temp.zoom.vna_amp;
-        data.vna.zoom_phase (m_flux, m_ng, :) = temp.zoom.vna_phase;
+        data.vna.freq_zoom (m_flux, m_ng, :)= temp.zoom.vna_freq;
+        data.vna.amp_zoom (m_flux, m_ng, :)= temp.zoom.vna_amp;
+        data.vna.phase_zoom (m_flux, m_ng, :) = temp.zoom.vna_phase;
         
         %% switch to SA and sig gen line, perform measurement
 %             disp('switch to SA')
@@ -181,9 +187,11 @@ for m_flux = 1 : input_params.flux_number
         if strcmp(input_params.sig_gen.model, 'n5183')
             n5183b_set_frequency(keysight_sg, data.rough_resonance_freq (m_flux, m_ng))
             n5183b_set_amplitude(keysight_sg, input_params.sig_gen.power)
+            n5183b_toggle_output(keysight_sg, 'on')
         elseif strcmp(input_params.sig_gen.model, 'e8257c')
             e8257c_set_frequency(e8257c_sig_gen, data.rough_resonance_freq (m_flux, m_ng))
             e8257c_set_amplitude(e8257c_sig_gen, input_params.sig_gen.power)
+            e8257c_toggle_output(e8257c_sig_gen, 'off')            
         end
         pause(1)
 
@@ -203,6 +211,6 @@ for m_flux = 1 : input_params.flux_number
         clear temp
     end
     clear_instruments
-    save('q_circle_and_freq_flucs_data.mat')
+    save([cd '/d' input_params.file_name_time_stamp '_q_circles/q_circle_and_freq_flucs_data.mat'])
 end
 switch_vna_measurement
