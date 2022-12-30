@@ -33,7 +33,7 @@ input_params.gate_start,input_params.gate_stop,input_params.gate_points,input_pa
 
 vna_turn_output_off(vna)
 clear_instruments
-save([cd '/d' input_params.file_name_time_stamp 'gain_profile/flux_scan_data.mat'])
+save([cd '/d' input_params.file_name_time_stamp '_gain_profile/flux_scan_data.mat'])
 rough_gain_prof.freq = squeeze(mean(mean(freq_measured, 1), 2)); 
 rough_gain_prof.amp = squeeze(mean(mean(amp_measured, 1), 2));
 rough_gain_prof.phase = squeeze(mean(mean(phase_measured, 1), 2));

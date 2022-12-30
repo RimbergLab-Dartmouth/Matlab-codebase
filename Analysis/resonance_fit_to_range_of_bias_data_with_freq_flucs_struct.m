@@ -33,6 +33,7 @@ bias_values = reshape(data_struct.dc_bias, [], 2);
         resonance_fits=ones(num_bias_points,3); 
     elseif strcmp(flucs_angle_selector, 'flucs_and_angle')
         resonance_fits=ones(num_bias_points,5); 
+    end
         
 % guesses for fits    
     gamma_int_guess=1e6;
