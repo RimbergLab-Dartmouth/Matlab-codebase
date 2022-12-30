@@ -3,10 +3,12 @@ if ~exist('gain_prof', 'var')
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
 end
+input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
+mkdir([cd '/d' input_params.file_name_time_stamp '_bias_point']);
 input_params.number_gate = 30;
 input_params.number_flux = 14;
-input_params.gate_start = -2;
-input_params.gate_stop = 8;
+input_params.gate_start = -3;
+input_params.gate_stop = 7;
 input_params.flux_start = -.7;
 input_params.flux_stop = .3;
 input_params.flux_series_resistor = 11.2e3;
@@ -131,7 +133,7 @@ clearvars -except gate_scan ...
     input_params ...
     gain_prof
 
-save('bias_point_calculator_data.mat')
-
+save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
+cd (['/d' input_params.file_name_time_stamp '_bias_point'])
 clearvars -except bias_point
-save('bias_point_struct.mat')
+save([cd '/d' temp_file_name '_bias_point/bias_point_struct.mat'])

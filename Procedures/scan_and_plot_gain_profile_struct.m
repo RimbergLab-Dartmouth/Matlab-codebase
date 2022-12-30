@@ -1,3 +1,5 @@
+input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
+mkdir([cd '/d' input_params.file_name_time_stamp '_gain_profile']);
 input_params.vna.power = -65;
 input_params.vna.average_number = 50;
 input_params.vna.IF_BW = 10e3;
@@ -31,7 +33,7 @@ input_params.gate_start,input_params.gate_stop,input_params.gate_points,input_pa
 
 vna_turn_output_off(vna)
 clear_instruments
-save('flux_scan_data.mat')
+save([cd '/d' input_params.file_name_time_stamp 'gain_profile/flux_scan_data.mat'])
 rough_gain_prof.freq = squeeze(mean(mean(freq_measured, 1), 2)); 
 rough_gain_prof.amp = squeeze(mean(mean(amp_measured, 1), 2));
 rough_gain_prof.phase = squeeze(mean(mean(phase_measured, 1), 2));
@@ -40,7 +42,7 @@ data.amp = amp_measured;
 data.phase = phase_measured;
 
 clearvars -except rough_gain_prof input_params data
-save('rough_gain_profile_and_data.mat')
+save([cd '/d' input_params.file_name_time_stamp '_gain_profile/rough_gain_profile_and_data.mat'])
 
 [gain_prof.freq,gain_prof.amp,gain_prof.phase]=extract_gain_profile_v2_struct(data.freq, data.amp, data.phase, rough_gain_prof, ...
     input_params.fine_gain_profile_exclude_span, input_params.plot_display);
@@ -50,4 +52,4 @@ saveas(gcf,'gain_profile.png')
 
 clearvars -except gain_prof input_params
 
-save('gain_prof_struct.mat')
+save([cd '/d' input_params.file_name_time_stamp '_gain_profile/gain_prof_struct.mat'])

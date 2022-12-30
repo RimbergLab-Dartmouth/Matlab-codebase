@@ -7,15 +7,16 @@ end
 %% input params
 input_params.flux_value = 0.5;
 input_params.ng_value = 0;
-input_params.twpa_pump.freq_start = 6.670e9;
-input_params.twpa_pump.freq_stop = 6.682e9;
-input_params.twpa_pump.freq_number = 13;
-input_params.twpa_pump.power_start = -2.34; % this is power on the actual sig gen itself, assumed to be the HP83711B
-input_params.twpa_pump.power_stop = -2.2; 
-input_params.twpa_pump.power_number = 15; 
+input_params.twpa_pump.freq_start = 6.667e9;
+input_params.twpa_pump.freq_stop = 6.667e9;
+input_params.twpa_pump.freq_number = 1;
+input_params.twpa_pump.power_start = -2.33; % this is power on the actual sig gen itself, assumed to be the HP83711B
+input_params.twpa_pump.power_stop = -2.33; 
+input_params.twpa_pump.power_number = 1; 
 input_params.twpa_pump.freqs = linspace(input_params.twpa_pump.freq_start, input_params.twpa_pump.freq_stop, input_params.twpa_pump.freq_number);
 input_params.twpa_pump.powers = linspace(input_params.twpa_pump.power_start, input_params.twpa_pump.power_stop, input_params.twpa_pump.power_number);
-input_params.center_freq = [5.7e9; 5.75e9; 5.775e9; 5.8e9];
+% input_params.center_freq = [5.7e9; 5.75e9; 5.775e9; 5.8e9];
+input_params.center_freq = [5.7e9; 5.72e9; 5.74e9; 5.76e9; 5.78e9; 5.8e9];
 input_params.center_freq_number = length(input_params.center_freq);
 input_params.input_attenuation = 83.1; % includes input cable attenuation
 input_params.constants.planck = 6.626e-34;

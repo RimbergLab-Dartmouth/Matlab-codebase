@@ -40,10 +40,10 @@ function[flux_period,flux_offset,center_freq, offset_slope]=identify_flux_period
     plot(flux_values, resonance_freqs-center_freq,'o', 'displayName', 'data freqs')
     hold on
     plot(flux_values_theory, sin_fit(1)+sin_fit(2).*sin(2*pi*flux_values_theory./sin_fit(3)+sin_fit(4))-center_freq, 'displayName', 'Theory freqs');
-    plot(flux_offset,0,'x', 'MarkerSize', 16, 'displayName', 'offset point')
+    plot(-flux_offset,0,'x', 'MarkerSize', 16, 'displayName', 'offset point')
     legend show
     
-        flux_offset = flux_offset;
+        flux_offset = -flux_offset;
         resonance_freqs = resonance_freqs';
         disp(['fit error was ' num2str(err)])
         disp(['the flux period is ' num2str(flux_period) 'V , the center freq is ' num2str(center_freq/1e9) 'GHz and the offset is ' num2str(flux_offset) ' V'])
