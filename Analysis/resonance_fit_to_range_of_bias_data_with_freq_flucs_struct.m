@@ -26,6 +26,7 @@ bias_values = reshape(data_struct.dc_bias, [], 2);
     data_imag=ones(num_bias_points,num_points);
     theory_real=ones(num_bias_points,num_points);
     theory_imag=ones(num_bias_points,num_points);
+    resonance_fits_min = ones(num_bias_points);
     err=ones(num_bias_points,1);
     if strcmp(flucs_angle_selector, 'flucs')
         resonance_fits=ones(num_bias_points,4); 
@@ -82,7 +83,9 @@ gain_prof_phase_interp = gain_prof_amp_interp;
         theory_real(m_bias_point,:) = temp_fit_struct.theory_real;
         theory_imag(m_bias_point,:) = temp_fit_struct.theory_imag;
         disp(['fitted m_bias_point = ' num2str(m_bias_point) ' of ' num2str(num_bias_points)])
-        resonance_fits_min(m_bias_point,1) = min(subtracted_log_mag(m_bias_point,:));
+        [~, resonance_fits_min_index] = min(subtracted_log_mag(m_bias_point,:));
+        resonance_fits_min(m_bias_point, 1) = freq_data(m_bias_point, resonance_fits_min_index);
+        clear resonance_fits_min_index
     end
   disp(['For the Q circle fits, average error was - ' num2str(mean(err)) 13 10 'maximum error was - ' num2str(max(err)) 13 10 ...
       'SD of error was - ' num2str(std(err))]);
