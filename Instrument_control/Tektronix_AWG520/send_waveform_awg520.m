@@ -2,6 +2,11 @@ function[message]=send_waveform_awg520(awg_handle,time,data,marker,wfm_name)  %d
 if isrow(data)==0 && iscolumn(data)==0                                 % 2xn array of 0s and 1s.
     warning('check data entry');
 end
+if isempty(marker)
+    marker = zeros(2, length(data));
+    disp('generating dummy 0 marker')
+end
+
 if isrow(data)
     data=data';
 end

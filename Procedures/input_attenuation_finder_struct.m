@@ -1,14 +1,31 @@
 run_params.plot_visible = 0;
 run_params.save_data_and_png_param = 1;
-run_params.file_name = 'tbd';
+run_params.file_name = 'fridge_attenuation_ng_0_flux_0p03';
+input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
+mkdir([cd '/d' input_params.file_name_time_stamp '_input_atten']);
+cd([cd '/d' input_params.file_name_time_stamp '_input_atten'])
 run_params.fig_directory = [cd '\plots\'];
 run_params.data_directory = [cd '\data\'];
+mkdir([run_params.data_directory]);
+mkdir([run_params.fig_directory '\fig_files']);
 %% bias point and power sweep settings
 input_params.ng_value = 0;
 input_params.flux_value = 0.53;
 input_params.constants.planckant = 6.626e-34;
 
-disp('ensure gain_prof_struct struct and bias_point struct are loaded in workspace')
+if ~exist('gain_prof', 'var')
+    disp('enter directory where gain_prof_struct.mat is saved')
+   load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
+   load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
+   clear load_directory
+end
+
+if ~exist('bias_point', 'var')
+    disp('enter directory where bias_point_struct.mat is saved')
+   load_directory = uigetdir;
+   load([load_directory '\bias_point_struct.mat'], 'bias_point')
+   clear load_directory
+end
 
 input_params.power_start_dBm = -65; % at the insert top
 input_params.power_stop_dBm = -51; 
@@ -241,6 +258,9 @@ for m_power = 1 : input_params.number_power_points
         saveas(raw_amp_phase_figure, save_file_name)
         save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_power) ...
             '_ng_' num2str(run_params.ng_value) '_flux_' num2str(run_params.flux_value*1000) 'm_raw_data_' num2str(input_params.powers_dBm(m_power)) 'dBm.fig'];
+        if run_params.save_fig_param 
+            saveas(raw_amp_phase_figure, save_file_name)
+        end
     end
     clear raw_amp_phase_figure ...
           save_file_name
@@ -344,7 +364,9 @@ for m_power = 1 : input_params.number_power_points
         saveas(q_circle_figure, save_file_name)
         save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_power) ...
             '_ng_' num2str(run_params.ng_value) '_flux_' num2str(run_params.flux_value*1000) 'm_q_fit_' num2str(input_params.powers_dBm(m_power)) 'dBm.fig'];
-        saveas(q_circle_figure, save_file_name)
+        if run_params.save_fig_param 
+            saveas(q_circle_figure, save_file_name)
+        end
     end
     close all
     clear q_circle_figure ...
@@ -420,7 +442,9 @@ if run_params.save_data_and_png_param == 1
     saveas(q_circle_figure, save_file_name)
     save_file_name = [run_params.fig_directory '\fig_files\' ...
         '_ng_' num2str(run_params.ng_value) '_flux_' num2str(run_params.flux_value*1000) 'm_attenuation_finder.fig'];
-    saveas(q_circle_figure, save_file_name)
+    if run_params.save_fig_param 
+        saveas(q_circle_figure, save_file_name)
+    end
 end
 close all
 clear q_circle_figure ...

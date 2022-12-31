@@ -81,7 +81,7 @@ gain_prof_phase_interp = gain_prof_amp_interp;
         data_imag(m_bias_point,:) = temp_fit_struct.data_imag;
         theory_real(m_bias_point,:) = temp_fit_struct.theory_real;
         theory_imag(m_bias_point,:) = temp_fit_struct.theory_imag;
-        m_bias_point
+        disp(['fitted m_bias_point = ' num2str(m_bias_point) ' of ' num2str(num_bias_points)])
         resonance_fits_min(m_bias_point,1) = min(subtracted_log_mag(m_bias_point,:));
     end
   disp(['For the Q circle fits, average error was - ' num2str(mean(err)) 13 10 'maximum error was - ' num2str(max(err)) 13 10 ...

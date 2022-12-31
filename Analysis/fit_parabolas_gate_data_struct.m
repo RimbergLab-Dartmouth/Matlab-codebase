@@ -49,7 +49,7 @@ function [gate_offset, gate_period, vertex_offset, concavity, freqs_theory_compl
 %         title('initial guess plot')
 %     end
     options=optimset('MaxIter',10000,'MaxFunEvals',10000,'TolFun',1e-14,'TolX',1e-14);
-    err = @(p) compute_freqs_from_guess(gate_bias,res_freqs, p, approx_number_periods);
+    err = @(p) compute_freqs_from_guess(gate_bias(:),res_freqs(:), p, approx_number_periods);
     [fit_params_temp,goodness_fit,~,~]=fminsearch(err,initial_params,options);
 %     disp(['the goodness of the fit was ' num2str(goodness_fit)]);
     gate_offset = fit_params_temp(1);

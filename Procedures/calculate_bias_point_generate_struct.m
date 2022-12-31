@@ -7,8 +7,8 @@ input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 mkdir([cd '/d' input_params.file_name_time_stamp '_bias_point']);
 input_params.number_gate = 30;
 input_params.number_flux = 14;
-input_params.gate_start = -3;
-input_params.gate_stop = 7;
+input_params.gate_start = -8;
+input_params.gate_stop = 1;
 input_params.flux_start = -.7;
 input_params.flux_stop = .3;
 input_params.flux_series_resistor = 11.2e3;
@@ -115,7 +115,7 @@ start_even_or_odd = input('is the band on the extreme left even (0) or odd (1)?'
 
 [gate_scan.qp.resonance_freqs_no_qp,gate_scan.qp.gate_values_no_qp]=identify_qp_region_single_flux_bias_struct(res_freqs_gate,gate_values_gate, number_odd, start_even_or_odd);
 
-[gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp,ones(length(gate_scan.qp.resonance_freqs_no_qp)), ...
+[gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp,ones(length(gate_scan.qp.resonance_freqs_no_qp),1), ...
     flux_value_gate, gate_scan.qp.gate_values_no_qp, flux_scan.fits.flux_center_freq_mean,number_even,1);
 gate_period = gate_period/10;
 gate_offset = gate_offset/10;
@@ -134,6 +134,5 @@ clearvars -except gate_scan ...
     gain_prof
 
 save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
-cd ([cd '/d' input_params.file_name_time_stamp '_bias_point'])
 clearvars -except bias_point input_params
-save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+save(['/d' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
