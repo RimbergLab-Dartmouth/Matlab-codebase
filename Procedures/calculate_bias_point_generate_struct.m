@@ -134,6 +134,6 @@ clearvars -except gate_scan ...
     gain_prof
 
 save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
-cd (['/d' input_params.file_name_time_stamp '_bias_point'])
-clearvars -except bias_point
-save([cd '/d' temp_file_name '_bias_point/bias_point_struct.mat'])
+cd ([cd '/d' input_params.file_name_time_stamp '_bias_point'])
+clearvars -except bias_point input_params
+save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])

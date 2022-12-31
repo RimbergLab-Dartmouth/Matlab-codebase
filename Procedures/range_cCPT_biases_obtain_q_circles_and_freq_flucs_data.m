@@ -48,9 +48,9 @@ input_params.vna.zoom_smoothing_aperture_phase = 1.5; % percent
 input_params.vna.power = -65;
 
 %% sa params
-input_params.sa.span = 100e3;
-input_params.sa.number_points = 10001;
-input_params.sa.average_number = 10;
+input_params.sa.span = 10e3;
+input_params.sa.number_points = 1001;
+input_params.sa.average_number = 5;
 input_params.sa.average_type = 'RMS';
 input_params.sa.trace_type = 'average';
 input_params.sa.RBW = 1;
