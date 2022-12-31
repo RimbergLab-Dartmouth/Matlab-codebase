@@ -5,7 +5,7 @@ function [kerr_required_MHz] = find_kerr_MHz_ng_flux(ng_value, flux_value)
     ng_value = mod(ng_value,1);
     flux_value = mod(flux_value, 1);
     
-    [~, ng_number] = min(abs(ng_value - kerr_data_structlgate_values));
+    [~, ng_number] = min(abs(ng_value - kerr_data_struct.gate_values));
     [~, flux_number] = min(abs(flux_value - kerr_data_struct.flux_values));
     kerr_required_MHz = kerr_data_struct.kerr_MHz(flux_number, ng_number);    
 end
