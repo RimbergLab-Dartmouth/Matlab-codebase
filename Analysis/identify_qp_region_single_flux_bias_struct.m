@@ -19,7 +19,7 @@ function [resonance_freqs_no_qp,gate_values_no_qp]=identify_qp_region_single_flu
      big_jump_indices = sort(big_jump_indices)  ;   
      eliminate_indices = abs(diff(big_jump_indices));
      big_jump_indices(eliminate_indices<2) = [];
-     big_jump_indices = big_jump_indices(1 : number_odd*2);
+     big_jump_indices = big_jump_indices(1 : min(length(big_jump_indices),number_odd*2));
 
      
      if mod(length(big_jump_indices), 2) == 1
