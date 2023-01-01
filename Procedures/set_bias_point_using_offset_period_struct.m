@@ -13,7 +13,7 @@ function[expected_bias_point_params_struct] = ...
     
     flux_dummies = 2*pi*linspace(desired_flux_point - 0.5, desired_flux_point + 0.5, 31);
     gate_dummies = linspace(desired_gate_point - 2, desired_gate_point + 2, 31);
-    [theory_freq_shift]=eigenvalues_v1_2(15.2e9,63e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
+    [theory_freq_shift]=eigenvalues_v1_2_struct(15.2e9,63e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
 % 	[theory_freq_shift]=eigenvalues_v1_2(14.8e9,54.1e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
 % 	[theory_freq_shift]=eigenvalues_v1_2(14.8e9,61e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
     
