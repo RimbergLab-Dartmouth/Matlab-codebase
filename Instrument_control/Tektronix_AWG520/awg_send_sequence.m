@@ -77,4 +77,5 @@ function [message_out, message_ascii] = awg_send_sequence(awg_handle, number_lin
     message_ascii = [':mmem:data "',sequence_name,'.seq",#', num2str(digits), num2str(body_length), message_body];
     message_out = uint8([':mmem:data "',sequence_name,'.seq",#', num2str(digits), num2str(body_length), message_body]); 
     fwrite(awg_handle, message_out)
+    disp('sequence sent')
 end

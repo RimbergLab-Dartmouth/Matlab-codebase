@@ -1,12 +1,12 @@
 run_params.plot_visible = 0;
 run_params.save_data_and_png_param = 1;
 run_params.save_fig_param = 1;
-run_params.file_name = 'fridge_attenuation_ng_0_flux_0p03';
+run_params.file_name = '_fridge_attenuation_ng_0p55_flux_0p05';
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 
 %% bias point and power sweep settings
 input_params.ng_value = 0.55;
-input_params.flux_value = 0;
+input_params.flux_value = 0.05;
 input_params.constants.planck = 6.626e-34;
 
 input_params.power_start_dBm = -65; % at the insert top
@@ -35,11 +35,11 @@ if ~exist('bias_point', 'var')
    clear load_directory
 end
 %%%%%%%%%%
-%%% make required folders
+%%% make necessary folders
 if run_params.save_data_and_png_param 
-    mkdir([cd '/d' input_params.file_name_time_stamp '_input_atten']);
-    run_params.fig_directory = [cd '/d' input_params.file_name_time_stamp '_input_atten\plots\'];
-    run_params.data_directory = [cd '/d' input_params.file_name_time_stamp '_input_atten\data\'];
+    mkdir([cd '/d' input_params.file_name_time_stamp run_params.file_name]);
+    run_params.fig_directory = [cd '/d' input_params.file_name_time_stamp run_params.file_name '\plots\'];
+    run_params.data_directory = [cd '/d' input_params.file_name_time_stamp run_params.file_name '\data\'];
     mkdir([run_params.data_directory]);
 end
 if run_params.save_fig_param || run_params.save_data_and_png_param

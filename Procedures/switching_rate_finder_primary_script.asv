@@ -17,9 +17,7 @@ run_params.input_power_value = -130; % power at the sample, adjusted using fridg
 run_params.detuning_point_start = -25; % in MHz
 run_params.detuning_point_end = -5; % in MHz. 
 run_params.detuning_point_step = 0.5; % in MHz.
-%%% deliberately make expected detuning number large so dont have to worry
-%%% about variation in array size
-run_params.expected_detuning_number = 100;%abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;
+run_params.expected_detuning_number = abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;
 run_params.number_repetitions = 1;
 
 
@@ -235,26 +233,26 @@ if m_bias_point == 1 && m_power == 1
     analysis.vna.actual_power.fits_flucs_and_angle.goodness_fit = zeros(1, 1); 
     
     %% other data arrays
-    data.detunings = zeros(1, 1, run_params.expected_detuning_number);
-    data.recorded_res_freq = zeros(1, 1, run_params.expected_detuning_number);
-    data.peripheral.awg_output_power = zeros(1, 1, run_params.expected_detuning_number);
-    data.lifetime_state_1_run_data = zeros(1, 1, run_params.expected_detuning_number, run_params.number_repetitions);
-    data.lifetime_state_2_run_data = zeros(1, 1, run_params.expected_detuning_number, run_params.number_repetitions);
-    data.gaussian_state_1_mean_run_data = zeros(1, 1, run_params.expected_detuning_number, run_params.number_repetitions);
-    data.gaussian_state_2_mean_run_data = zeros(1, 1, run_params.expected_detuning_number, run_params.number_repetitions);
-    data.sigma_gaussian_run_data = zeros(1, 1, run_params.expected_detuning_number, run_params.number_repetitions);
-    data.double_gaussian_fit_error_run_data = zeros(1, 1, run_params.expected_detuning_number, run_params.number_repetitions);
-    data.area_gaussian_1_run_data = zeros(1, 1,run_params.expected_detuning_number, run_params.number_repetitions); 
-    data.area_gaussian_2_run_data = zeros(1, 1,run_params.expected_detuning_number, run_params.number_repetitions); 
-    data.theory_hist_phases_run_data = zeros(1, 1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
-    data.theory_gaussian_1_run_data = zeros(1, 1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
-    data.theory_gaussian_2_run_data = zeros(1, 1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
-    data.switch_finder_hist_phases_run_data = zeros(1, 1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
-    data.switch_finder_hists_run_data = zeros(1, 1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
-    data.poisson_lifetime_state_1_array = zeros(1, 1,run_params.expected_detuning_number,1);
-    data.poisson_lifetime_state_2_array = zeros(1, 1,run_params.expected_detuning_number,1);
-    data.poisson_error_lifetime_1_in_us_array = zeros(1, 1,run_params.expected_detuning_number, 2);
-    data.poisson_error_lifetime_2_in_us_array = zeros(1, 1,run_params.expected_detuning_number, 2);
+    data.detunings = zeros(1, 1, expected_number);
+    data.recorded_res_freq = zeros(1, 1, expected_number);
+    data.peripheral.awg_output_power = zeros(1, 1, expected_number);
+    data.lifetime_state_1_run_data = zeros(1, 1, expected_number, run_params.number_repetitions);
+    data.lifetime_state_2_run_data = zeros(1, 1, expected_number, run_params.number_repetitions);
+    data.gaussian_state_1_mean_run_data = zeros(1, 1, expected_number, run_params.number_repetitions);
+    data.gaussian_state_2_mean_run_data = zeros(1, 1, expected_number, run_params.number_repetitions);
+    data.sigma_gaussian_run_data = zeros(1, 1, expected_number, run_params.number_repetitions);
+    data.double_gaussian_fit_error_run_data = zeros(1, 1, expected_number, run_params.number_repetitions);
+    data.area_gaussian_1_run_data = zeros(1, 1,expected_number, run_params.number_repetitions); 
+    data.area_gaussian_2_run_data = zeros(1, 1,expected_number, run_params.number_repetitions); 
+    data.theory_hist_phases_run_data = zeros(1, 1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width); 
+    data.theory_gaussian_1_run_data = zeros(1, 1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width); 
+    data.theory_gaussian_2_run_data = zeros(1, 1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width); 
+    data.switch_finder_hist_phases_run_data = zeros(1, 1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width); 
+    data.switch_finder_hists_run_data = zeros(1, 1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width); 
+    data.poisson_lifetime_state_1_array = zeros(1, 1,expected_number,1);
+    data.poisson_lifetime_state_2_array = zeros(1, 1,expected_number,1);
+    data.poisson_error_lifetime_1_in_us_array = zeros(1, 1,expected_number, 2);
+    data.poisson_error_lifetime_2_in_us_array = zeros(1, 1,expected_number, 2);
 else
     %% arrays for VNA data and analysis single photon
     data.vna.single_photon.rough.freq = [data.vna.single_photon.rough.freq; zeros(1, 1, input_params.vna.rough_number_points)];
@@ -383,26 +381,26 @@ else
     analysis.vna.actual_power.fits_flucs_and_angle.goodness_fit = [analysis.vna.actual_power.fits_flucs_and_angle.goodness_fit; zeros(1, 1)]; 
     
     %% other data arrays 
-    data.detunings = [data.lifetime_state_1_run_data; zeros(1, 1, run_params.expected_detuning_number)];
+    data.detunings = [data.lifetime_state_1_run_data; zeros(1, 1, expected_number)];
     data.recorded_res_freq = [data.recorded_res_freq; zeros(1, 1)];
-    data.peripheral.awg_output_power = [data.peripherals.awg_output_power; zeros(1, 1, run_params.expected_detuning_number)];
-    data.lifetime_state_1_run_data = [data.lifetime_state_1_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions)]; 
-    data.lifetime_state_2_run_data = [data.lifetime_state_2_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions)]; 
-    data.gaussian_state_1_mean_run_data = [data.gaussian_state_1_mean_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions)]; 
-    data.gaussian_state_2_mean_run_data = [data.gaussian_state_2_mean_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions)]; 
-    data.sigma_gaussian_run_data = [data.sigma_gaussian_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions)]; 
-    data.double_gaussian_fit_error_run_data = [data.double_gaussian_fit_error_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions)]; 
-    data.area_gaussian_1_run_data = [data.area_gaussian_1_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions)]; 
-    data.area_gaussian_2_run_data = [data.area_gaussian_2_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions)]; 
-    data.theory_hist_phases_run_data = [data.theory_hist_phases_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width)]; 
-    data.theory_gaussian_1_run_data = [data.theory_gaussian_1_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width)]; 
-    data.theory_gaussian_2_run_data = [data.theory_gaussian_2_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width)]; 
-    data.switch_finder_hist_phases_run_data = [data.switch_finder_hist_phases_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width)]; 
-    data.switch_finder_hists_run_data = [data.switch_finder_hists_run_data; zeros(1,1,run_params.expected_detuning_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width)]; 
-    data.poisson_lifetime_state_1_array = [data.poisson_lifetime_state_1_array; zeros(1,1,run_params.expected_detuning_number,1)];
-    data.poisson_lifetime_state_2_array = [data.poisson_lifetime_state_2_array; zeros(1,1,run_params.expected_detuning_number,1)];
-    data.poisson_error_lifetime_1_in_us_array = [data.poisson_error_lifetime_1_in_us_array; zeros(1,1,run_params.expected_detuning_number, 2)];
-    data.poisson_error_lifetime_2_in_us_array = [data.poisson_error_lifetime_2_in_us_array; zeros(1,1,run_params.expected_detuning_number, 2)];
+    data.peripheral.awg_output_power = [data.peripherals.awg_output_power; zeros(1, 1, expected_number)];
+    data.lifetime_state_1_run_data = [data.lifetime_state_1_run_data; zeros(1,1,expected_number, run_params.number_repetitions)]; 
+    data.lifetime_state_2_run_data = [data.lifetime_state_2_run_data; zeros(1,1,expected_number, run_params.number_repetitions)]; 
+    data.gaussian_state_1_mean_run_data = [data.gaussian_state_1_mean_run_data; zeros(1,1,expected_number, run_params.number_repetitions)]; 
+    data.gaussian_state_2_mean_run_data = [data.gaussian_state_2_mean_run_data; zeros(1,1,expected_number, run_params.number_repetitions)]; 
+    data.sigma_gaussian_run_data = [data.sigma_gaussian_run_data; zeros(1,1,expected_number, run_params.number_repetitions)]; 
+    data.double_gaussian_fit_error_run_data = [data.double_gaussian_fit_error_run_data; zeros(1,1,expected_number, run_params.number_repetitions)]; 
+    data.area_gaussian_1_run_data = [data.area_gaussian_1_run_data; zeros(1,1,expected_number, run_params.number_repetitions)]; 
+    data.area_gaussian_2_run_data = [data.area_gaussian_2_run_data; zeros(1,1,expected_number, run_params.number_repetitions)]; 
+    data.theory_hist_phases_run_data = [data.theory_hist_phases_run_data; zeros(1,1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width)]; 
+    data.theory_gaussian_1_run_data = [data.theory_gaussian_1_run_data; zeros(1,1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width)]; 
+    data.theory_gaussian_2_run_data = [data.theory_gaussian_2_run_data; zeros(1,1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width)]; 
+    data.switch_finder_hist_phases_run_data = [data.switch_finder_hist_phases_run_data; zeros(1,1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width)]; 
+    data.switch_finder_hists_run_data = [data.switch_finder_hists_run_data; zeros(1,1,expected_number, run_params.number_repetitions, 360/clean_RTS_bin_width)]; 
+    data.poisson_lifetime_state_1_array = [data.poisson_lifetime_state_1_array; zeros(1,1,expected_number,1)];
+    data.poisson_lifetime_state_2_array = [data.poisson_lifetime_state_2_array; zeros(1,1,expected_number,1)];
+    data.poisson_error_lifetime_1_in_us_array = [data.poisson_error_lifetime_1_in_us_array; zeros(1,1,expected_number, 2)];
+    data.poisson_error_lifetime_2_in_us_array = [data.poisson_error_lifetime_2_in_us_array; zeros(1,1,expected_number, 2)];
 end
     
 %% loop initialization
@@ -412,19 +410,19 @@ res_freq = 5.9e9; % initialize well outside cCPT tunability so the VNA function 
 
 while detuning_point < run_params.detuning_point_end + run_params.detuning_point_step
     %% record some input variables for this run
-    input_params.time_stamp{m_power, m_bias_point} = datestr(now, 'yymmdd_HHMMSS');
+    input_params.time_stamp(m_power, m_bias_point) = datestr(now, 'yymmdd_HHMMSS');
     input_params.ng_1_value(m_power, m_bias_point) = run_params.ng_1_value;
     input_params.flux_1_value(m_power, m_bias_point) = run_params.flux_1_value;
     input_params.input_power_value(m_power, m_bias_point) = run_params.input_power_value;
     input_params.AWG_power_value(m_power, m_bias_point) = run_params.awg.output_power;
     input_params.fridge_top_power_value(m_power, m_bias_point) = run_params.awg.output_power - input_params.additional_attenuation;
-    input_params.awg.sequence{m_power, m_bias_point} = run_params.awg.sequence;
+    input_params.awg.sequence(m_power, m_bias_point) = run_params.awg.sequence;
     input_params.detunings(m_power, m_bias_point, m_detuning) = detuning_point;
     input_params.run_number = input_params.run_number;
     input_params.run_order(m_power, m_bias_point, m_detuning) = input_params.run_number;
     data.detunings(m_power, m_bias_point, m_detuning) = detuning_point;
-    data.peripheral.bias_point_offset_and_periods(m_power, m_bias_point) = bias_point;
-    data.peripheral.gain_profile(m_power, m_bias_point) = gain_prof;
+    data.peripheral.bias_point_offset_and_periods(m_power, m_bias_point) = bias_point_struct;
+    data.peripheral.gain_profile(m_power, m_bias_point) = gain_profile_struct;
     data.peripheral.awg_output_power(m_power, m_bias_point) = run_params.awg.output_power;
     input_params.vna.input_power(m_power, m_bias_point) = run_params.input_power_value;
     input_params.analysis.moving_mean_average_time(m_power, m_bias_point, m_detuning) = run_params.analysis.moving_mean_average_time;
@@ -440,7 +438,7 @@ while detuning_point < run_params.detuning_point_end + run_params.detuning_point
         bias_set_param = 0;
     end
     %% run the actual data collection code %%%%
-%     switching_rate_finder_single_cCPT_setting
+    switching_rate_finder_single_cCPT_setting
     %%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     data.drive_freq_GHz(m_power, m_bias_point, m_detuning) = detuning_point/1e3 + res_freq/1e9;
@@ -448,9 +446,9 @@ while detuning_point < run_params.detuning_point_end + run_params.detuning_point
         
     %% clean the RTS data %%%%%%%%
     input_params.analysis.moving_mean_average_time(m_power, m_bias_point, m_detuning) = run_params.analysis.moving_mean_average_time;
-    clean_RTS_data_struct
     input_params.analysis.bin_edges(m_power, m_bias_point, m_detuning, :) = run_params.analysis.bin_edges;
     input_params.analysis.poissonian_fit_bin_number(m_power, m_bias_point, m_detuning) = run_params.poissonian_fit_bin_number;
+    clean_RTS_data_struct
     %% Fit Poissonian
     if temp.single_gaussian_fit_error < temp.double_gaussian_fit_error
         [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...

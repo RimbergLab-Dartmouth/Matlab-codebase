@@ -25,7 +25,7 @@ function[expected_bias_point_params_struct] = ...
     addAnalogOutputChannel(daq_handle,'Dev1','ao0','Voltage');
     addAnalogOutputChannel(daq_handle,'Dev1','ao1','Voltage');
     outputSingleScan(daq_handle,[desired_gate_voltage desired_flux_voltage]);
-%     pause(3);
+    pause(3);
 
     if plot_display == 1
         figure
@@ -52,8 +52,9 @@ function[expected_bias_point_params_struct] = ...
         vna_send_average_trigger(vna);
         vna_autoscale(vna,1,1);
         vna_autoscale(vna,1,2);
-        actual_resonance_freq = vna_marker_search(vna,1,'min','on',1,1)
+        actual_resonance_freq = vna_marker_search(vna,1,'min','on',1,1);
         vna_set_trigger_source(vna,'INT');
+        actual_resonance_freq = vna_marker_search(vna,1,'min','on',1,1)
 %         vna_turn_output_off(vna)
         release(daq_handle);
         freq_error = (actual_resonance_freq - expected_freq)

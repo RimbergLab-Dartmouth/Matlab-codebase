@@ -1,5 +1,5 @@
 moving_mean_average_time = run_params.analysis.moving_mean_average_time;
-moving_mean_average_number = moving_mean_average_time * input_params.digitizer.sample_rate;
+moving_mean_average_number = moving_mean_average_time *1e-6* input_params.digitizer.sample_rate;
 
 %% clean up phase data a little bit by shifting center to 0 degs, and by
 %%%%% getting rid of gross outliers
@@ -7,13 +7,16 @@ raw_data.phase_extracted = wrapTo180(raw_data.phase_extracted - 180/pi *circ_mea
 %% moving average of phase and amp (having done the cleaning above, the moving mean is the same as the moving circ mean)
 raw_data.phase_moving_mean = movmean(raw_data.phase_extracted, moving_mean_average_number);
 raw_data.amp_moving_mean = movmean(raw_data.amp_extracted, moving_mean_average_number);
+raw_data.phase_corrected = raw_data.phase_moving_mean;
 
 raw_data.phase_corrected(raw_data.phase_corrected > 180/pi*circ_mean(raw_data.phase_moving_mean*pi/180) + input_params.analysis.phase_outlier_cutoff) = NaN;
-raw_data.phase_corrected(raw_data.phase_corrected < 180/pi*circ_mean(raw_data.phase_moving_mean*pi/180) + input_params.analysis.phase_outlier_cutoff) = NaN;
+raw_data.phase_corrected(raw_data.phase_corrected < 180/pi*circ_mean(raw_data.phase_moving_mean*pi/180) - input_params.analysis.phase_outlier_cutoff) = NaN;
 
 raw_data.time_corrected = raw_data.time;
 raw_data.amp_corrected = raw_data.amp_extracted;
-raw_data.amp_corrected(isnan(raw_data.phase_corrected)) = NaN;
+raw_data.amp_corrected(isnan(raw_data.phase_corrected)) = [];
+raw_data.time_corrected(isnan(raw_data.phase_corrected)) = [];
+raw_data.phase_corrected(isnan(raw_data.phase_corrected)) = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 run_params.analysis.bin_edges = -180:input_params.analysis.clean_RTS_bin_width:180;
 %% Clean RTS data using function, and 
@@ -33,18 +36,18 @@ if run_params.plot_visible == 1
 elseif run_params.plot_visible == 0 
     RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
-start_point = randi([50e-6 * input_params.digitizer.sample_rate, end - run_params.analysis.plotting_number_for_RTS - 1]);
-plot(temp.clean_time_data(start_point : run_params.analysis.plotting_number_for_RTS)*1e6, ...
-    raw_data.phase_extracted(start_point : run_params.analysis.plotting_number_for_RTS), 'r', 'DisplayName', 'raw data')
+start_point = randi([50e-6 * input_params.digitizer.sample_rate, length(raw_data.phase_corrected) - run_params.analysis.plotting_number_for_RTS - 1]);
+plot(temp.clean_time_data(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
+    raw_data.phase_extracted(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS), 'r', 'DisplayName', 'raw data')
 hold on
-plot(raw_data.time_corrected(start_point : run_params.analysis.plotting_number_for_RTS)*1e6, ...
-    squeeze(temp.raw_data_out(start_point : run_params.analysis.plotting_number_for_RTS)), ...
+plot(raw_data.time_corrected(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
+    squeeze(temp.raw_data_out(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)), ...
     'b', 'DisplayName', 'moving averaged data')
-plot(raw_data.time_corrected(start_point : run_params.analysis.plotting_number_for_RTS)*1e6, ...
-    squeeze(temp.clean_RTS_data(start_point : run_params.analysis.plotting_number_for_RTS)), ...
+plot(raw_data.time_corrected(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
+    squeeze(temp.clean_RTS_data(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)), ...
     'k', 'linewidth', 3, 'DisplayName', 'cleaned data')
 xlabel('Time ($\mu$s)', 'interpreter', 'latex')
-ylabel('Phase($S_{21}$) (^o)', 'interpreter', 'latex')
+ylabel('Phase($S_{21}) (^\circ$)', 'interpreter', 'latex')
 title(['RTS for P$_{\mathrm{in}} = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
     '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$Phi_0$' 13 10 ...
             '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
@@ -65,9 +68,9 @@ clear RTS_figure ...
       start_point
 %% Find PSD of cleaned RTS signal    
 [temp.freqs, temp.psd, temp.psd_dBm] = ...
-    extract_PSD(raw_data.time_corrected, temp.RTS.clean_RTS_data);
+    extract_PSD(raw_data.time_corrected, temp.clean_RTS_data);
 %% Find theoretical Lorentzian from the obtained lifetimes 
-temp.theoretical_lorentzian = 4*(abs(temp.gaussian_1_mean - temp.gaussian_2_mean))^2 * (temp.lifetime_state_1_final_iteration * temp.lifetime_state_2_final_iteration)^2 ...
+temp.theory_lorentzian = 4*(abs(temp.gaussian_1_mean - temp.gaussian_2_mean))^2 * (temp.lifetime_state_1_final_iteration * temp.lifetime_state_2_final_iteration)^2 ...
     ./(temp.lifetime_state_1_final_iteration + temp.lifetime_state_2_final_iteration)^3 ./ (1 + 4*pi^2 .* temp.freqs.^2 ./ (1/temp.lifetime_state_1_final_iteration  + ...
     1 / temp.lifetime_state_2_final_iteration )^2);
 %% Fit a Lorentzian to the PSD
@@ -79,7 +82,6 @@ temp.psd (temp.freqs > 3 / moving_mean_average_time) = [];
 temp.psd_dBm(temp.freqs > 3 / moving_mean_average_time) = [];
 temp.theory_lorentzian_fit (temp.freqs > 3 / moving_mean_average_time) = [];
 temp.theory_lorentzian (temp.freqs > 3 / moving_mean_average_time) = [];
-temp.freqs (temp.freqs > 3 / moving_mean_average_time) = [];    
 %% neglect some unreasonable lifetime values 
 temp.lifetime_state_1_final_iteration (temp.lifetime_state_1_final_iteration < 1/moving_mean_average_time) = NaN;
 temp.lifetime_state_2_final_iteration (temp.lifetime_state_2_final_iteration < 1/moving_mean_average_time) = NaN;
@@ -92,7 +94,7 @@ temp.lifetime_state_2_final_iteration (temp.number_switches_both_states_final_it
 temp.lifetime_state_1_final_iteration (temp.area_gaussian_1 > input_params.analysis.min_gaussian_count) = NaN;
 temp.lifetime_state_2_final_iteration (temp.area_gaussian_2 > input_params.analysis.min_gaussian_count) = NaN;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Plotting PSD
+%% Plotting PSD 
 if run_params.plot_visible == 1
     RTS_PSD_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 elseif run_params.plot_visible == 0 
@@ -299,10 +301,10 @@ function [clean_time_data, raw_data_out, clean_RTS_data, gaussian_1_mean, gaussi
           lifetime_state_2_iteration_array ...
           phase_iteration_array  
       
-    error_lifetime_ratio(iteration_number) = zeros(number_iterations, 1);
-    threshold_1_iteration_array(iteration_number) = zeros(number_iterations, 1);
-    threshold_2_iteration_array(iteration_number) = zeros(number_iterations, 1);
-    number_switches_both_states_iteration_array(iteration_number) = zeros(number_iterations, 1);
+    error_lifetime_ratio = zeros(number_iterations, 1);
+    threshold_1_iteration_array = zeros(number_iterations, 1);
+    threshold_2_iteration_array = zeros(number_iterations, 1);
+    number_switches_both_states_iteration_array = zeros(number_iterations, 1);
     lifetime_state_1_iteration_array = zeros(number_iterations, 1);
     lifetime_state_2_iteration_array = zeros(number_iterations, 1);
     phase_iteration_array = zeros(number_iterations, length(time_data));
@@ -444,7 +446,8 @@ function [clean_time_data, raw_data_out, clean_RTS_data, gaussian_1_mean, gaussi
         phase_iteration_array(iteration_number, :) = 0;
         clean_RTS_data = phase_iteration_array(end, :);
         number_switches_both_states_final_iteration = 0;
-        clean_time_data = 0;
+        clean_time_data = time_data;
+        clean_RTS_data = RTS_data;
         hist_RTS_bins = hist_bin_middles;
     else
         %%%% shift back to original undo the processing to find peaks earlier.

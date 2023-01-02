@@ -1,3 +1,7 @@
+run_params.file_name = 'gain_added_noise_TWPA_6656M_-2p24';
+input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
+input_params.file_directory = [cd '/d' input_params.file_name_time_stamp run_params.file_name];
+mkdir(input_params.file_directory);
 if ~exist('bias_point', 'var')
     disp('enter directory where bias_point_struct.mat is saved')
    load_directory = uigetdir;
@@ -7,11 +11,12 @@ end
 %% input params
 input_params.flux_value = 0.5;
 input_params.ng_value = 0;
-input_params.twpa_pump.freq_start = 6.667e9;
-input_params.twpa_pump.freq_stop = 6.667e9;
+input_params.twpa_pump.pump_on_off = 'on';
+input_params.twpa_pump.freq_start = 6.656e9;
+input_params.twpa_pump.freq_stop = 6.656e9;
 input_params.twpa_pump.freq_number = 1;
-input_params.twpa_pump.power_start = -2.33; % this is power on the actual sig gen itself, assumed to be the HP83711B
-input_params.twpa_pump.power_stop = -2.33; 
+input_params.twpa_pump.power_start = -2.24; % this is power on the actual sig gen itself, assumed to be the HP83711B
+input_params.twpa_pump.power_stop = -2.24; 
 input_params.twpa_pump.power_number = 1; 
 input_params.twpa_pump.freqs = linspace(input_params.twpa_pump.freq_start, input_params.twpa_pump.freq_stop, input_params.twpa_pump.freq_number);
 input_params.twpa_pump.powers = linspace(input_params.twpa_pump.power_start, input_params.twpa_pump.power_stop, input_params.twpa_pump.power_number);
@@ -97,7 +102,11 @@ tic
 for m_twpa_freq = 1 : input_params.twpa_pump.freq_number
     connect_instruments
     for m_twpa_power = 1 : input_params.twpa_pump.power_number
-        set_83711B(hp_high_freq_sg, input_params.twpa_pump.freqs(m_twpa_freq), input_params.twpa_pump.powers(m_twpa_power), 1)
+        if strcmp(input_params.twpa_pump.pump_on_off, 'on')
+            set_83711B(hp_high_freq_sg, input_params.twpa_pump.freqs(m_twpa_freq), input_params.twpa_pump.powers(m_twpa_power), 1);
+        elseif strcmp(input_params.twpa_pump.pump_on_off, 'off')
+            set_83711B(hp_high_freq_sg, input_params.twpa_pump.freqs(m_twpa_freq), input_params.twpa_pump.powers(m_twpa_power), 0);
+        end
         for m_center_freq = 1 : input_params.center_freq_number
             disp(['running pump freq = ' num2str(m_twpa_freq) ' of ' num2str(input_params.twpa_pump.freq_number) ', pump power = ' ...
                 num2str(m_twpa_power) ' of ' num2str(input_params.twpa_pump.power_number) ', center freq = ' ...
@@ -172,7 +181,7 @@ for m_twpa_freq = 1 : input_params.twpa_pump.freq_number
     clear idx ...
           pump_freq_index ...
           pump_power_index
-    save('gain_added_noise_data.mat')
+    save([input_params.file_directory '/gain_added_noise_data.mat'])
 end
 switch_vna_measurement
 
@@ -190,8 +199,8 @@ xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
 ylabel('Pump power (dBm)', 'interpreter', 'latex')
 title('Average added noise photons')
 if input_params.save_figures == 1
-    saveas(added_noise_figure, 'added_noise_vs_twpa_pump.fig')
-    saveas(added_noise_figure, 'added_noise_vs_twpa_pump.png')
+    saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.fig'])
+    saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.png'])
 end
 
 if input_params.figures_visible == 1
@@ -207,6 +216,6 @@ xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
 ylabel('Pump power (dBm)', 'interpreter', 'latex')
 title('Average gain')
 if input_params.save_figures == 1
-    saveas(gain_figure, 'gain_vs_twpa_pump.fig')
-    saveas(gain_figure, 'gain_vs_twpa_pump.png')
+    saveas(gain_figure, [input_params.file_directory '/gain_vs_twpa_pump.fig'])
+    saveas(gain_figure, [input_params.file_directory '/gain_vs_twpa_pump.png'])
 end
