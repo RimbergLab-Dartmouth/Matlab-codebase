@@ -1,5 +1,5 @@
-moving_mean_average_time = run_params.analysis.moving_mean_average_time;
-moving_mean_average_number = moving_mean_average_time *1e-6* input_params.digitizer.sample_rate;
+moving_mean_average_time = run_params.analysis.moving_mean_average_time*1e-6;
+moving_mean_average_number = moving_mean_average_time * input_params.digitizer.sample_rate;
 
 %% clean up phase data a little bit by shifting center to 0 degs, and by
 %%%%% getting rid of gross outliers
@@ -74,12 +74,14 @@ temp.theory_lorentzian = 4*(abs(temp.gaussian_1_mean - temp.gaussian_2_mean))^2 
     ./(temp.lifetime_state_1_final_iteration + temp.lifetime_state_2_final_iteration)^3 ./ (1 + 4*pi^2 .* temp.freqs.^2 ./ (1/temp.lifetime_state_1_final_iteration  + ...
     1 / temp.lifetime_state_2_final_iteration )^2);
 %% Fit a Lorentzian to the PSD
-[temp.lifetime_state_1_lorentz_fit, temp.lifetime_state_2_lorentz_fit, temp.amp_diff_lorentz_fit, temp.theory_lorentzian_fit, temp.lorentz_fit_err] = ...
-        fit_RTS_lorentzian(temp.freqs, temp.psd, temp.lifetime_state_1_final_iteration, temp.lifetime_state_2_final_iteration, abs(temp.gaussian_1_mean - temp.gaussian_2_mean));
-    
 % get rid of high frequency components. the moving mean got rid of that anyway
 temp.psd (temp.freqs > 3 / moving_mean_average_time) = [];
 temp.psd_dBm(temp.freqs > 3 / moving_mean_average_time) = [];
+temp.freqs(time.freqs > 3 / moving_mean_average_time) = [];
+
+[temp.lifetime_state_1_lorentz_fit, temp.lifetime_state_2_lorentz_fit, temp.amp_diff_lorentz_fit, temp.theory_lorentzian_fit, temp.lorentz_fit_err] = ...
+        fit_RTS_lorentzian(temp.freqs, temp.psd, temp.lifetime_state_1_final_iteration, temp.lifetime_state_2_final_iteration, abs(temp.gaussian_1_mean - temp.gaussian_2_mean));
+    
 temp.theory_lorentzian_fit (temp.freqs > 3 / moving_mean_average_time) = [];
 temp.theory_lorentzian (temp.freqs > 3 / moving_mean_average_time) = [];
 %% neglect some unreasonable lifetime values 

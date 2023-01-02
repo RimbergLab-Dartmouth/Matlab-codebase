@@ -41,7 +41,7 @@ function [err,theory_flux,theory_gate]=resonance_freqs_error_calc(resonance_freq
         Ec
         return
     end
-    [freq_shift]=eigenvalues_v1_2(Ej,Ec,number_charge_states,flux_values,gate_values,flux_period,gate_period,0,6);
+    [freq_shift]=eigenvalues_v1_2_struct(Ej,Ec,number_charge_states,flux_values,gate_values,flux_period,gate_period,0,6);
     theory_res_freqs=f0+freq_shift; 
     theory_res_freqs = theory_res_freqs';
     theory_res_freqs(resonance_freqs_no_qp==0)=mean(mean(theory_res_freqs));
