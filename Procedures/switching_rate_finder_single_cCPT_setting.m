@@ -28,6 +28,7 @@ if run_params.awg.files_generation_param == 1 || m_detuning == 1
 end
 %% set bias point and record set value
 if bias_set_param == 1
+    disp('setting bias point DC voltage')
     [output_bias_point_struct] = ...
         set_bias_point_using_offset_period_struct (run_params.ng_1_value, run_params.flux_1_value, bias_point, 0,1,vna);
     data.peripheral.flux_voltage_output (m_power, m_bias_point) = output_bias_point_struct.desired_flux_voltage;
@@ -41,9 +42,12 @@ if bias_set_param == 1
     release(daq_handle);
     clear daq_handle ...
           output_bias_point_struct
+else
+    disp('skipping setting bias point DC voltage')
 end
 %% acquire VNA data at single photon levels
 if vna_data_acquisition == 1
+    disp('capturing VNA data at single photon power')
     switch_vna_measurement(ps_2)
     pause(2)
     vna_set_power(vna, -65, 1)
@@ -316,6 +320,8 @@ if vna_data_acquisition == 1
     close all
     clear q_circle_figure ...
           save_file_name
+else
+    disp('skipping single photon power VNA capture')
 end
 %% Set resonance freq
 if res_freq_recorder == 1
@@ -323,6 +329,7 @@ if res_freq_recorder == 1
 end
 %% Acquire VNA data at desired power
 if vna_data_acquisition == 1
+    disp('capturing VNA data at desired power')
     switch_vna_measurement(ps_2)
     pause(2)
     vna_set_power(vna, run_params.vna.power, 1)
@@ -596,6 +603,8 @@ if vna_data_acquisition == 1
     close all
     clear q_circle_figure ...
           save_file_name
+else
+    disp('skipping desired power VNA capture')
 end
 %% generate AWG waveform and sequence and send to AWG
 if run_params.awg.files_generation_param == 1
@@ -682,7 +691,7 @@ e8257c_toggle_output(e8257c_sig_gen, 'on')
 %% Data acquisition
 % Call mfile with library definitions
 AlazarDefs
-
+disp('collecting phase vs time data')
 % Load driver library
 if ~alazarLoadLibrary()
   fprintf('Error: ATSApi library not loaded\n');
@@ -745,7 +754,7 @@ raw_data.voltage = reshape(raw_data.voltage', [], 1);
 %%%%% extract amp and phase and reshape to original array dimensions %%%%%%
 [raw_data.amp_extracted, raw_data.phase_extracted] = get_amp_and_phase(raw_data.time, raw_data.voltage, input_params.if_freq, input_params.digitizer.sample_rate);
 raw_data.amp_extracted = reshape(raw_data.amp_extracted', size_required)';
-raw_data.phase_extracted = reshape(raw_data.phase_extracted', size_required)';
+raw_data.phase_extracted = 180/pi*reshape(raw_data.phase_extracted', size_required)';
 raw_data.time = reshape(raw_data.time', size_required)';
 raw_data.voltage = reshape(raw_data.voltage', size_required)';
 clear size_required
