@@ -4,7 +4,7 @@ moving_mean_average_number = moving_mean_average_time * input_params.digitizer.s
 
 %% clean up phase data a little bit by shifting center to 0 degs, and by
 %%%%% getting rid of gross outliers
-raw_data.phase_extracted = wrapTo180(raw_data.phase_extracted - 180/pi *circ_mean(raw_data.phase_extracted));
+raw_data.phase_extracted = wrapTo180(raw_data.phase_extracted - 180/pi *circ_mean(pi/180*raw_data.phase_extracted));
 %% moving average of phase and amp (having done the cleaning above, the moving mean is the same as the moving circ mean)
 raw_data.phase_moving_mean = movmean(raw_data.phase_extracted, moving_mean_average_number);
 raw_data.amp_moving_mean = movmean(raw_data.amp_extracted, moving_mean_average_number);
@@ -46,11 +46,11 @@ ylabel('Count', 'interpreter', 'latex')
 title(['RTS Gaussians for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
     '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
     '$\Delta$ = ' num2str(detuning_point) 'MHz' 13 10 ...
-    'center gaussian 1 = ' num2str(round(temp.gaussian_1_mean, 2)) '^$\circ$, ' ...
-    'center gaussian 2 = ' num2str(round(temp.gaussian_2_mean, 2)) '^$\circ$, ' ...
-    'double gaussian $\sigma$ = ' num2str(round(temp.sigma_double_gaussian, 2)) '^$\circ$' 13 10 ...
-    'single gaussian center = ' num2str(round(temp.single_gaussian_fit_params(2), 2)) '^$\circ$', ...
-    'single gaussian $\sigma$ = ' num2str(round(temp.single_gaussian_fit_params(3), 2)) '^$\circ$'], 'interpreter', 'latex')
+    'center gaussian 1 = ' num2str(round(temp.gaussian_1_mean, 2)) '$^\circ$, ' ...
+    'center gaussian 2 = ' num2str(round(temp.gaussian_2_mean, 2)) '$^\circ$, ' ...
+    'double gaussian $\sigma$ = ' num2str(round(temp.sigma_double_gaussian, 2)) '$^\circ$' 13 10 ...
+    'single gaussian center = ' num2str(round(temp.single_gaussian_fit_params(2), 2)) '$^\circ$', ...
+    'single gaussian $\sigma$ = ' num2str(round(temp.single_gaussian_fit_params(3), 2)) '$^\circ$'], 'interpreter', 'latex')
 legend show
 
 if run_params.save_data_and_png_param == 1
@@ -171,41 +171,50 @@ end
 clear RTS_PSD_figure ...
       save_file_name
 %% Assigning values to long term variables
-analysis.gaussian_1_mean(m_power, m_bias_point, m_detuning) = temp.gaussian_1_mean;
-analysis.gaussian_2_mean(m_power, m_bias_point, m_detuning) = temp.gaussian_2_mean;
-analysis.gaussian_difference(m_power, m_bias_point, m_detuning) = temp.gaussian_difference;
-analysis.sigma_double_gaussian(m_power, m_bias_point, m_detuning) = temp.sigma_double_gaussian;
-analysis.double_gaussian_fit_error(m_power, m_bias_point, m_detuning) = temp.double_gaussian_fit_error;
-analysis.area_gaussian_1(m_power, m_bias_point, m_detuning) = temp.area_gaussian_1;
+analysis.gaussian_1_mean(m_power, m_bias_point, m_detuning, m_repetition) = temp.gaussian_1_mean;
+analysis.gaussian_2_mean(m_power, m_bias_point, m_detuning, m_repetition) = temp.gaussian_2_mean;
+analysis.gaussian_difference(m_power, m_bias_point, m_detuning, m_repetition) = temp.gaussian_difference;
+analysis.sigma_double_gaussian(m_power, m_bias_point, m_detuning, m_repetition) = temp.sigma_double_gaussian;
+analysis.double_gaussian_fit_error(m_power, m_bias_point, m_detuning, m_repetition) = temp.double_gaussian_fit_error;
+analysis.area_gaussian_1(m_power, m_bias_point, m_detuning, m_repetition) = temp.area_gaussian_1;
 analysis.area_gaussian_2(m_power, m_bias_point, m_detuning) = temp.area_gaussian_2;
-analysis.number_switches_both_states_iteration_array(m_power, m_bias_point, m_detuning, :) = temp.number_switches_both_states_iteration_array;
-analysis.number_switches_both_states_final_iteration(m_power, m_bias_point, m_detuning) = temp.number_switches_both_states_final_iteration;
+analysis.number_switches_both_states_iteration_array(m_power, m_bias_point, m_detuning, m_repetition, :) = temp.number_switches_both_states_iteration_array;
+analysis.number_switches_both_states_final_iteration(m_power, m_bias_point, m_detuning, m_repetition) = temp.number_switches_both_states_final_iteration;
 
-analysis.lifetime_state_1_final_iteration(m_power, m_bias_point, m_detuning) = temp.lifetime_state_1_final_iteration;
-analysis.lifetime_state_2_final_iteration(m_power, m_bias_point, m_detuning) = temp.lifetime_state_2_final_iteration;
-analysis.lifetime_state_1_iteration_array(m_power, m_bias_point, m_detuning, :) = temp.lifetime_state_1_iteration_array;
-analysis.lifetime_state_2_iteration_array(m_power, m_bias_point, m_detuning, :) = temp.lifetime_state_2_iteration_array;
-analysis.simple_threshold_lifetime_state_1(m_power, m_bias_point, m_detuning) = temp.simple_threshold_lifetime_state_1;
-analysis.simple_threshold_lifetime_state_2(m_power, m_bias_point, m_detuning) = temp.simple_threshold_lifetime_state_2;
-analysis.threshold_1_iteration_array(m_power, m_bias_point, m_detuning, :) = temp.threshold_1_iteration_array;
-analysis.threshold_2_iteration_array(m_power, m_bias_point, m_detuning, :) = temp.threshold_2_iteration_array;
-analysis.gaussian_1_theory_values(m_power, m_bias_point, m_detuning, :) = temp.gaussian_1_theory_values;
-analysis.gaussian_2_theory_values(m_power, m_bias_point, m_detuning, :) = temp.gaussian_2_theory_values;
-analysis.hist_RTS_bins(m_power, m_bias_point, m_detuning, :) = temp.hist_RTS_bins;
-analysis.hist_count_data(m_power, m_bias_point, m_detuning, :) = temp.hist_count_data;
-analysis.single_gaussian_fit_params(m_power, m_bias_point, m_detuning, :) = temp.single_gaussian_fit_params;
-analysis.single_gaussian_theory_values(m_power, m_bias_point, m_detuning, :) = temp.single_gaussian_theory_values;
-analysis.single_gaussian_fit_error(m_power, m_bias_point, m_detuning) = temp.single_gaussian_fit_error;
+analysis.lifetime_state_1_final_iteration(m_power, m_bias_point, m_detuning, m_repetition) = temp.lifetime_state_1_final_iteration;
+analysis.lifetime_state_2_final_iteration(m_power, m_bias_point, m_detuning, m_repetition) = temp.lifetime_state_2_final_iteration;
+analysis.lifetime_state_1_iteration_array(m_power, m_bias_point, m_detuning, m_repetition, 1:run_params.analysis.number_iterations) = ...
+                                                            temp.lifetime_state_1_iteration_array;
+analysis.lifetime_state_2_iteration_array(m_power, m_bias_point, m_detuning, m_repetition, 1:run_params.analysis.number_iterations) = ...
+                                                            temp.lifetime_state_2_iteration_array;
+analysis.simple_threshold_lifetime_state_1(m_power, m_bias_point, m_detuning, m_repetition) = temp.simple_threshold_lifetime_state_1;
+analysis.simple_threshold_lifetime_state_2(m_power, m_bias_point, m_detuning, m_repetition) = temp.simple_threshold_lifetime_state_2;
+analysis.threshold_1_iteration_array(m_power, m_bias_point, m_detuning, m_repetition, 1:run_params.analysis.number_iterations) = ...
+                                                            temp.threshold_1_iteration_array;
+analysis.threshold_2_iteration_array(m_power, m_bias_point, m_detuning, m_repetition, 1:run_params.analysis.number_iterations) = ...
+                                                            temp.threshold_2_iteration_array;
+analysis.gaussian_1_theory_values(m_power, m_bias_point, m_detuning, m_repetition, 1:length(run_params.analysis.bin_edges)-1) = ...
+                                                            temp.gaussian_1_theory_values;
+analysis.gaussian_2_theory_values(m_power, m_bias_point, m_detuning, m_repetition, 1:length(run_params.analysis.bin_edges)-1) = ...
+                                                            temp.gaussian_2_theory_values;
+analysis.hist_RTS_bins(m_power, m_bias_point, m_detuning, m_repetition, 1:length(run_params.analysis.bin_edges)-1) = ...
+                                                            temp.hist_RTS_bins;
+analysis.hist_count_data(m_power, m_bias_point, m_detuning, m_repetition, 1:length(run_params.analysis.bin_edges)-1) = ...
+                                                            temp.hist_count_data;
+analysis.single_gaussian_fit_params(m_power, m_bias_point, m_detuning, m_repetition, 1:3) = temp.single_gaussian_fit_params;
+analysis.single_gaussian_theory_values(m_power, m_bias_point, m_detuning, m_repetition, 1:length(run_params.analysis.bin_edges)-1) = ...
+                                                            temp.single_gaussian_theory_values;
+analysis.single_gaussian_fit_error(m_power, m_bias_point, m_detuning, m_repetition) = temp.single_gaussian_fit_error;
 
-analysis.RTS_PSD.freqs(m_power, m_bias_point, m_detuning, 1:length(temp.freqs)) = temp.freqs;
-analysis.RTS_PSD.psd(m_power, m_bias_point, m_detuning,  1:length(temp.freqs)) = temp.psd;
-analysis.RTS_PSD.psd_dBm(m_power, m_bias_point, m_detuning,  1:length(temp.freqs)) = temp.psd_dBm;
-analysis.RTS_PSD.theory_lorentzian_values(m_power, m_bias_point, m_detuning,  1:length(temp.freqs)) = temp.theory_lorentzian;
-analysis.RTS_PSD.lorentzian_fit_theory(m_power, m_bias_point, m_detuning,  1:length(temp.freqs)) = temp.theory_lorentzian_fit;
-analysis.RTS_PSD.lorentzian_fit_lifetime_state_1(m_power, m_bias_point, m_detuning) = temp.lifetime_state_1_lorentz_fit;
-analysis.RTS_PSD.lorentzian_fit_lifetime_state_2(m_power, m_bias_point, m_detuning) = temp.lifetime_state_2_lorentz_fit;
-analysis.RTS_PSD.lorentzian_fit_amp_diff(m_power, m_bias_point, m_detuning) = temp.amp_diff_lorentz_fit;
-analysis.RTS_PSD.lorentzian_fit_err(m_power, m_bias_point, m_detuning) = temp.lorentz_fit_err;
+analysis.RTS_PSD.freqs(m_power, m_bias_point, m_detuning, m_repetition, 1:length(temp.freqs)) = temp.freqs;
+analysis.RTS_PSD.psd(m_power, m_bias_point, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd;
+analysis.RTS_PSD.psd_dBm(m_power, m_bias_point, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd_dBm;
+analysis.RTS_PSD.theory_lorentzian_values(m_power, m_bias_point, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian;
+analysis.RTS_PSD.lorentzian_fit_theory(m_power, m_bias_point, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian_fit;
+analysis.RTS_PSD.lorentzian_fit_lifetime_state_1(m_power, m_bias_point, m_detuning, m_repetition) = temp.lifetime_state_1_lorentz_fit;
+analysis.RTS_PSD.lorentzian_fit_lifetime_state_2(m_power, m_bias_point, m_detuning, m_repetition) = temp.lifetime_state_2_lorentz_fit;
+analysis.RTS_PSD.lorentzian_fit_amp_diff(m_power, m_bias_point, m_detuning, m_repetition) = temp.amp_diff_lorentz_fit;
+analysis.RTS_PSD.lorentzian_fit_err(m_power, m_bias_point, m_detuning, m_repetition) = temp.lorentz_fit_err;
 
 %%%% store necessary time data, delete rest
 if run_params.analysis.plotting_time_for_RTS ~= 0
@@ -215,25 +224,25 @@ if run_params.analysis.plotting_time_for_RTS ~= 0
         input_params.start_index_of_RTS_raw_data_to_store = length(temp.raw_data_out) - input_params.length_of_RTS_raw_data_to_store - 1;
     end
     
-    analysis.RTS.moving_mean_average_phase(m_power, m_bias_point, m_detuning, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+    analysis.RTS.moving_mean_average_phase(m_power, m_bias_point, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
         temp.raw_data_out(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
 
-    data.RTS.time(m_power, m_bias_point, m_detuning, 1 : input_params.length_of_RTS_raw_data_to_store) = ...    
+    data.RTS.time(m_power, m_bias_point, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...    
         raw_data.time_corrected(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
     
-    data.RTS.raw_phase(m_power, m_bias_point, m_detuning, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+    data.RTS.raw_phase(m_power, m_bias_point, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
         raw_data.phase_extracted(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
 
-    data.RTS.raw_amp(m_power, m_bias_point, m_detuning, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+    data.RTS.raw_amp(m_power, m_bias_point, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
         raw_data.amp_extracted(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
 
-    analysis.RTS.moving_mean_average_amp(m_power, m_bias_point, m_detuning, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+    analysis.RTS.moving_mean_average_amp(m_power, m_bias_point, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
         raw_data.amp_moving_mean(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
 
-    analysis.RTS.clean_RTS_phase(m_power, m_bias_point, m_detuning, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+    analysis.RTS.clean_RTS_phase(m_power, m_bias_point, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
         temp.clean_RTS_data(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
 
-    analysis.RTS.simple_threshold_clean_RTS_data(m_power, m_bias_point, m_detuning, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+    analysis.RTS.simple_threshold_clean_RTS_data(m_power, m_bias_point, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
         temp.simple_threshold_clean_RTS_data(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
 end
 
@@ -255,6 +264,7 @@ function [clean_time_data, raw_data_out, clean_RTS_data, gaussian_1_mean, gaussi
         disp('Input array dimensions do not match')
         clean_time_data = time_data;
         clean_RTS_data = RTS_data;
+        raw_data_out = RTS_data;
         gaussian_1_mean = 0;
         gaussian_2_mean = 0;
         sigma_double_gaussian = 0;
@@ -263,6 +273,22 @@ function [clean_time_data, raw_data_out, clean_RTS_data, gaussian_1_mean, gaussi
         area_gaussian_2 = 1e9;
         lifetime_state_1_final_iteration = 0;
         lifetime_state_2_final_iteration = 0;
+        lifetime_state_1_iteration_array = 0;
+        lifetime_state_2_iteration_array = 0;
+        simple_threshold_clean_RTS_data = RTS_data;
+        simple_threshold_lifetime_state_1 = 0;
+        simple_threshold_lifetime_state_2 = 0;
+        threshold_1_iteration_array = 0;
+        threshold_2_iteration_array = 0;
+        number_switches_both_states_final_iteration = 0;
+        number_switches_both_states_iteration_array = zeros(1, number_iterations);
+        gaussian_1_theory_values = 0;
+        gaussian_2_theory_values = 0;
+        hist_RTS_bins = 0;
+        hist_count_data = 0;
+        single_gaussian_fit_params = 0;
+        single_gaussian_theory_values = 0;
+        single_gaussian_fit_error = 0;
         return
     end
     
@@ -306,6 +332,33 @@ function [clean_time_data, raw_data_out, clean_RTS_data, gaussian_1_mean, gaussi
 
     %%%%% fit single gaussian to the histograms
     [single_gaussian_fit_params, single_gaussian_theory_values, single_gaussian_fit_error] = fit_gaussian(wrapTo180(hist_bin_middles_wrapped_180), hist_count_data);
+    
+    if single_gaussian_fit_error < min(fit_error_360, fit_error_180) 
+        clean_time_data = time_data;
+        clean_RTS_data = RTS_data;
+        raw_data_out = RTS_data;        
+        gaussian_1_mean = 0;
+        gaussian_2_mean = 0;
+        sigma_double_gaussian = 0;
+        double_gaussian_fit_error = 1e9;
+        area_gaussian_1 = 1e9;
+        area_gaussian_2 = 1e9;
+        lifetime_state_1_final_iteration = 0;
+        lifetime_state_2_final_iteration = 0;
+        lifetime_state_1_iteration_array = 0;
+        lifetime_state_2_iteration_array = 0;
+        simple_threshold_clean_RTS_data = RTS_data;
+        simple_threshold_lifetime_state_1 = 0;
+        simple_threshold_lifetime_state_2 = 0;
+        threshold_1_iteration_array = 0;
+        threshold_2_iteration_array = 0;
+        number_switches_both_states_final_iteration = 0;
+        number_switches_both_states_iteration_array = zeros(1, number_iterations);
+        gaussian_1_theory_values = 0;
+        gaussian_2_theory_values = 0;
+        hist_RTS_bins = hist_bin_middles;
+        return
+    end
     
     if fit_error_180 < fit_error_360 || fit_error_180 == fit_error_360
         gaussian_1_mean = wrapTo180(double_gaussian_fit_180(2));

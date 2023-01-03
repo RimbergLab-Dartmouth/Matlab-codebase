@@ -12,9 +12,9 @@ m_bias_point = 1;
 m_power = 1;
 run_params.ng_1_value = 0;
 run_params.flux_1_value = 0.06;
-run_params.input_power_value = -125; % power at the sample, adjusted using fridge attenuation and additional attenuation params.
+run_params.input_power_value = -120; % power at the sample, adjusted using fridge attenuation and additional attenuation params.
 
-run_params.detuning_point_start = -25; % in MHz
+run_params.detuning_point_start = -7; % in MHz
 run_params.detuning_point_end = -5; % in MHz. 
 run_params.detuning_point_step = 0.5; % in MHz.
 m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
@@ -80,7 +80,7 @@ if m_bias_point == 1 && m_power == 1
     %% Analysis params
     input_params.if_freq = 21e6; % freq to which output signal is mixed down
     input_params.analysis.clean_RTS_bin_width = 6; % degs - phase histogramming bin size
-    run_params.analysis.moving_mean_average_time = 1; % in us
+    run_params.analysis.moving_mean_average_time = 3; % in us
     run_params.analysis.number_iterations = 5; % number of iterations for the clean RTS algorithm
     input_params.analysis.phase_outlier_cutoff = 45; % in degs, this is the phase above and below the mean phase, over which the phase is classified as an outlier (after moving mean)
     run_params.analysis.min_gaussian_center_to_center_phase = 15; % in degs, this is the minimum distance between gaussian centers that the double gaussian fit accepts
@@ -233,7 +233,7 @@ if m_bias_point == 1 && m_power == 1
     analysis.vna.actual_power.fits_flucs_and_angle.goodness_fit = zeros(1, 1); 
     
     %% other data arrays
-    data.detunings = zeros(1, 1, run_params.detuning_array_number);
+    data.detunings = zeros(1, 1, run_params.detuning_array_number, run_params.number_repetitions);
     data.recorded_res_freq = zeros(1, 1, run_params.detuning_array_number);
     data.peripheral.awg_output_power = zeros(1, 1, run_params.detuning_array_number);
     data.lifetime_state_1_run_data = zeros(1, 1, run_params.detuning_array_number, run_params.number_repetitions);
@@ -381,7 +381,7 @@ else
     analysis.vna.actual_power.fits_flucs_and_angle.goodness_fit = [analysis.vna.actual_power.fits_flucs_and_angle.goodness_fit; zeros(1, 1)]; 
     
     %% other data arrays 
-    data.detunings = [data.lifetime_state_1_run_data; zeros(1, 1, run_params.detuning_array_number)];
+    data.detunings = [data.lifetime_state_1_run_data; zeros(1, 1, run_params.detuning_array_number, run_params.number_repetitions)];
     data.recorded_res_freq = [data.recorded_res_freq; zeros(1, 1)];
     data.peripheral.awg_output_power = [data.peripherals.awg_output_power; zeros(1, 1, run_params.detuning_array_number)];
     data.lifetime_state_1_run_data = [data.lifetime_state_1_run_data; zeros(1,1,run_params.detuning_array_number, run_params.number_repetitions)]; 
@@ -411,7 +411,8 @@ res_freq = 5.9e9; % initialize well outside cCPT tunability so the VNA function 
 while detuning_point < run_params.detuning_point_end + run_params.detuning_point_step
     m_repetition = 1;
     while m_repetition < run_params.number_repetitions + 1
-        disp(['running m_detuning = ' num2str(m_detuning - m_detuning_start + 1) ' of ' num2str(run_params.detuning_expected_number) ...
+        disp([13 10 13 10 13 10 13 10 13 10 13 10 13 10 ...
+            'running m_detuning = ' num2str(m_detuning - m_detuning_start + 1) ' of ' num2str(run_params.detuning_expected_number) ...
             ', m_repetition = ' num2str(m_repetition) ' of ' num2str(run_params.number_repetitions)])
         %% record some input variables for this run
         input_params.time_stamp{m_power, m_bias_point} = datestr(now, 'yymmdd_HHMMSS');
@@ -536,16 +537,20 @@ elseif run_params.plot_visible == 0
     Lifetime_detuning_plots = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
 
-errorbar(squeeze(data.detunings(m_power, m_bias_point, :)), squeeze(analysis.Poissonian.lifetime_1(m_power, m_bias_point, :)), ...
-    squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_bias_point, :)), squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_bias_point, :)), ...
-    squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_bias_point)), ...
-    squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_bias_point)), ...
+errorbar(mean(squeeze(data.detunings(m_power, m_bias_point, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2), ...
+    mean(squeeze(analysis.Poissonian.lifetime_1(m_power, m_bias_point, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2), ...
+    mean(squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_bias_point, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2), ...
+    mean(squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_bias_point, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2), ...
+    squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_bias_point)*ones(run_params.detuning_expected_number, 1))/1e6, ...
+    squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_bias_point)*ones(run_params.detuning_expected_number, 1))/1e6, ...
     'rx-', 'Linewidth', 3, 'DisplayName', 'State 1 lifetimes')
 hold on
-errorbar(squeeze(data.detunings(m_power, m_bias_point, :)), squeeze(analysis.Poissonian.lifetime_2(m_power, m_bias_point, :)), ...
-    squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_bias_point, :)), squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_bias_point, :)), ...
-    squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_bias_point))/1e6, ...
-    squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_bias_point))/1e6, ...
+errorbar(mean(squeeze(data.detunings(m_power, m_bias_point, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2), ...
+    mean(squeeze(analysis.Poissonian.lifetime_2(m_power, m_bias_point, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2), ...
+    mean(squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_bias_point,  m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2), ...
+    mean(squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_bias_point,  m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2), ...
+    squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_bias_point)*ones(run_params.detuning_expected_number, 1))/1e6, ...
+    squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_bias_point)*ones(run_params.detuning_expected_number, 1))/1e6, ...
     'bx-', 'Linewidth', 3, 'DisplayName', 'State 2 lifetimes')
 
 xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')

@@ -667,13 +667,18 @@ if run_params.awg.files_generation_param == 1
           file_list
 end
 %% set sig gen params
-input_params.center_freq(m_power, m_bias_point, m_detuning) = res_freq + detuning_point;
-input_params.sig_gen.input_LO_power(m_power, m_bias_point, m_detuning) = 17; % input power to IQ4509 input mixer is 15dBm
-input_params.sig_gen.input_LO_freq (m_power, m_bias_point, m_detuning) = input_params.center_freq(m_power, m_bias_point, m_detuning) - input_params.awg.input_IF_waveform_freq;
+input_params.center_freq(m_power, m_bias_point, m_detuning, m_repetition) = res_freq + detuning_point;
+input_params.sig_gen.input_LO_power(m_power, m_bias_point, m_detuning, m_repetition) = 17; % input power to IQ4509 input mixer is 15dBm
+input_params.sig_gen.input_LO_freq (m_power, m_bias_point, m_detuning, m_repetition) = input_params.center_freq(m_power, m_bias_point, m_detuning, m_repetition) - ...
+    input_params.awg.input_IF_waveform_freq;
+n5183b_set_frequency(keysight_sg, squeeze(input_params.sig_gen.input_LO_freq (m_power, m_bias_point, m_detuning, m_repetition)))
+n5183b_set_amplitude(keysight_sg, squeeze(input_params.sig_gen.input_LO_power(m_power, m_bias_point, m_detuning, m_repetition)))
 % the IF to IQ4509 is at 84MHz, defined in the above AWG waveforms
-input_params.sig_gen.output_LO_power(m_power, m_bias_point, m_detuning) = 16.8; % input power to mini circuits ZXF05 - 73L+ output mixer is 15dBm
-input_params.sig_gen.output_LO_freq (m_power, m_bias_point, m_detuning) = input_params.center_freq(m_power, m_bias_point, m_detuning) + ...
+input_params.sig_gen.output_LO_power(m_power, m_bias_point, m_detuning,  m_repetition) = 16.8; % input power to mini circuits ZXF05 - 73L+ output mixer is 15dBm
+input_params.sig_gen.output_LO_freq (m_power, m_bias_point, m_detuning,  m_repetition) = input_params.center_freq(m_power, m_bias_point, m_detuning,  m_repetition) + ...
     input_params.if_freq;
+e8257c_set_frequency(e8257c_sig_gen, squeeze(input_params.sig_gen.output_LO_freq (m_power, m_bias_point, m_detuning,  m_repetition)))
+e8257c_set_amplitude(e8257c_sig_gen, squeeze(input_params.sig_gen.output_LO_power(m_power, m_bias_point, m_detuning,  m_repetition)))
 %% switch to phase line on switches
 switch_phase_measurement(ps_2)
 %% setup AWG
