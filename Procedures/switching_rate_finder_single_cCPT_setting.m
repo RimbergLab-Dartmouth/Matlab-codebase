@@ -667,7 +667,7 @@ if run_params.awg.files_generation_param == 1
           file_list
 end
 %% set sig gen params
-input_params.center_freq(m_power, m_bias_point, m_detuning, m_repetition) = res_freq + detuning_point;
+input_params.center_freq(m_power, m_bias_point, m_detuning, m_repetition) = res_freq + detuning_point*1e6;
 input_params.sig_gen.input_LO_power(m_power, m_bias_point, m_detuning, m_repetition) = 17; % input power to IQ4509 input mixer is 15dBm
 input_params.sig_gen.input_LO_freq (m_power, m_bias_point, m_detuning, m_repetition) = input_params.center_freq(m_power, m_bias_point, m_detuning, m_repetition) - ...
     input_params.awg.input_IF_waveform_freq;
@@ -769,7 +769,7 @@ e8257c_toggle_output(e8257c_sig_gen,'off')
 n5183b_toggle_pulse_mod(keysight_sg,'off')
 n5183b_toggle_modulation(keysight_sg,'off')
 
-if detuning_point > run_params.detuning_point_end + run_params.detuning_point_step || detuning_point == run_params.detuning_point_end + run_params.detuning_point_step
+if detuning_point > run_params.detuning_point_end + run_params.detuning_point_step || detuning_point == run_params.detuning_point_end 
         awg_toggle_output(awg,'off',1)
         awg_toggle_output(awg,'off',2)
         awg_run_output_channel_off(awg,'stop')
