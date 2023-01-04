@@ -6,8 +6,8 @@ plotting.save_analyzed_data = 0;
 plotting.f_inverse_start_index = 3; 
 plotting.f_inverse_stop_index = 3; % index from end to which stop fit
 plotting.reanalyze = 1;
-plotting.ej_ec_fit_reanalyze = 0;
-plotting.q_circle_fits_reanalyze = 0;
+plotting.ej_ec_fit_reanalyze = 1;
+plotting.q_circle_fits_reanalyze = 1;
 plotting.noise_spectrum_reanalyze = 1;
 %% guesses for Ej, Ec fit
 if plotting.ej_ec_fit_reanalyze == 1 && plotting.reanalyze == 1
@@ -117,10 +117,10 @@ if plotting.reanalyze && plotting.noise_spectrum_reanalyze
     analysis.sa.freq = analysis.sa.freq(:, :, (input_params.sa.number_points - 1)/2 + 1: end);
     analysis.sa.amp = (data.sa.amp(:, :, 1 : (input_params.sa.number_points - 1)/2 + 1) + data.sa.amp(:, :, (input_params.sa.number_points - 1)/2 + 1 : end))/2;
     analysis.sa.amp_carrier_off = (data.sa.amp_carrier_off(:, :, 1 : (input_params.sa.number_points - 1)/2 + 1) + data.sa.amp_carrier_off(:, :, (input_params.sa.number_points - 1)/2 + 1 : end))/2;
-    [~, analysis.sa.amp_watts] = convert_dBm_to_Vp(analysis.sa.amp);
-    [~, analysis.sa.amp_carrier_off_watts] = convert_dBm_to_Vp(analysis.sa.amp_carrier_off);
-    analysis.sa.psd_watts_Hz = analysis.sa.amp_watts / input_params.sa.RBW / input_params.sa.span * (input_params.sa.number_points - 1); 
-    analysis.sa.psd_watts_Hz_off = analysis.sa.amp_carrier_off_watts / input_params.sa.RBW / input_params.sa.span * (input_params.sa.number_points - 1); 
+    analysis.sa.amp_difference = analysis.sa.amp - analysis.sa.amp_carrier_off;
+    [~, analysis.sa.amp_watts] = convert_dBm_to_Vp(analysis.sa.amp_difference);
+%     [~, analysis.sa.amp_carrier_off_watts] = convert_dBm_to_Vp(analysis.sa.amp_carrier_off);
+    analysis.sa.psd_watts_Hz = analysis.sa.amp_difference / input_params.sa.RBW / input_params.sa.span * (input_params.sa.number_points - 1); 
 
 
     for m_flux = 1 : input_params.flux_number
@@ -128,21 +128,26 @@ if plotting.reanalyze && plotting.noise_spectrum_reanalyze
             [analysis.spectrum.goodness_fit(m_flux, m_ng),analysis.spectrum.amp_fit(m_flux, m_ng),analysis.spectrum.exponent_fit(m_flux, m_ng), ...
                 analysis.spectrum.theory_freqs(m_flux, m_ng, :), analysis.spectrum.theory_amp_watts(m_flux, m_ng, :)] = ...
                 fit_f_inverse_law(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)),...
-                squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index) ...
-                - analysis.sa.psd_watts_Hz_off(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)));
-            disp(['fitted noise spectrum flux = ' num2str(m_flux) ' of ' num2str(input_params.flux_number) ', gate = ' num2str(m_ng) ' of ' num2str(input_params.ng_number)])
+                squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)));
             figure
             semilogx(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)),...
-                squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)), 'displayName', 'carrier on')
-            hold on
-            semilogx (squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)), ...
-                squeeze(analysis.sa.psd_watts_Hz_off(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)), 'displayName', 'carrier off')
-%             plot(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - 1)),squeeze(analysis.spectrum.theory_freqs(m_flux, m_ng, :)), 'displayName', 'fit')
-            legend show
-            pause
-            close all
-%             [~, temp.index] = min(abs(gain_prof.freq - squeeze(analysis.flucs_angle.resonance_fits(m_flux, m_ng, 1))));
-%             analysis.system_effective_gain.closest_value (m_flux, m_ng) = gain_prof.amp(temp.index);  
+                squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)))
+            disp(['fitted noise spectrum flux = ' num2str(m_flux) ' of ' num2str(input_params.flux_number) ', gate = ' num2str(m_ng) ' of ' num2str(input_params.ng_number)])
+            %%%%% plot raw data for each point while fitting
+%             figure
+%             semilogx(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)),...
+%                 squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)), 'displayName', 'carrier on')
+%             hold on
+%             semilogx (squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)), ...
+%                 squeeze(analysis.sa.psd_watts_Hz_off(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)), 'displayName', 'carrier off')
+%             plot(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)), ...
+%                 squeeze(analysis.spectrum.theory_amp_watts(m_flux, m_ng, :)), 'displayName', 'fit')
+%             legend show
+%             pause
+%             close all
+            %%%%%%%%%%%%
+            [~, temp.index] = min(abs(gain_prof.freq - squeeze(analysis.flucs_angle.resonance_fits(m_flux, m_ng, 1))));
+            analysis.system_effective_gain.closest_value (m_flux, m_ng) = gain_prof.amp(temp.index);  
             %%%% this is the value of the effective gain of the amp chain
             %%%% (input attenuation + amp gain => vna port to vna port),
             %%%% closest expected at the resonance freq
