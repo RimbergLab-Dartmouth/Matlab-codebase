@@ -9,8 +9,6 @@ function[err]=f_inverse_fitting_error_calc(variable_params,data_amps,freqs)
 %      [data_real,data_imag]=rotate_data(data_real,data_imag,angle_guess);
 %      data_real=data_real';
 %      data_imag=data_imag';
-     amp_guess
-     power_guess
      [~,theory_amps] = f_inverse_law(freqs,amp_guess,power_guess);
 %      size(theory_real)
 %      size(data_real)

@@ -71,6 +71,6 @@ function [err,theory_flux,theory_gate] = resonance_freqs_error_calc_struct(reson
     error_matrix=abs(theory_res_freqs-resonance_freqs_no_qp);
     error_matrix(resonance_freqs_no_qp==0)=[];
 %     max(max(error_matrix))
-    err=mean(mean(error_matrix))
+    err=mean(mean(error_matrix));
     close 
 end

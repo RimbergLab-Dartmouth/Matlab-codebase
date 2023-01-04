@@ -1,5 +1,5 @@
 %% plotting settings parameters
-plotting.visible = 1;
+plotting.figs_visible = 1;
 plotting.save_figures_png = 0;
 plotting.save_figures_fig = 0;
 plotting.save_analyzed_data = 0;
@@ -7,29 +7,28 @@ plotting.f_inverse_start_index = 3;
 plotting.f_inverse_stop_index = 3; % index from end to which stop fit
 plotting.reanalyze = 1;
 plotting.ej_ec_fit_reanalyze = 1;
-plotting.q_circle_fits_reanalyze = 1;
+plotting.q_circle_fits_reanalyze = 0;
 plotting.noise_spectrum_reanalyze = 1;
-%% guesses for Ej, Ec fit
-if plotting.ej_ec_fit_reanalyze == 1 && plotting.reanalyze == 1
-    guess.center_freq = 5.757e9;
-    guess.Ej_guess = 14.8e9; % in  GHz
-    guess.Ec_guess = 54.1e9; % in  GHz
-    guess.number_charge_states = 9;
-    guess.initial_params=[guess.center_freq,guess.Ej_guess,guess.Ec_guess];
-    ej_ec_fit.options=optimset('MaxIter',100,'MaxFunEvals',1000,'TolFun',1e-10,'TolX',1e-10);
-end
-
 %% plotting and saving location definitions
 if plotting.reanalyze && (plotting.q_circle_fits_reanalyze || plotting.noise_spectrum_reanalyze) && ~exist('data', 'var')
     clearvars -except plotting
+    disp('need data. select file')
     [file_name, file_path] = uigetfile;
     finput = file_name;
     load([file_path file_name] ,'-regexp', '^(?!(plotting)$).')   
     disp(['Loaded file : ' file_path file_name])
 end
 
-if ~exist('analysis', 'var')
-    disp('need analyzed data. If refitting required change parameter and retry.')
+if plotting.figs_visible && ~plotting.reanalyze && ~exist('analysis', 'var')
+    if exist('data', 'var')
+        disp('need to analyze. change reanalyze parameter, or load file with analysis.')
+    else
+        disp('need analysis. load file with analysis')
+    end    
+end
+
+if ~plotting.reanalyze && ~exist('analysis', 'var')
+    disp('need analyzed data. If refitting required, change parameter and retry.')
 end
 if ~isfield(input_params, 'file_name_time_stamp') && (plotting.save_figures_png || plotting.save_figures_fig || plotting.save_analyzed_data)
     disp('select directory where plots and data should be saved')
@@ -52,7 +51,15 @@ end
 if plotting.save_analyzed_data
     plotting.mat_file_dir = [cd '/' plotting.save_folder];
 end
-
+%% guesses for Ej, Ec fit
+if plotting.ej_ec_fit_reanalyze == 1 && plotting.reanalyze == 1
+    guess.center_freq = 5.757e9;
+    guess.Ej_guess = 14.8e9; % in  GHz
+    guess.Ec_guess = 54.1e9; % in  GHz
+    guess.number_charge_states = 9;
+    guess.initial_params=[guess.center_freq,guess.Ej_guess,guess.Ec_guess];
+    ej_ec_fit.options=optimset('MaxIter',100,'MaxFunEvals',1000,'TolFun',1e-10,'TolX',1e-10);
+end
 %% fit q cirlces
 if plotting.reanalyze && plotting.q_circle_fits_reanalyze
     %%%% no freq flucs
@@ -82,7 +89,8 @@ if plotting.reanalyze && plotting.q_circle_fits_reanalyze
     [temp.theory_lin_mag,temp.theory_phase_radians] = extract_lin_mag_phase_from_real_imag(analysis.flucs_angle.theory_real,analysis.flucs_angle.theory_imag);
     [analysis.flucs_angle.theory_log_mag,analysis.flucs_angle.theory_phase_degs] = extract_log_mag_phase_degs(temp.theory_lin_mag,temp.theory_phase_radians);
 end
-%% Fitting Ej and Ec to res freqs    
+%% Fitting Ej and Ec to res freqs  
+disp('fitting EJ and EC to the res freq data')
 if plotting.ej_ec_fit_reanalyze == 1 && plotting.reanalyze == 1
     if ~isfield(analysis, 'flucs_angle')
         disp('q-cirlces not available. load appropriate file or reanalyze')
@@ -125,15 +133,15 @@ if plotting.reanalyze && plotting.noise_spectrum_reanalyze
 
     for m_flux = 1 : input_params.flux_number
         for m_ng = 1 : input_params.ng_number
+            disp(['fitting noise spectrum flux = ' num2str(m_flux) ' of ' num2str(input_params.flux_number) ', gate = ' num2str(m_ng) ' of ' num2str(input_params.ng_number)])
             [analysis.spectrum.goodness_fit(m_flux, m_ng),analysis.spectrum.amp_fit(m_flux, m_ng),analysis.spectrum.exponent_fit(m_flux, m_ng), ...
                 analysis.spectrum.theory_freqs(m_flux, m_ng, :), analysis.spectrum.theory_amp_watts(m_flux, m_ng, :)] = ...
                 fit_f_inverse_law(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)),...
                 squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)));
-            figure
-            semilogx(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)),...
-                squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)))
-            disp(['fitted noise spectrum flux = ' num2str(m_flux) ' of ' num2str(input_params.flux_number) ', gate = ' num2str(m_ng) ' of ' num2str(input_params.ng_number)])
             %%%%% plot raw data for each point while fitting
+%             figure
+%             semilogx(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)),...
+%                 squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)))
 %             figure
 %             semilogx(squeeze(analysis.sa.freq(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)),...
 %                 squeeze(analysis.sa.psd_watts_Hz(m_flux, m_ng, plotting.f_inverse_start_index:end - plotting.f_inverse_stop_index)), 'displayName', 'carrier on')
@@ -163,7 +171,7 @@ if plotting.reanalyze && plotting.noise_spectrum_reanalyze
     %%% for this numerical factor
     [~, temp.input_power_watts] = convert_dBm_to_Vp(input_params.sig_gen.power);
     analysis.spectrum.numerical_factor = (analysis.flucs_angle.resonance_fits(:, :, 2) + analysis.flucs_angle.resonance_fits(:, :, 3)).^2 .* analysis.flucs_angle.resonance_fits(:, :, 1).^2 ...
-        / 2 ./ analysis.flucs_angle.resonance_fits(:, :, 3).^2 / temp.input_power_watts ./ analysis.system_effective_gain.closest_value;
+        / 2 ./ analysis.flucs_angle.resonance_fits(:, :, 3).^2 / temp.input_power_watts ./ 10.^(analysis.system_effective_gain.closest_value/10);
     clear temp
 
     %%% total sigma from 1/f fit is (see eqn. 39 of paper above)
@@ -175,7 +183,7 @@ if plotting.reanalyze && plotting.noise_spectrum_reanalyze
     end
 end
 %% plotting res freqs surface plot
-if plotting.visible
+if plotting.figs_visible
     figure
     subplot(1, 3, 1)
     surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 1)/1e9), 'linestyle', 'none')
@@ -208,7 +216,7 @@ if plotting.visible
         'Ben fit : $E_J$ = 14.8 GHz, $E_C$ = 52.1 GHz' ], 'interpreter', 'latex', 'fontsize', 46)
 end
 %% Plotting res freqs fit errors surf plots
-if plotting.visible
+if plotting.figs_visible
     figure
     subplot(1, 2, 1)
     surf(input_params.ng_values, input_params.flux_values, abs(squeeze(analysis.ej_ec_fit.theory_freqs - analysis.flucs_angle.resonance_fits(:, : , 1))/1e6), 'linestyle', 'none')
@@ -233,7 +241,7 @@ if plotting.visible
         'Ben fit : $E_J$ = 14.8 GHz, $E_C$ = 52.1 GHz' ], 'interpreter', 'latex', 'fontsize', 46)
 end
 %% Plotting q-circle fit error surf plot
-if plotting.visible
+if plotting.figs_visible
     figure
     surf(input_params.ng_values, input_params.flux_values, analysis.flucs_angle.err, 'linestyle', 'none')
     xlabel('Gate electrons', 'interpreter', 'latex')    
@@ -248,7 +256,7 @@ if plotting.visible
           hL
 end
 %% Plotting damping rates surf plots
-if plotting.visible
+if plotting.figs_visible
     figure
     subplot(1, 2, 1)
     surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 2)/1e6), 'linestyle', 'none')
@@ -273,7 +281,7 @@ if plotting.visible
     sgtitle('Damping rates', 'interpreter', 'latex', 'fontsize', 46)
 end
 %% Plotting sigma freq flucs VNA surf plot
-if plotting.visible
+if plotting.figs_visible
     figure
     surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 4)/1e6), 'linestyle', 'none')
     xlabel('Gate electrons', 'interpreter', 'latex')    
@@ -288,7 +296,7 @@ if plotting.visible
     view(0,90)
 end
 %% Plotting fitting angle surf plot
-if plotting.visible
+if plotting.figs_visible
     figure
     surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 5)), 'linestyle', 'none')
     xlabel('Gate electrons', 'interpreter', 'latex')    
@@ -303,7 +311,7 @@ if plotting.visible
     view(0,90)
 end
 %% Plotting Kerr
-if plotting.visible
+if plotting.figs_visible
     figure
     subplot(1, 2, 1)
     surf(input_params.ng_values, input_params.flux_values, analysis.ej_ec_fit.kerr/1e6, 'linestyle', 'none')
@@ -328,7 +336,7 @@ if plotting.visible
     sgtitle('$K/2\pi$', 'interpreter', 'latex', 'fontsize', 46)
 end
 %% Plotting sigma freq flucs noise spectrum surf plot
-if plotting.visible
+if plotting.figs_visible
     figure
     surf(input_params.ng_values, input_params.flux_values, analysis.spectrum.sigma, 'linestyle', 'none')
     xlabel('Gate electrons', 'interpreter', 'latex')    
