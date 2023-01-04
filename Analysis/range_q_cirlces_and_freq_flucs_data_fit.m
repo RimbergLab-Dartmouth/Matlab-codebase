@@ -192,7 +192,10 @@ if plotting.reanalyze && plotting.noise_spectrum_reanalyze
         save([plotting.mat_file_dir '/only_analysis.mat'],'-regexp', '^(?!(bias_point|data|gain_prof|plotting|guess)$).');
     end
 end
-%% plotting res freqs surface plot
+
+
+%% plotting section
+%% Surface plotting res freqs
 if plotting.figs_visible
     figure
     subplot(1, 3, 1)
@@ -231,7 +234,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'res_freqs_surf_plots.fig'])
     end    
 end
-%% Plotting res freqs fit errors surf plots
+%% Surface Plotting res freqs fit errors
 if plotting.figs_visible
     figure
     subplot(1, 2, 1)
@@ -262,7 +265,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'res_freqs_fit_to_data_error_surf_plots.fig'])
     end    
 end
-%% Plotting q-circle fit error surf plot
+%% Surface Plotting q-circle fit error 
 if plotting.figs_visible
     figure
     surf(input_params.ng_values, input_params.flux_values, analysis.flucs_angle.err, 'linestyle', 'none')
@@ -283,7 +286,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'q_circle_fit_error_surf_plots.fig'])
     end   
 end
-%% Plotting damping rates surf plots
+%% Surface Plotting damping rates 
 if plotting.figs_visible
     figure
     subplot(1, 2, 1)
@@ -314,28 +317,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'damping_rates_surf_plots.fig'])
     end      
 end
-%% Plotting sigma freq flucs VNA surf plot
-if plotting.figs_visible
-    figure
-    surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 4)/1e6), 'linestyle', 'none')
-    xlabel('Gate electrons', 'interpreter', 'latex')    
-    ylabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
-    title('Freq fluctuations $\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex')
-    caxis([.3 1.7])
-    c = colorbar;
-    hL = ylabel(c,'$\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex');     
-    set(hL,'Rotation',90);
-    clear c ...
-          hL
-    view(0,90)
-    if plotting.save_figures_png
-        saveas(gcf, [plotting.png_file_dir 'freq_flucs_surf_plots.png'])
-    end
-    if plotting.save_figures_fig
-        saveas(gcf, [plotting.fig_file_dir 'freq_flucs_surf_plots.fig'])
-    end     
-end
-%% Plotting fitting angle surf plot
+%% Surface Plotting fitting angle 
 if plotting.figs_visible
     figure
     surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 5)), 'linestyle', 'none')
@@ -356,7 +338,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'fit_angle_surf_plots.fig'])
     end     
 end
-%% Plotting Kerr
+%% Surface Plotting simulated Kerr 
 if plotting.figs_visible
     figure
     subplot(1, 2, 1)
@@ -387,7 +369,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'kerr_surf_plots.fig'])
     end     
 end
-%% Plotting sigma freq flucs noise spectrum surf plot
+%% Surface Plotting sigma freq flucs noise spectrum 
 if plotting.figs_visible
     figure
     surf(input_params.ng_values, input_params.flux_values, analysis.spectrum.sigma, 'linestyle', 'none')
@@ -408,7 +390,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'noise_spectrum_surf_plots.fig'])
     end     
 end
-%% Plotting res freqs vs gates, different fluxes are different colours
+%% Gate Plotting res freqs vs gates, different fluxes are different colours
 if plotting.figs_visible
     y_axis_start_value = 5.7;
     y_axis_end_value = 5.815;
@@ -441,7 +423,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'res_freq_line_plots_vs_gate.fig'])
     end       
 end
-%% Plotting internal damping rates vs gates, different fluxes are different colours
+%% Gate Plotting internal damping rates vs gates, different fluxes are different colours
 if plotting.figs_visible
     y_axis_start_value = 0.1;
     y_axis_end_value = 3;
@@ -474,7 +456,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'kappa_int_line_plots_vs_gate.fig'])
     end       
 end
-%% Plotting external damping rates vs gates, different fluxes are different colours
+%% Gate Plotting external damping rates vs gates, different fluxes are different colours
 if plotting.figs_visible
     y_axis_start_value = 0.7;
     y_axis_end_value = 1.4;
@@ -507,7 +489,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'kappa_ext_line_plots_vs_gate.fig'])
     end       
 end
-%% Plotting freq flucs vs gates, different fluxes are different colours
+%% Gate Plotting freq flucs vs gates, different fluxes are different colours
 if plotting.figs_visible
     y_axis_start_value = 0.1;
     y_axis_end_value = 3;
@@ -540,7 +522,40 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'freq_flucs_line_plots_vs_gate.fig'])
     end       
 end
-%% Plotting impedance mismatch angle vs gates, different fluxes are different colours
+%% Gate Plotting simulated Kerr vs gates, different fluxes are different colours
+if plotting.figs_visible
+    y_axis_start_value = -800;
+    y_axis_end_value = 800;
+    colors = parula(input_params.flux_number);
+    figure
+    hold on
+    for m_flux = 1 : input_params.flux_number
+        plot(input_params.ng_values,squeeze(analysis.ej_ec_fit.kerr(m_flux, :))/1e3, '-x', ...
+        'markersize', 16, 'color', colors(m_flux, :))
+    end
+    xlabel('Gate electrons', 'interpreter', 'latex')
+    ylabel('$K/2\pi$(kHz)', 'interpreter', 'latex')
+    title('Kerr simulated from fit with flucs and angle values', 'interpreter', 'latex')
+    axis([input_params.ng_values(1) input_params.ng_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(end), 10), 2);
+    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'Kerr_simulated_line_plots_vs_gate.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'Kerr_simulated_line_plots_vs_gate.fig'])
+    end       
+end
+%% Gate Plotting impedance mismatch angle vs gates, different fluxes are different colours
 if plotting.figs_visible
     y_axis_start_value = -10;
     y_axis_end_value = 10;
@@ -571,7 +586,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'impedance_mismatch_angle_line_plots_vs_gate.fig'])
     end       
 end
-%% Plotting q-circle fit error vs gates, different fluxes are different colours
+%% Gate Plotting q-circle fit error vs gates, different fluxes are different colours
 if plotting.figs_visible
     y_axis_start_value = -10;
     y_axis_end_value = 10;
@@ -604,7 +619,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'q_circle_fit_error_line_plots_vs_gate.fig'])
     end       
 end
-%% Plotting res freqs vs flux, different gates are different colours
+%% Flux Plotting res freqs vs flux, different gates are different colours
 if plotting.figs_visible
     y_axis_start_value = 5.7;
     y_axis_end_value = 5.815;
@@ -637,7 +652,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'res_freq_line_plots_vs_flux.fig'])
     end       
 end
-%% Plotting internal damping rates vs flux, different gate are different colours
+%% Flux Plotting internal damping rates vs flux, different gate are different colours
 if plotting.figs_visible
     y_axis_start_value = 0.1;
     y_axis_end_value = 3;
@@ -670,7 +685,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'kappa_int_line_plots_vs_flux.fig'])
     end       
 end
-%% Plotting external damping rates vs flux, different gates are different colours
+%% Flux Plotting external damping rates vs flux, different gates are different colours
 if plotting.figs_visible
     y_axis_start_value = 0.7;
     y_axis_end_value = 1.4;
@@ -703,7 +718,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'kappa_ext_line_plots_vs_flux.fig'])
     end       
 end
-%% Plotting freq flucs vs flux, different gates are different colours
+%% Flux Plotting freq flucs vs flux, different gates are different colours
 if plotting.figs_visible
     y_axis_start_value = 0.1;
     y_axis_end_value = 3;
@@ -736,7 +751,40 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'freq_flucs_line_plots_vs_flux.fig'])
     end       
 end
-%% Plotting impedance mismatch angle vs flux, different gates are different colours
+%% Flux Plotting simulated Kerr vs flux, different gates are different colours
+if plotting.figs_visible
+    y_axis_start_value = -800;
+    y_axis_end_value = 800;
+    colors = parula(input_params.ng_number);
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(input_params.flux_values,squeeze(analysis.ej_ec_fit.kerr(:, m_gate))/1e3, '-x', ...
+        'markersize', 16, 'color', colors(m_gate, :))
+    end
+    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    ylabel('$K/2\pi$(kHz)', 'interpreter', 'latex')
+    title('Kerr simulated from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.flux_values(1) input_params.flux_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.ng_values(1), input_params.ng_values(end), 10), 2);
+    hL = ylabel(c,'gate electrons', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_gate ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'Kerr_line_plots_vs_flux.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'Kerr_line_plots_vs_flux.fig'])
+    end       
+end
+%% FluxPlotting impedance mismatch angle vs flux, different gates are different colours
 if plotting.figs_visible
     y_axis_start_value = -10;
     y_axis_end_value = 10;
@@ -767,7 +815,7 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'impedance_mismatch_angle_line_plots_vs_flux.fig'])
     end       
 end
-%% Plotting q-circle fit error vs flux, different gates are different colours
+%% Flux Plotting q-circle fit error vs flux, different gates are different colours
 if plotting.figs_visible
     y_axis_start_value = -10;
     y_axis_end_value = 10;
@@ -799,4 +847,147 @@ if plotting.figs_visible
     if plotting.save_figures_fig
         saveas(gcf, [plotting.fig_file_dir 'q_circle_fit_error_line_plots_vs_flux.fig'])
     end       
+end
+%% Res Freq Plotting internal damping rates vs resonance frequency
+if plotting.figs_visible
+    x_axis_start_value = 5.7;
+    x_axis_end_value = 5.815;
+    y_axis_start_value = 0.1;
+    y_axis_end_value = 1;
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 1))/1e9,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 2))/1e6, '-bx', ...
+        'markersize', 16)
+    end
+    xlabel('$\omega_0$ (GHz)', 'interpreter', 'latex')
+    ylabel('$\kappa_{\mathrm{int}}$ (MHz)', 'interpreter', 'latex')
+    title(['Internal damping rates vs resonance frequency' 13 10 ...
+        'Fit values : $E_J$ = ' num2str(round(analysis.ej_ec_fit.params(2)/1e9, 2)) ' GHz, $E_C$ = ' ...
+        num2str(round(analysis.ej_ec_fit.params(3)/1e9, 2)) ' GHz'], 'interpreter', 'latex')
+    axis([x_axis_start_value x_axis_end_value y_axis_start_value y_axis_end_value])
+    clear m_gate ...
+          x_axis_start_value ...
+          x_axis_end_value ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'internal_damping_rate_vs_res_freq.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'internal_damping_rate_vs_res_freq.fig'])
+    end       
+end
+%% Res Freq Plotting external damping rates vs resonance frequency
+if plotting.figs_visible
+    x_axis_start_value = 5.7;
+    x_axis_end_value = 5.815;
+    y_axis_start_value = 0.7;
+    y_axis_end_value = 1.5;
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 1))/1e9,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 3))/1e6, '-bx', ...
+        'markersize', 16)
+    end
+    xlabel('$\omega_0$ (GHz)', 'interpreter', 'latex')
+    ylabel('$\kappa_{\mathrm{ext}}$ (MHz)', 'interpreter', 'latex')
+    title(['External damping rates vs resonance frequency' 13 10 ...
+        'Fit values : $E_J$ = ' num2str(round(analysis.ej_ec_fit.params(2)/1e9, 2)) ' GHz, $E_C$ = ' ...
+        num2str(round(analysis.ej_ec_fit.params(3)/1e9, 2)) ' GHz'], 'interpreter', 'latex')
+    axis([x_axis_start_value x_axis_end_value y_axis_start_value y_axis_end_value])
+    clear m_gate ...
+          x_axis_start_value ...
+          x_axis_end_value ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'external_damping_rate_vs_res_freq.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'external_damping_rate_vs_res_freq.fig'])
+    end       
+end
+%% Res Freq Plotting sigma vs resonance frequency
+if plotting.figs_visible
+    x_axis_start_value = 5.7;
+    x_axis_end_value = 5.815;
+    y_axis_start_value = 0.1;
+    y_axis_end_value = 2;
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 1))/1e9,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 4))/1e6, '-bx', ...
+        'markersize', 16)
+    end
+    xlabel('$\omega_0$ (GHz)', 'interpreter', 'latex')
+    ylabel('$\sigma_{\omega_0}$ (MHz)', 'interpreter', 'latex')
+    title(['Frequency fluctuations vs resonance frequency' 13 10 ...
+        'Fit values : $E_J$ = ' num2str(round(analysis.ej_ec_fit.params(2)/1e9, 2)) ' GHz, $E_C$ = ' ...
+        num2str(round(analysis.ej_ec_fit.params(3)/1e9, 2)) ' GHz'], 'interpreter', 'latex')
+    axis([x_axis_start_value x_axis_end_value y_axis_start_value y_axis_end_value])
+    clear m_gate ...
+          x_axis_start_value ...
+          x_axis_end_value ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'freq_flucs_vs_res_freq.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'freq_flucs_vs_res_freq.fig'])
+    end       
+end
+%% Res Freq Plotting impedance mismatch angle vs resonance frequency
+if plotting.figs_visible
+    x_axis_start_value = 5.7;
+    x_axis_end_value = 5.815;
+    y_axis_start_value = 0.1;
+    y_axis_end_value = 2;
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 1))/1e9,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 5)), '-bx', ...
+        'markersize', 16)
+    end
+    xlabel('$\omega_0$ (GHz)', 'interpreter', 'latex')
+    ylabel('Angle ($^\circ$)', 'interpreter', 'latex')
+    title(['Impedance mismatch angle vs resonance frequency' 13 10 ...
+        'Fit values : $E_J$ = ' num2str(round(analysis.ej_ec_fit.params(2)/1e9, 2)) ' GHz, $E_C$ = ' ...
+        num2str(round(analysis.ej_ec_fit.params(3)/1e9, 2)) ' GHz'], 'interpreter', 'latex')
+    axis([x_axis_start_value x_axis_end_value y_axis_start_value y_axis_end_value])
+    clear m_gate ...
+          x_axis_start_value ...
+          x_axis_end_value ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'impedance_mismatch_angle_vs_res_freq.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'impedance_mismatch_angle_vs_res_freq.fig'])
+    end       
+end
+
+
+%% Plotting sigma freq flucs VNA surf plot
+if plotting.figs_visible
+    figure
+    surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 4)/1e6), 'linestyle', 'none')
+    xlabel('Gate electrons', 'interpreter', 'latex')    
+    ylabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    title('Freq fluctuations $\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex')
+    caxis([.3 1.7])
+    c = colorbar;
+    hL = ylabel(c,'$\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL
+    view(0,90)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'freq_flucs_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'freq_flucs_surf_plots.fig'])
+    end     
 end
