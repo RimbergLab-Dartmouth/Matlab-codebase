@@ -28,8 +28,10 @@ if run_params.awg.files_generation_param == 1 || m_detuning == 1
 end
 %% set bias point and record set value
 if bias_set_param == 1
-    [output_bias_point_struct] = ...
-        set_bias_point_using_offset_period_struct (run_params.ng_1_value, run_params.flux_1_value, bias_point, 0,1,vna);
+    disp('setting bias point DC voltage')
+    if run_params.set_with_pre_recorded 
+        [output_bias_point_struct] = ...
+            set_bias_point_using_offset_period_struct (run_params.ng_1_value, run_params.flux_1_value, bias_point, 0,1,vna);
     data.peripheral.flux_voltage_output (m_power, m_bias_point) = output_bias_point_struct.desired_flux_voltage;
     data.peripheral.gate_voltage_output (m_power, m_bias_point) = output_bias_point_struct.desired_gate_voltage;
     data.peripheral.expected_freq (m_power, m_bias_point) = output_bias_point_struct.expected_freq;
@@ -41,9 +43,12 @@ if bias_set_param == 1
     release(daq_handle);
     clear daq_handle ...
           output_bias_point_struct
+else
+    disp('skipping setting bias point DC voltage')
 end
 %% acquire VNA data at single photon levels
 if vna_data_acquisition == 1
+    disp('capturing VNA data at single photon power')
     switch_vna_measurement(ps_2)
     pause(2)
     vna_set_power(vna, -65, 1)
@@ -316,6 +321,8 @@ if vna_data_acquisition == 1
     close all
     clear q_circle_figure ...
           save_file_name
+else
+    disp('skipping single photon power VNA capture')
 end
 %% Set resonance freq
 if res_freq_recorder == 1
@@ -323,7 +330,7 @@ if res_freq_recorder == 1
 end
 %% Acquire VNA data at desired power
 if vna_data_acquisition == 1
-    disp('capturing VNA data at single photon powers')
+    disp('capturing VNA data at desired power')
     switch_vna_measurement(ps_2)
     pause(2)
     vna_set_power(vna, run_params.vna.power, 1)
@@ -598,7 +605,7 @@ if vna_data_acquisition == 1
     clear q_circle_figure ...
           save_file_name
 else
-    disp('skipping single photon power VNA capture')
+    disp('skipping desired power VNA capture')
 end
 %% generate AWG waveform and sequence and send to AWG
 if run_params.awg.files_generation_param == 1
@@ -661,13 +668,18 @@ if run_params.awg.files_generation_param == 1
           file_list
 end
 %% set sig gen params
-input_params.center_freq(m_power, m_bias_point, m_detuning) = res_freq + detuning_point;
-input_params.sig_gen.input_LO_power(m_power, m_bias_point, m_detuning) = 17; % input power to IQ4509 input mixer is 15dBm
-input_params.sig_gen.input_LO_freq (m_power, m_bias_point, m_detuning) = input_params.center_freq(m_power, m_bias_point, m_detuning) - input_params.awg.input_IF_waveform_freq;
+input_params.center_freq(m_power, m_bias_point, m_detuning, m_repetition) = res_freq + detuning_point*1e6;
+input_params.sig_gen.input_LO_power(m_power, m_bias_point, m_detuning, m_repetition) = 17; % input power to IQ4509 input mixer is 15dBm
+input_params.sig_gen.input_LO_freq (m_power, m_bias_point, m_detuning, m_repetition) = input_params.center_freq(m_power, m_bias_point, m_detuning, m_repetition) - ...
+    input_params.awg.input_IF_waveform_freq;
+n5183b_set_frequency(keysight_sg, squeeze(input_params.sig_gen.input_LO_freq (m_power, m_bias_point, m_detuning, m_repetition)))
+n5183b_set_amplitude(keysight_sg, squeeze(input_params.sig_gen.input_LO_power(m_power, m_bias_point, m_detuning, m_repetition)))
 % the IF to IQ4509 is at 84MHz, defined in the above AWG waveforms
-input_params.sig_gen.output_LO_power(m_power, m_bias_point, m_detuning) = 16.8; % input power to mini circuits ZXF05 - 73L+ output mixer is 15dBm
-input_params.sig_gen.output_LO_freq (m_power, m_bias_point, m_detuning) = input_params.center_freq(m_power, m_bias_point, m_detuning) + ...
+input_params.sig_gen.output_LO_power(m_power, m_bias_point, m_detuning,  m_repetition) = 16.8; % input power to mini circuits ZXF05 - 73L+ output mixer is 15dBm
+input_params.sig_gen.output_LO_freq (m_power, m_bias_point, m_detuning,  m_repetition) = input_params.center_freq(m_power, m_bias_point, m_detuning,  m_repetition) + ...
     input_params.if_freq;
+e8257c_set_frequency(e8257c_sig_gen, squeeze(input_params.sig_gen.output_LO_freq (m_power, m_bias_point, m_detuning,  m_repetition)))
+e8257c_set_amplitude(e8257c_sig_gen, squeeze(input_params.sig_gen.output_LO_power(m_power, m_bias_point, m_detuning,  m_repetition)))
 %% switch to phase line on switches
 switch_phase_measurement(ps_2)
 %% setup AWG
@@ -685,7 +697,7 @@ e8257c_toggle_output(e8257c_sig_gen, 'on')
 %% Data acquisition
 % Call mfile with library definitions
 AlazarDefs
-
+disp('collecting phase vs time data')
 % Load driver library
 if ~alazarLoadLibrary()
   fprintf('Error: ATSApi library not loaded\n');
@@ -758,7 +770,7 @@ e8257c_toggle_output(e8257c_sig_gen,'off')
 n5183b_toggle_pulse_mod(keysight_sg,'off')
 n5183b_toggle_modulation(keysight_sg,'off')
 
-if detuning_point > run_params.detuning_point_end + run_params.detuning_point_step || detuning_point == run_params.detuning_point_end + run_params.detuning_point_step
+if detuning_point > run_params.detuning_point_end + run_params.detuning_point_step || detuning_point == run_params.detuning_point_end 
         awg_toggle_output(awg,'off',1)
         awg_toggle_output(awg,'off',2)
         awg_run_output_channel_off(awg,'stop')

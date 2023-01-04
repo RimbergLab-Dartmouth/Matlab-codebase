@@ -8,6 +8,7 @@ run_params.file_name = 'switching_finder_comprehensive_data.mat';
 run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 run_params.data_directory = [cd '\data'];
+run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in a pre recorded data set.
 m_bias_point = 1;
 m_power = 1;
 run_params.ng_1_value = 0;
@@ -38,6 +39,15 @@ if ~exist('bias_point', 'var')
    load_directory = uigetdir;
    load([load_directory '\bias_point_struct.mat'], 'bias_point')
    clear load_directory
+end
+
+if ~isfield(run_params, 'pre_recorded')
+    disp('enter directory where pre_recorded_values.mat is saved')
+   load_directory = uigetdir;
+   load([load_directory '\pre_recorded_values.mat'], 'pre_recorded')
+   run_params.pre_recorded_struct = pre_recorded;
+   clear load_directory ...
+         pre_recorded
 end
 %%%%%%%%%%
 
@@ -415,6 +425,7 @@ while detuning_point < run_params.detuning_point_end + run_params.detuning_point
             'running m_detuning = ' num2str(m_detuning - m_detuning_start + 1) ' of ' num2str(run_params.detuning_expected_number) ...
             ', m_repetition = ' num2str(m_repetition) ' of ' num2str(run_params.number_repetitions)])
         %% record some input variables for this run
+        input_params.pre_recorded_res_freq_values_struct(m_power, m_bias_point) = run_params.pre_recorded_struct;
         input_params.time_stamp{m_power, m_bias_point} = datestr(now, 'yymmdd_HHMMSS');
         input_params.ng_1_value(m_power, m_bias_point) = run_params.ng_1_value;
         input_params.flux_1_value(m_power, m_bias_point) = run_params.flux_1_value;

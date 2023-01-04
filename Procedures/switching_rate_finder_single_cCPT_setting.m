@@ -29,8 +29,13 @@ end
 %% set bias point and record set value
 if bias_set_param == 1
     disp('setting bias point DC voltage')
-    [output_bias_point_struct] = ...
-        set_bias_point_using_offset_period_struct (run_params.ng_1_value, run_params.flux_1_value, bias_point, 0,1,vna);
+    if run_params.set_with_pre_recorded 
+        [output_bias_point_struct] = ...
+            set_bias_point_using_offset_period_check_with_prerecorded (run_params.ng_1_value, run_params.flux_1_value, bias_point, run_params.pre_recorded_struct,1,vna);
+    else
+        [output_bias_point_struct] = ...
+            set_bias_point_using_offset_period_struct (run_params.ng_1_value, run_params.flux_1_value, bias_point, 0,1,vna);
+    end
     data.peripheral.flux_voltage_output (m_power, m_bias_point) = output_bias_point_struct.desired_flux_voltage;
     data.peripheral.gate_voltage_output (m_power, m_bias_point) = output_bias_point_struct.desired_gate_voltage;
     data.peripheral.expected_freq (m_power, m_bias_point) = output_bias_point_struct.expected_freq;
