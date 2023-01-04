@@ -5,12 +5,12 @@ plotting.save_figures_fig = 0;
 plotting.save_analyzed_data = 0;
 plotting.f_inverse_start_index = 3; 
 plotting.f_inverse_stop_index = 3; % index from end to which stop fit
-plotting.reanalyze = 1;
-plotting.ej_ec_fit_reanalyze = 1;
+plotting.reanalyze = 0;
+plotting.ej_ec_fit_reanalyze = 0;
 plotting.q_circle_fits_reanalyze = 0;
-plotting.noise_spectrum_reanalyze = 1;
+plotting.noise_spectrum_reanalyze = 0;
 %% plotting and saving location definitions
-if plotting.reanalyze && (plotting.q_circle_fits_reanalyze || plotting.noise_spectrum_reanalyze) && ~exist('data', 'var')
+while plotting.reanalyze && (plotting.q_circle_fits_reanalyze || plotting.noise_spectrum_reanalyze) && ~exist('data', 'var')
     clearvars -except plotting
     disp('need data. select file')
     [file_name, file_path] = uigetfile;
@@ -19,16 +19,27 @@ if plotting.reanalyze && (plotting.q_circle_fits_reanalyze || plotting.noise_spe
     disp(['Loaded file : ' file_path file_name])
 end
 
-if plotting.figs_visible && ~plotting.reanalyze && ~exist('analysis', 'var')
+while plotting.figs_visible && ~plotting.reanalyze && ~exist('analysis', 'var')
     if exist('data', 'var')
         disp('need to analyze. change reanalyze parameter, or load file with analysis.')
-    end
-    
+        [file_name, file_path] = uigetfile;
+        finput = file_name;
+        load([file_path file_name] ,'-regexp', '^(?!(plotting)$).')   
+        disp(['Loaded file : ' file_path file_name])
+    else
+        disp('need analysis. load file with analysis')
+        [file_name, file_path] = uigetfile;
+        finput = file_name;
+        load([file_path file_name] ,'-regexp', '^(?!(plotting)$).')   
+        disp(['Loaded file : ' file_path file_name])
+    end    
 end
 
-if ~plotting.reanalyze && ~exist('analysis', 'var')
-    disp('need analyzed data. If refitting required, change parameter and retry.')
+if ~plotting.reanalyze && ~plotting.save_analyzed_data && ~plotting.figs_visible
+    disp('What do you want this program to do? Sit here twiddling thumbs?')
+    return
 end
+
 if ~isfield(input_params, 'file_name_time_stamp') && (plotting.save_figures_png || plotting.save_figures_fig || plotting.save_analyzed_data)
     disp('select directory where plots and data should be saved')
     plotting.save_folder = uigetdir;
@@ -89,8 +100,8 @@ if plotting.reanalyze && plotting.q_circle_fits_reanalyze
     [analysis.flucs_angle.theory_log_mag,analysis.flucs_angle.theory_phase_degs] = extract_log_mag_phase_degs(temp.theory_lin_mag,temp.theory_phase_radians);
 end
 %% Fitting Ej and Ec to res freqs  
-disp('fitting EJ and EC to the res freq data')
 if plotting.ej_ec_fit_reanalyze == 1 && plotting.reanalyze == 1
+    disp('fitting EJ and EC to the res freq data')
     if ~isfield(analysis, 'flucs_angle')
         disp('q-cirlces not available. load appropriate file or reanalyze')
         return
@@ -213,6 +224,12 @@ if plotting.figs_visible
           hL
     sgtitle(['Fit values : $E_J$ = ' num2str(round(analysis.ej_ec_fit.params(2)/1e9, 2)) ' GHz, $E_C$ = ' num2str(round(analysis.ej_ec_fit.params(3)/1e9, 2)) ' GHz' 13 10 ...
         'Ben fit : $E_J$ = 14.8 GHz, $E_C$ = 52.1 GHz' ], 'interpreter', 'latex', 'fontsize', 46)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'res_freqs_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'res_freqs_surf_plots.fig'])
+    end    
 end
 %% Plotting res freqs fit errors surf plots
 if plotting.figs_visible
@@ -238,6 +255,12 @@ if plotting.figs_visible
           hL
     sgtitle(['Fit values : $E_J$ = ' num2str(round(analysis.ej_ec_fit.params(2)/1e9, 2)) ' GHz, $E_C$ = ' num2str(round(analysis.ej_ec_fit.params(3)/1e9, 2)) ' GHz' 13 10 ...
         'Ben fit : $E_J$ = 14.8 GHz, $E_C$ = 52.1 GHz' ], 'interpreter', 'latex', 'fontsize', 46)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'res_freqs_fit_to_data_error_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'res_freqs_fit_to_data_error_surf_plots.fig'])
+    end    
 end
 %% Plotting q-circle fit error surf plot
 if plotting.figs_visible
@@ -253,6 +276,12 @@ if plotting.figs_visible
     set(hL,'Rotation',90);
     clear c ...
           hL
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'q_circle_fit_error_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'q_circle_fit_error_surf_plots.fig'])
+    end   
 end
 %% Plotting damping rates surf plots
 if plotting.figs_visible
@@ -278,6 +307,12 @@ if plotting.figs_visible
     clear c ...
           hL
     sgtitle('Damping rates', 'interpreter', 'latex', 'fontsize', 46)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'damping_rates_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'damping_rates_surf_plots.fig'])
+    end      
 end
 %% Plotting sigma freq flucs VNA surf plot
 if plotting.figs_visible
@@ -293,6 +328,12 @@ if plotting.figs_visible
     clear c ...
           hL
     view(0,90)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'freq_flucs_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'freq_flucs_surf_plots.fig'])
+    end     
 end
 %% Plotting fitting angle surf plot
 if plotting.figs_visible
@@ -308,6 +349,12 @@ if plotting.figs_visible
     clear c ...
           hL
     view(0,90)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'fit_angle_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'fit_angle_surf_plots.fig'])
+    end     
 end
 %% Plotting Kerr
 if plotting.figs_visible
@@ -333,6 +380,12 @@ if plotting.figs_visible
     clear c ...
           hL
     sgtitle('$K/2\pi$', 'interpreter', 'latex', 'fontsize', 46)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'kerr_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'kerr_surf_plots.fig'])
+    end     
 end
 %% Plotting sigma freq flucs noise spectrum surf plot
 if plotting.figs_visible
@@ -348,4 +401,402 @@ if plotting.figs_visible
     clear c ...
           hL
     view(0,90)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'noise_spectrum_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'noise_spectrum_surf_plots.fig'])
+    end     
+end
+%% Plotting res freqs vs gates, different fluxes are different colours
+if plotting.figs_visible
+    y_axis_start_value = 5.7;
+    y_axis_end_value = 5.815;
+    colors = parula(input_params.flux_number);
+    figure
+    hold on
+    for m_flux = 1 : input_params.flux_number
+        plot(input_params.ng_values,squeeze(analysis.flucs_angle.resonance_fits(m_flux, :, 1))/1e9, '-x', ...
+        'markersize', 16, 'color', colors(m_flux, :))
+    end
+    xlabel('Gate electrons', 'interpreter', 'latex')
+    ylabel('$\omega_0/2\pi$(GHz)', 'interpreter', 'latex')
+    title('Resonance freqs from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.ng_values(1) input_params.ng_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(end), 10), 2);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'res_freq_line_plots_vs_gate.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'res_freq_line_plots_vs_gate.fig'])
+    end       
+end
+%% Plotting internal damping rates vs gates, different fluxes are different colours
+if plotting.figs_visible
+    y_axis_start_value = 0.1;
+    y_axis_end_value = 3;
+    colors = parula(input_params.flux_number);
+    figure
+    hold on
+    for m_flux = 1 : input_params.flux_number
+        plot(input_params.ng_values,squeeze(analysis.flucs_angle.resonance_fits(m_flux, :, 2))/1e6, '-x', ...
+        'markersize', 16, 'color', colors(m_flux, :))
+    end
+    xlabel('Gate electrons', 'interpreter', 'latex')
+    ylabel('$\kappa_{\mathrm{int}}/2\pi$(MHz)', 'interpreter', 'latex')
+    title('Internal damping rate from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.ng_values(1) input_params.ng_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex');     
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(end), 10), 2);
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'kappa_int_line_plots_vs_gate.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'kappa_int_line_plots_vs_gate.fig'])
+    end       
+end
+%% Plotting external damping rates vs gates, different fluxes are different colours
+if plotting.figs_visible
+    y_axis_start_value = 0.7;
+    y_axis_end_value = 1.4;
+    colors = parula(input_params.flux_number);
+    figure
+    hold on
+    for m_flux = 1 : input_params.flux_number
+        plot(input_params.ng_values,squeeze(analysis.flucs_angle.resonance_fits(m_flux, :, 3))/1e6, '-x', ...
+        'markersize', 16, 'color', colors(m_flux, :))
+    end
+    xlabel('Gate electrons', 'interpreter', 'latex')
+    ylabel('$\kappa_{\mathrm{ext}}/2\pi$(MHz)', 'interpreter', 'latex')
+    title('External damping rate from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.ng_values(1) input_params.ng_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex');  
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(end), 10), 2);   
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'kappa_ext_line_plots_vs_gate.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'kappa_ext_line_plots_vs_gate.fig'])
+    end       
+end
+%% Plotting freq flucs vs gates, different fluxes are different colours
+if plotting.figs_visible
+    y_axis_start_value = 0.1;
+    y_axis_end_value = 3;
+    colors = parula(input_params.flux_number);
+    figure
+    hold on
+    for m_flux = 1 : input_params.flux_number
+        plot(input_params.ng_values,squeeze(analysis.flucs_angle.resonance_fits(m_flux, :, 4))/1e6, '-x', ...
+        'markersize', 16, 'color', colors(m_flux, :))
+    end
+    xlabel('Gate electrons', 'interpreter', 'latex')
+    ylabel('$\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex')
+    title('Frequency fluctuations from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.ng_values(1) input_params.ng_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(end), 10), 2);
+    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'freq_flucs_line_plots_vs_gate.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'freq_flucs_line_plots_vs_gate.fig'])
+    end       
+end
+%% Plotting impedance mismatch angle vs gates, different fluxes are different colours
+if plotting.figs_visible
+    y_axis_start_value = -10;
+    y_axis_end_value = 10;
+    colors = parula(input_params.flux_number);
+    figure
+    hold on
+    for m_flux = 1 : input_params.flux_number
+        plot(input_params.ng_values,squeeze(analysis.flucs_angle.resonance_fits(m_flux, :, 5)), '-x', ...
+        'markersize', 16, 'color', colors(m_flux, :))
+    end
+    xlabel('Gate electrons', 'interpreter', 'latex')
+    ylabel('Angle($^\circ$)', 'interpreter', 'latex')
+    title('Impedance mismatch angle from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.ng_values(1) input_params.ng_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(end), 10), 2);
+    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'impedance_mismatch_angle_line_plots_vs_gate.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'impedance_mismatch_angle_line_plots_vs_gate.fig'])
+    end       
+end
+%% Plotting q-circle fit error vs gates, different fluxes are different colours
+if plotting.figs_visible
+    y_axis_start_value = -10;
+    y_axis_end_value = 10;
+    colors = parula(input_params.flux_number);
+    figure
+    hold on
+    for m_flux = 1 : input_params.flux_number
+        plot(input_params.ng_values,squeeze(analysis.flucs_angle.err(m_flux, :)), '-x', ...
+        'markersize', 16, 'color', colors(m_flux, :))
+    end
+    xlabel('Gate electrons', 'interpreter', 'latex')
+    ylabel('Fit error (arb. units)', 'interpreter', 'latex')
+    title('Q circle fit errors from fit with flucs and angle', 'interpreter', 'latex')
+%     axis([input_params.ng_values(1) input_params.ng_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(end), 10), 2);
+    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'q_circle_fit_error_line_plots_vs_gate.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'q_circle_fit_error_line_plots_vs_gate.fig'])
+    end       
+end
+%% Plotting res freqs vs flux, different gates are different colours
+if plotting.figs_visible
+    y_axis_start_value = 5.7;
+    y_axis_end_value = 5.815;
+    colors = parula(input_params.ng_number);
+    figure
+    hold on
+    for m_gate = 1 : input_params.ng_number
+        plot(input_params.flux_values,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 1))/1e9, '-x', ...
+        'markersize', 16, 'color', colors(m_gate, :))
+    end
+    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    ylabel('$\omega_0/2\pi$(GHz)', 'interpreter', 'latex')
+    title('Resonance freqs from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.flux_values(1) input_params.flux_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    hL = ylabel(c,'gate electrons', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.ng_values(1), input_params.ng_values(end), 10), 2);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'res_freq_line_plots_vs_flux.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'res_freq_line_plots_vs_flux.fig'])
+    end       
+end
+%% Plotting internal damping rates vs flux, different gate are different colours
+if plotting.figs_visible
+    y_axis_start_value = 0.1;
+    y_axis_end_value = 3;
+    colors = parula(input_params.ng_number);
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(input_params.flux_values,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 2))/1e6, '-x', ...
+        'markersize', 16, 'color', colors(m_gate, :))
+    end
+    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    ylabel('$\kappa_{\mathrm{int}}/2\pi$(MHz)', 'interpreter', 'latex')
+    title('Internal damping rate from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.flux_values(1) input_params.flux_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    hL = ylabel(c,'gate electrons', 'interpreter', 'latex');     
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.ng_values(1), input_params.ng_values(end), 10), 2);
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_flux ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'kappa_int_line_plots_vs_flux.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'kappa_int_line_plots_vs_flux.fig'])
+    end       
+end
+%% Plotting external damping rates vs flux, different gates are different colours
+if plotting.figs_visible
+    y_axis_start_value = 0.7;
+    y_axis_end_value = 1.4;
+    colors = parula(input_params.ng_number);
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(input_params.flux_values,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 3))/1e6, '-x', ...
+        'markersize', 16, 'color', colors(m_gate, :))
+    end
+    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    ylabel('$\kappa_{\mathrm{ext}}/2\pi$(MHz)', 'interpreter', 'latex')
+    title('External damping rate from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.flux_values(1) input_params.flux_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    hL = ylabel(c,'gate electrons', 'interpreter', 'latex');  
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.ng_values(1), input_params.ng_values(end), 10), 2);   
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_gate ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'kappa_ext_line_plots_vs_flux.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'kappa_ext_line_plots_vs_flux.fig'])
+    end       
+end
+%% Plotting freq flucs vs flux, different gates are different colours
+if plotting.figs_visible
+    y_axis_start_value = 0.1;
+    y_axis_end_value = 3;
+    colors = parula(input_params.ng_number);
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(input_params.flux_values,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 4))/1e6, '-x', ...
+        'markersize', 16, 'color', colors(m_gate, :))
+    end
+    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    ylabel('$\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex')
+    title('Frequency fluctuations from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.flux_values(1) input_params.flux_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.ng_values(1), input_params.ng_values(end), 10), 2);
+    hL = ylabel(c,'gate electrons', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_gate ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'freq_flucs_line_plots_vs_flux.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'freq_flucs_line_plots_vs_flux.fig'])
+    end       
+end
+%% Plotting impedance mismatch angle vs flux, different gates are different colours
+if plotting.figs_visible
+    y_axis_start_value = -10;
+    y_axis_end_value = 10;
+    colors = parula(input_params.ng_number);
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(input_params.flux_values,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 5)), '-x', ...
+        'markersize', 16, 'color', colors(m_gate, :))
+    end
+    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    ylabel('Angle($^\circ$)', 'interpreter', 'latex')
+    title('Impedance mismatch angle from fit with flucs and angle', 'interpreter', 'latex')
+    axis([input_params.flux_values(1) input_params.flux_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.ng_values(1), input_params.ng_values(end), 10), 2);
+    hL = ylabel(c,'gate electrons', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_gate ...
+          colors
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'impedance_mismatch_angle_line_plots_vs_flux.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'impedance_mismatch_angle_line_plots_vs_flux.fig'])
+    end       
+end
+%% Plotting q-circle fit error vs flux, different gates are different colours
+if plotting.figs_visible
+    y_axis_start_value = -10;
+    y_axis_end_value = 10;
+    colors = parula(input_params.ng_number);
+    figure
+    hold on
+    for m_gate = 1 : input_params.flux_number
+        plot(input_params.flux_values,squeeze(analysis.flucs_angle.err(:, m_gate)), '-x', ...
+        'markersize', 16, 'color', colors(m_gate, :))
+    end
+    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    ylabel('Fit error (arb. units)', 'interpreter', 'latex')
+    title('Q circle fit errors from fit with flucs and angle', 'interpreter', 'latex')
+%     axis([input_params.flux_values(1) input_params.flux_values(end) y_axis_start_value y_axis_end_value])
+    c = colorbar;
+    c.Ticks = linspace(0, 1, 10);
+    c.TickLabels = round(linspace(input_params.ng_values(1), input_params.ng_values(end), 10), 2);
+    hL = ylabel(c,'gate electrons', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL ...
+          m_gate ...
+          colors ...
+          y_axis_start_value ...
+          y_axis_end_value
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'q_circle_fit_error_line_plots_vs_flux.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'q_circle_fit_error_line_plots_vs_flux.fig'])
+    end       
 end
