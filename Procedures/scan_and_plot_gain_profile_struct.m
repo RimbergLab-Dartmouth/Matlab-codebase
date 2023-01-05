@@ -10,8 +10,8 @@ input_params.vna.electrical_delay = 62.6e-9;
 input_params.flux_start = -1;
 input_params.flux_stop = -0.2;
 input_params.flux_points = 30;
-input_params.gate_start = 1.1;
-input_params.gate_stop = 1.2;
+input_params.gate_start = 2.1;
+input_params.gate_stop = 2.2;
 input_params.gate_points = 1;
 input_params.fine_gain_profile_exclude_span = 15e6; % span around resonance to omit in extracting gain
 input_params.plot_display = 1;
@@ -47,8 +47,8 @@ save([cd '/d' input_params.file_name_time_stamp '_gain_profile/rough_gain_profil
 [gain_prof.freq,gain_prof.amp,gain_prof.phase]=extract_gain_profile_v2_struct(data.freq, data.amp, data.phase, rough_gain_prof, ...
     input_params.fine_gain_profile_exclude_span, input_params.plot_display);
 
-saveas(gcf,'gain_profile.fig')
-saveas(gcf,'gain_profile.png')
+saveas(gcf,[cd '/d' input_params.file_name_time_stamp '_gain_profile/gain_profile.fig'])
+saveas(gcf,[cd '/d' input_params.file_name_time_stamp '_gain_profile/gain_profile.png'])
 
 clearvars -except gain_prof input_params
 

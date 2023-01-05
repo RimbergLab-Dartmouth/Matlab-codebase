@@ -1,4 +1,4 @@
-run_params.file_name = 'gain_added_noise_TWPA_6676M_-2p25';
+run_params.file_name = 'gain_added_noise_TWPA_667M_-2p33';
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 input_params.file_directory = [cd '/d' input_params.file_name_time_stamp run_params.file_name];
 mkdir(input_params.file_directory);
@@ -12,11 +12,11 @@ end
 input_params.flux_value = 0.5;
 input_params.ng_value = 0;
 input_params.twpa_pump.pump_on_off = 'on';
-input_params.twpa_pump.freq_start = 6.676e9;
-input_params.twpa_pump.freq_stop = 6.676e9;
+input_params.twpa_pump.freq_start = 6.67e9;
+input_params.twpa_pump.freq_stop = 6.67e9;
 input_params.twpa_pump.freq_number = 1;
-input_params.twpa_pump.power_start = -2.25; % this is power on the actual sig gen itself, assumed to be the HP83711B
-input_params.twpa_pump.power_stop = -2.25; 
+input_params.twpa_pump.power_start = -2.33; % this is power on the actual sig gen itself, assumed to be the HP83711B
+input_params.twpa_pump.power_stop = -2.33; 
 input_params.twpa_pump.power_number = 1; 
 input_params.twpa_pump.freqs = linspace(input_params.twpa_pump.freq_start, input_params.twpa_pump.freq_stop, input_params.twpa_pump.freq_number);
 input_params.twpa_pump.powers = linspace(input_params.twpa_pump.power_start, input_params.twpa_pump.power_stop, input_params.twpa_pump.power_number);

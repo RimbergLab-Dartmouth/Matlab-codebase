@@ -41,9 +41,9 @@ function[expected_bias_point_params_struct] = ...
     end
     expected_bias_point_params_struct.desired_flux_voltage = desired_flux_voltage;
     expected_bias_point_params_struct.desired_gate_voltage = desired_gate_voltage; 
-    expected_bias_point_params_struct.flux_dummies = flux_dummies;
-    expected_bias_point_params_struct.gate_dummies = gate_dummies; 
-    expected_bias_point_params_struct.theory_freq_shift = theory_freq_shift;
+%     expected_bias_point_params_struct.flux_dummies = flux_dummies;
+%     expected_bias_point_params_struct.gate_dummies = gate_dummies; 
+%     expected_bias_point_params_struct.theory_freq_shift = theory_freq_shift;
     expected_bias_point_params_struct.expected_freq = expected_freq;
     expected_bias_point_params_struct.freq_error = freq_error;
 end

@@ -8,24 +8,28 @@ function [resonance_freqs_no_qp,gate_values_no_qp]=identify_qp_region_single_flu
     %%% get rid of large gate values, since difference between res freqs
     %%% for these values is usually large, and might be mistaken to be a
     %%% jump from odd to even.
-    gate_values(resonance_freqs > 5.802e9) = [];
-    resonance_freqs(resonance_freqs > 5.802e9) = [];
+    cutoff_freq = 5.798e9;
+    gate_values(resonance_freqs > cutoff_freq) = [];
+    resonance_freqs(resonance_freqs > cutoff_freq) = [];
     
     %%%% find the big jump indices
      difference=abs(diff(resonance_freqs));
      [~,big_jump_indices] = maxk(difference,(number_odd + 1)*2);  % find a few extra big jumps, in case some of them are close to each other and eliminated
      %%%% if big jump indices are indicated to be next to each other, that
      %%%% cannot be right. 
-     big_jump_indices = sort(big_jump_indices)  ;   
+     big_jump_indices = sort(big_jump_indices);
      eliminate_indices = abs(diff(big_jump_indices));
      big_jump_indices(eliminate_indices<2) = [];
+%      if any(big_jump_indices == 1) || any(big_jump_indices == length(resonance_freqs))
+%         big_jump_indices = big_jump_indices(1 : min(length(big_jump_indices),number_odd*2 + 1));
+%      else
      big_jump_indices = big_jump_indices(1 : min(length(big_jump_indices),number_odd*2));
-
+%      end
      
      if mod(length(big_jump_indices), 2) == 1
-         if start_even_or_odd == 0
+         if start_even_or_odd == 0 && ~any(big_jump_indices == length(resonance_freqs))
             big_jump_indices = [big_jump_indices; length(resonance_freqs)];
-         elseif start_even_or_odd == 1
+         elseif start_even_or_odd == 1 && ~any(big_jump_indices == 1)
             big_jump_indices = [0; big_jump_indices];
          end
      end
