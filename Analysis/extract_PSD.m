@@ -1,4 +1,4 @@
-function [freqs, psd, psd_dbm] = extract_PSD(time, x)
+function [freqs, psd, psd_dB] = extract_PSD(time, x)
     if diff(time) - mean(diff(time)) > 1e-19
         disp('check time input')
         return
@@ -11,6 +11,6 @@ function [freqs, psd, psd_dbm] = extract_PSD(time, x)
     psd(2:end-1) = 2*psd(2:end-1);
     psd_temp = psd;
     psd_temp(psd_temp < 1e-20) = 1e-11;
-    psd_dbm = 10*log10(psd_temp);
+    psd_dB = convert_fraction_to_dB(psd_temp);
     freqs = 0:Fs/length(x):Fs/2;
 end

@@ -114,11 +114,10 @@ if temp.double_gaussian_existence == 1 % no point analysing if double gaussian d
 end
 %% Find theoretical Lorentzian from the obtained lifetimes 
 if temp.double_gaussian_existence == 1
-    %%%% see eqn. 9.34 in https://www.nii.ac.jp/qis/first-quantum/e/forStudents/lecture/pdf/noise/chapter9.pdf
-    %%%% or
-    %%%%% eqn. 3.28 of https://ris.utwente.nl/ws/portalfiles/portal/6038220/thesis-Kolhatkar.pdf 
-    temp.theory_lorentzian = 4*(abs(temp.gaussian_1_mean - temp.gaussian_2_mean))^2 ./ ((temp.lifetime_state_1_final_iteration + temp.lifetime_state_2_final_iteration) .* ...
-        ((1/temp.lifetime_state_1_final_iteration + 1/ temp.lifetime_state_2_final_iteration)^2 + (2*pi*temp.freqs).^2));
+    temp.theory_l
+    temp.theory_lorentzian = 4*(abs(temp.gaussian_1_mean - temp.gaussian_2_mean))^2 * (temp.lifetime_state_1_final_iteration * temp.lifetime_state_2_final_iteration)^2 ...
+        ./(temp.lifetime_state_1_final_iteration + temp.lifetime_state_2_final_iteration)^3 ./ (1 + 4*pi^2 .* temp.freqs.^2 ./ (1/temp.lifetime_state_1_final_iteration  + ...
+        1 / temp.lifetime_state_2_final_iteration )^2);
 end
 %% Fit a Lorentzian to the PSD
 if temp.double_gaussian_existence == 1
@@ -129,19 +128,19 @@ if temp.double_gaussian_existence == 1
     temp.freqs(temp.freqs > 3 / moving_mean_average_time) = [];
 
     [temp.lifetime_state_1_lorentz_fit, temp.lifetime_state_2_lorentz_fit, temp.amp_diff_lorentz_fit, temp.theory_lorentzian_fit, temp.lorentz_fit_err] = ...
-            fit_RTS_lorentzian(temp.freqs, temp.psd, temp.lifetime_state_1_final_iteration, temp.lifetime_state_2_final_iteration, abs(temp.gaussian_1_mean - temp.gaussian_2_mean));
+            fit_RTS_lorentzian(temp.freqs, temp.psd*1e35, temp.lifetime_state_1_final_iteration, temp.lifetime_state_2_final_iteration, abs(temp.gaussian_1_mean - temp.gaussian_2_mean));
 end
 %% neglect some unreasonable lifetime values 
-% temp.lifetime_state_1_final_iteration (temp.lifetime_state_1_final_iteration < 1/moving_mean_average_time) = NaN;
-% temp.lifetime_state_2_final_iteration (temp.lifetime_state_2_final_iteration < 1/moving_mean_average_time) = NaN;
-% temp.lifetime_state_1_final_iteration (temp.gaussian_difference < run_params.analysis.min_gaussian_center_to_center_phase) = NaN;
-% temp.lifetime_state_2_final_iteration (temp.gaussian_difference < run_params.analysis.min_gaussian_center_to_center_phase) = NaN;
-% temp.lifetime_state_1_final_iteration (temp.gaussian_difference > run_params.analysis.max_gaussian_center_to_center_phase) = NaN;
-% temp.lifetime_state_2_final_iteration (temp.gaussian_difference > run_params.analysis.max_gaussian_center_to_center_phase) = NaN;
-% temp.lifetime_state_1_final_iteration (temp.number_switches_both_states_final_iteration < input_params.minimum_number_switches) = NaN;
-% temp.lifetime_state_2_final_iteration (temp.number_switches_both_states_final_iteration < input_params.minimum_number_switches) = NaN;
-% temp.lifetime_state_1_final_iteration (temp.area_gaussian_1 > input_params.analysis.min_gaussian_count) = NaN;
-% temp.lifetime_state_2_final_iteration (temp.area_gaussian_2 > input_params.analysis.min_gaussian_count) = NaN;
+temp.lifetime_state_1_final_iteration (temp.lifetime_state_1_final_iteration < 1/moving_mean_average_time) = NaN;
+temp.lifetime_state_2_final_iteration (temp.lifetime_state_2_final_iteration < 1/moving_mean_average_time) = NaN;
+temp.lifetime_state_1_final_iteration (temp.gaussian_difference < run_params.analysis.min_gaussian_center_to_center_phase) = NaN;
+temp.lifetime_state_2_final_iteration (temp.gaussian_difference < run_params.analysis.min_gaussian_center_to_center_phase) = NaN;
+temp.lifetime_state_1_final_iteration (temp.gaussian_difference > run_params.analysis.max_gaussian_center_to_center_phase) = NaN;
+temp.lifetime_state_2_final_iteration (temp.gaussian_difference > run_params.analysis.max_gaussian_center_to_center_phase) = NaN;
+temp.lifetime_state_1_final_iteration (temp.number_switches_both_states_final_iteration < input_params.minimum_number_switches) = NaN;
+temp.lifetime_state_2_final_iteration (temp.number_switches_both_states_final_iteration < input_params.minimum_number_switches) = NaN;
+temp.lifetime_state_1_final_iteration (temp.area_gaussian_1 > input_params.analysis.min_gaussian_count) = NaN;
+temp.lifetime_state_2_final_iteration (temp.area_gaussian_2 > input_params.analysis.min_gaussian_count) = NaN;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plotting PSD 
 if temp.double_gaussian_existence == 1
@@ -151,12 +150,12 @@ if temp.double_gaussian_existence == 1
         RTS_PSD_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
     end
 
-    semilogx(temp.freqs/1e3, temp.psd_dBm, 'r', 'DisplayName', 'PSD data')
+    plot(temp.freqs/1e3, temp.psd_dBm, 'r', 'DisplayName', 'PSD data')
     hold on
-    semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian), 'b', 'DisplayName', 'Theoretical Lorentzian')
-    semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian_fit), 'k', 'DisplayName', 'Fit Lorentzian')
+    plot(temp.freqs/1e3, convert_watts_to_dBm(temp.theory_lorentzian), 'b', 'DisplayName', 'Theoretical Lorentzian')
+    plot(temp.freqs/1e3, convert_watts_to_dBm(temp.theory_lorentzian_fit), 'k', 'DisplayName', 'Fit Lorentzian')
     xlabel('Freq (kHz)', 'interpreter', 'latex')
-    ylabel('PSD (dB $^\circ$))', 'interpreter', 'latex')
+    ylabel('PSD (dBm))', 'interpreter', 'latex')
     title(['RTS PSD for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
         '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
         '$\Delta$ = ' num2str(detuning_point) 'MHz' ...

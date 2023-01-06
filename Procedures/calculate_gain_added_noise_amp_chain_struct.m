@@ -186,7 +186,7 @@ end
 switch_vna_measurement
 
 %% plotting
-if input_params.figures_visible == 1
+if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 else
     added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
@@ -203,7 +203,7 @@ if input_params.save_figures == 1
     saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.png'])
 end
 
-if input_params.figures_visible == 1
+if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     gain_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 else
     gain_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');

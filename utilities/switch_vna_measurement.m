@@ -7,4 +7,5 @@ function [] = switch_vna_measurement(ps_2)
     two_way_switch_control('C', 0)
     two_way_switch_control('D', 0)
 	four_way_switch_control(1);
+    disp('switched to VNA measurement line')
 end

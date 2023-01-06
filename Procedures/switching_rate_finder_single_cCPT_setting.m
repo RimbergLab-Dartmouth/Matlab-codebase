@@ -614,6 +614,7 @@ else
 end
 %% generate AWG waveform and sequence and send to AWG
 if run_params.awg.files_generation_param == 1
+    disp('generating awg waveforms and sequences')
     %%%%%% generate a do nothing pulse 1us long and send to AWG
     file_list = awg_list_files(awg);
     if contains(file_list, 'do_nothing_1us.wfm')
@@ -673,6 +674,7 @@ if run_params.awg.files_generation_param == 1
           file_list
 end
 %% set sig gen params
+disp('setting sig gens. Not AWG.')
 input_params.center_freq(m_power, m_flux, m_gate, m_detuning, m_repetition) = res_freq + detuning_point*1e6;
 input_params.sig_gen.input_LO_power(m_power, m_flux, m_gate, m_detuning, m_repetition) = 17; % input power to IQ4509 input mixer is 15dBm
 input_params.sig_gen.input_LO_freq (m_power, m_flux, m_gate, m_detuning, m_repetition) = input_params.center_freq(m_power, m_flux, m_gate, m_detuning, m_repetition) - ...
@@ -686,9 +688,10 @@ input_params.sig_gen.output_LO_freq (m_power, m_flux, m_gate, m_detuning,  m_rep
 e8257c_set_frequency(e8257c_sig_gen, squeeze(input_params.sig_gen.output_LO_freq (m_power, m_flux, m_gate, m_detuning,  m_repetition)))
 e8257c_set_amplitude(e8257c_sig_gen, squeeze(input_params.sig_gen.output_LO_power(m_power, m_flux, m_gate, m_detuning,  m_repetition)))
 %% switch to phase line on switches
-switch_phase_measurement(ps_2)
+switch_phase_measurement
 %% setup AWG
 if run_params.awg.files_generation_param == 1 || m_detuning == run_params.detuning_point_start
+    disp('setting AWG')
     awg_load_waveform(awg, 1, run_params.awg.sequence)
     awg_set_ref_source(awg, 'ext')
     awg_set_run_mode(awg, 'cont')
@@ -697,6 +700,7 @@ if run_params.awg.files_generation_param == 1 || m_detuning == run_params.detuni
     awg_run_output_channel_off(awg, 'run')
 end
 %% turn on sig gens
+disp('sig gens now on')
 n5183b_toggle_output(keysight_sg, 'on')
 e8257c_toggle_output(e8257c_sig_gen, 'on')
 %% Data acquisition
@@ -737,7 +741,9 @@ if ~ret_code
     fprintf('Error: Acquisition failed\n');
 end
 clear ret_code
+disp('acquired raw data')
 %% Reshape data for analysis
+disp('reshaping raw data')
 %%%% get rid of unfilled buffers - since they have all elements 0
 %%%% each buffer is in dimension 1, time and amp points of that buffer in dimension 2
 amp_row_mean = mean(raw_data.voltage, 2);
@@ -768,21 +774,44 @@ raw_data.amp_extracted = reshape(raw_data.amp_extracted', size_required)';
 raw_data.phase_extracted = 180/pi*reshape(raw_data.phase_extracted', size_required)';
 raw_data.time = reshape(raw_data.time', size_required)';
 raw_data.voltage = reshape(raw_data.voltage', size_required)';
-clear size_required
+if ~run_params.analysis_during_acquisition
+    if run_params.save_data_and_png_param == 1
+        if ~exist('save_data_counter', 'var')
+            m_save_data_counter = 1;
+        end
+    end
+    raw_data_matrix.time(m_save_data_counter, :) = raw_data.time;
+    raw_data_matrix.voltage(m_save_data_counter, :) = raw_data.voltage;
+    raw_data_matrix.amp_extracted(m_save_data_counter, :) = raw_data.amp_extracted;
+    raw_data_matrix.phase_extracted(m_save_data_counter, :) = raw_data.phase_extracted;
+end
+clear size_required ...
+      raw_data
 %% turn off sig gens (not AWG unless the last detuning point)
+disp('sig gens are off. AWG still on')
 n5183b_toggle_output(keysight_sg, 'off')
 e8257c_toggle_output(e8257c_sig_gen,'off')
 n5183b_toggle_pulse_mod(keysight_sg,'off')
 n5183b_toggle_modulation(keysight_sg,'off')
 
 if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_step || detuning_point == run_params.detuning_point_end) && ...
-        m_repetition == run_params.number_repetitions
-    
+            m_repetition == run_params.number_repetitions    
+        disp('sig gens off, AWG also off')
         awg_toggle_output(awg,'off',1)
         awg_toggle_output(awg,'off',2)
         awg_run_output_channel_off(awg,'stop')
 end
-
+%% save only raw data matrix struct for further analysis later 
+if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquisition
+    if m_save_data_counter == input_params.save_raw_data_frequency
+        save([run_params.data_directory '\' num2str(m_power) '_' num2str(m_flux) '_' num2str(m_gate) '_' ...
+            num2str(m_repetition) 'raw_data_record_' num2str(m_save_data_counter)], 'raw_data.mat', raw_data_matrix)   
+        m_save_data_counter = 0;
+        clear raw_data_matrix
+        disp('saved raw data')
+    end
+    m_save_data_counter = m_save_data_counter + 1;
+end
 %% clear some unrequired variables that will be reloaded next iteration of this function
 clear vna_data_acquisition ...
       res_freq_recorder ...

@@ -8,4 +8,5 @@ function [] = switch_sig_gen_sa_measurement(keysight_sg, ps_2)
     two_way_switch_control('C', 1)
     two_way_switch_control('D', 1)
 	four_way_switch_control(2);
+    disp('switched to sig gen, SA line')
 end
