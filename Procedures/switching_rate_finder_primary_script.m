@@ -72,7 +72,7 @@ for m_flux = 1:2
         clear date;
         run_params.save_data_and_png_param = 1; % 0/1 - decides whether to save data and figs or not. 
         run_params.save_fig_file_param = 0; % fig file for actual time trace of phase. usually very large for ms data at high sampling
-        run_params.plot_visible = 1;
+        run_params.plot_visible = 0;
         run_params.fig_directory = [cd '\plots\'];
         run_params.rts_fig_directory = [cd '\plots\rts\'];
         run_params.data_directory = [cd '\data\'];
@@ -164,7 +164,7 @@ for m_flux = 1:2
 
 
         %% prepare run start
-        clock_start = tic;
+        tic;
         %%%%%%%%%%
         disp(['input power number = ' num2str(m_power) ' of ' num2str(length(input_params.input_power_value_list)) 13 10 ...
             'input power = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
@@ -615,110 +615,114 @@ for m_flux = 1:2
         pause(3);
         vna_turn_output_off(vna)
         clear_instruments
-        %% Plot lifetime curves
-    if run_params.plot_visible == 1 
-        Lifetime_detuning_plots = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-    elseif run_params.plot_visible == 0 
-        Lifetime_detuning_plots = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-    end
-
-    if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate') % 'separate' or 'averaged', 'histogrammed_together'
-        hold on
-        for m_repetition = 1 : run_params.number_repetitions
-            temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-            temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-            temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-            temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
-            temp.x_array(temp.y_array == 0) = NaN;
-            temp.y_error(temp.y_array == 0) = NaN;
-            temp.x_error(temp.y_array == 0) = NaN;
-            temp.y_array(temp.y_array == 0) = NaN;
-
-            errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-            'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
+    %% Plot lifetime curves
+    if run_params.analysis_during_acquisition
+        if run_params.plot_visible == 1 
+            Lifetime_detuning_plots = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+        elseif run_params.plot_visible == 0 
+            Lifetime_detuning_plots = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
         end
 
-        for m_repetition = 1 : run_params.number_repetitions
-            temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-            temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-            temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-            temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
-            temp.x_array(temp.y_array == 0) = NaN;
-            temp.y_error(temp.y_array == 0) = NaN;
-            temp.x_error(temp.y_array == 0) = NaN;
-            temp.y_array(temp.y_array == 0) = NaN;
-
-            errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-            'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)]) 
-        end
-    elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'averaged')
-        temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-        temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-        temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-        temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1))/1e6;
-        temp.x_array(temp.y_array == 0) = NaN;
-        temp.y_error(temp.y_array == 0) = NaN;
-        temp.x_error(temp.y_array == 0) = NaN;
-        temp.y_array(temp.y_array == 0) = NaN;
-
-        errorbar(temp.x_array, temp.y_array,temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-            'rx-', 'Linewidth', 3, 'DisplayName', 'State 1 lifetimes')
-
-        hold on
-
-        temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-        temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-        temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-        temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1))/1e6;
-        temp.x_array(temp.y_array == 0) = NaN;
-        temp.y_error(temp.y_array == 0) = NaN;
-        temp.x_error(temp.y_array == 0) = NaN;
-        temp.y_array(temp.y_array == 0) = NaN;
-        errorbar(temp.x_array, temp.y_array,temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-            'rx-', 'Linewidth', 3, 'DisplayName', 'State 2 lifetimes')
-
-    elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together')    
-            temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-            temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-            temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-            temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
-
-            errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-            'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
+        if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate') % 'separate' or 'averaged', 'histogrammed_together'
             hold on
-            temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-            temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-            temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-            temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+            for m_repetition = 1 : run_params.number_repetitions
+                temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
+                temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
+                temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
+                temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+                temp.x_array(temp.y_array == 0) = NaN;
+                temp.y_error(temp.y_array == 0) = NaN;
+                temp.x_error(temp.y_array == 0) = NaN;
+                temp.y_array(temp.y_array == 0) = NaN;
 
-            errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-            'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)])         
-    end    
-    xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
-    ylabel('Time ($\mu$s)', 'interpreter', 'latex')
-    title(['Lifetimes for fit for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
-        '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$'], 'interpreter', 'latex')
-    legend show
+                errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
+                'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
+            end
 
-    if run_params.save_data_and_png_param == 1
-            save_file_name = [run_params.fig_directory num2str(m_power) '_' num2str(m_bias_point) '_' num2str(run_params.input_power_value) 'dBm_' ...
-                'ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_lifetimes.png'];
-            saveas(Lifetime_detuning_plots, save_file_name)
-            save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(run_params.input_power_value) 'dBm_' ...
-                'ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_lifetimes.fig'];
-            saveas(Lifetime_detuning_plots, save_file_name)
+            for m_repetition = 1 : run_params.number_repetitions
+                temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
+                temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
+                temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
+                temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+                temp.x_array(temp.y_array == 0) = NaN;
+                temp.y_error(temp.y_array == 0) = NaN;
+                temp.x_error(temp.y_array == 0) = NaN;
+                temp.y_array(temp.y_array == 0) = NaN;
+
+                errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
+                'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)]) 
+            end
+        elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'averaged')
+            temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
+            temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
+            temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
+            temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1))/1e6;
+            temp.x_array(temp.y_array == 0) = NaN;
+            temp.y_error(temp.y_array == 0) = NaN;
+            temp.x_error(temp.y_array == 0) = NaN;
+            temp.y_array(temp.y_array == 0) = NaN;
+
+            errorbar(temp.x_array, temp.y_array,temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
+                'rx-', 'Linewidth', 3, 'DisplayName', 'State 1 lifetimes')
+
+            hold on
+
+            temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
+            temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
+            temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
+            temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1))/1e6;
+            temp.x_array(temp.y_array == 0) = NaN;
+            temp.y_error(temp.y_array == 0) = NaN;
+            temp.x_error(temp.y_array == 0) = NaN;
+            temp.y_array(temp.y_array == 0) = NaN;
+            errorbar(temp.x_array, temp.y_array,temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
+                'rx-', 'Linewidth', 3, 'DisplayName', 'State 2 lifetimes')
+
+        elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together')    
+                temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
+                temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
+                temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
+                temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+
+                errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
+                'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
+                hold on
+                temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
+                temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
+                temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
+                temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+
+                errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
+                'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)])         
+        end    
+        xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
+        ylabel('Time ($\mu$s)', 'interpreter', 'latex')
+        title(['Lifetimes for fit for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
+            '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$'], 'interpreter', 'latex')
+        legend show
+
+        if run_params.save_data_and_png_param == 1
+                save_file_name = [run_params.fig_directory num2str(m_power) '_' num2str(m_bias_point) '_' num2str(run_params.input_power_value) 'dBm_' ...
+                    'ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_lifetimes.png'];
+                saveas(Lifetime_detuning_plots, save_file_name)
+                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(run_params.input_power_value) 'dBm_' ...
+                    'ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_lifetimes.fig'];
+                saveas(Lifetime_detuning_plots, save_file_name)
+        end
+        clear Lifetime_detuning_plots ...
+              save_file_name ...
+              temp
+        close all
     end
-    clear Lifetime_detuning_plots ...
-          save_file_name ...
-          temp
-    close all
+    %% make sure to leave on VNA line at the end
     connect_instruments
     switch_vna_measurement
     vna_set_power(vna, -65, 1)
     vna_turn_output_on(vna)
     clear_instruments
+    %% save run data
     if run_params.save_data_and_png_param == 1
-        save([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params)$).')   
+        save([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|raw_data_matrix)$).')   
     end
     end
 end

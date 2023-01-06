@@ -776,7 +776,8 @@ raw_data.time = reshape(raw_data.time', size_required)';
 raw_data.voltage = reshape(raw_data.voltage', size_required)';
 if ~run_params.analysis_during_acquisition
     if run_params.save_data_and_png_param == 1
-        if ~exist('save_data_counter', 'var')
+        if ~exist('m_save_data_counter', 'var')
+            disp('doesnt exist')
             m_save_data_counter = 1;
         end
     end
@@ -810,7 +811,7 @@ if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquis
         clear raw_data_matrix
         disp('saved raw data')
     end
-    m_save_data_counter = m_save_data_counter + 1;
+    m_save_data_counter = m_save_data_counter + 1
 end
 %% clear some unrequired variables that will be reloaded next iteration of this function
 clear vna_data_acquisition ...
