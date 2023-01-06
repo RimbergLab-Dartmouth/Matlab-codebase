@@ -164,6 +164,7 @@ for m_flux = 1:2
 
 
         %% prepare run start
+        clock_start = tic;
         %%%%%%%%%%
         disp(['input power number = ' num2str(m_power) ' of ' num2str(length(input_params.input_power_value_list)) 13 10 ...
             'input power = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
@@ -419,9 +420,13 @@ for m_flux = 1:2
                 disp([13 10 13 10 13 10 13 10 ...
                     'running m_detuning = ' num2str(m_detuning - m_detuning_start + 1) ' of ' num2str(run_params.detuning_expected_number * run_params.detuning_point_step/0.5) ...
                     ', m_repetition = ' num2str(m_repetition) ' of ' num2str(run_params.number_repetitions)])
+                elapsed_time = toc;
+                disp(['Elapsed time since start of run : ' num2str(floor(elapsed_time/3600)) 'hrs, ' num2str(floor(mod(elapsed_time, 3600)/60)) 'mins, ' ...
+                    num2str(mod(mod(elapsed_time, 3600),60)) 'seconds'])
                 %% record some input variables for this run
                 input_params.pre_recorded_res_freq_values_struct(m_power, m_flux, m_gate) = run_params.pre_recorded_struct;
                 input_params.time_stamp{m_power, m_flux, m_gate} = datestr(now, 'yymmdd_HHMMSS');
+                input_params.elapsed_time_since_loop_start(m_power, m_flux, m_gate, m_detuning, m_repetition) = elapsed_time;
                 input_params.ng_1_value(m_power, m_bias_point) = run_params.ng_1_value;
                 input_params.flux_1_value(m_power, m_bias_point) = run_params.flux_1_value;
                 input_params.input_power_value(m_power, m_flux, m_gate) = run_params.input_power_value;

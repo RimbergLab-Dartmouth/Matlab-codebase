@@ -784,9 +784,9 @@ if ~run_params.analysis_during_acquisition
     raw_data_matrix.voltage(m_save_data_counter, :) = raw_data.voltage;
     raw_data_matrix.amp_extracted(m_save_data_counter, :) = raw_data.amp_extracted;
     raw_data_matrix.phase_extracted(m_save_data_counter, :) = raw_data.phase_extracted;
+    clear raw_data
 end
-clear size_required ...
-      raw_data
+clear size_required
 %% turn off sig gens (not AWG unless the last detuning point)
 disp('sig gens are off. AWG still on')
 n5183b_toggle_output(keysight_sg, 'off')
@@ -805,7 +805,7 @@ end
 if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquisition
     if m_save_data_counter == input_params.save_raw_data_frequency
         save([run_params.data_directory '\' num2str(m_power) '_' num2str(m_flux) '_' num2str(m_gate) '_' ...
-            num2str(m_repetition) 'raw_data_record_' num2str(m_save_data_counter)], 'raw_data.mat', raw_data_matrix)   
+            num2str(m_repetition) 'raw_data_record_' num2str(m_save_data_counter)], 'raw_data.mat', 'raw_data_matrix')   
         m_save_data_counter = 0;
         clear raw_data_matrix
         disp('saved raw data')
