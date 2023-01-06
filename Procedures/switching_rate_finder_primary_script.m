@@ -20,8 +20,8 @@ input_params.input_power_value_list = -130 : 2 : -114;
 % m_flux = 1;
 % m_gate = 1;
 m_power = 4;
-for m_flux = 1:2
-    for m_gate = 1:2
+for m_flux = 1: length(input_params.flux_1_value_list)
+    for m_gate = 1: length(input_params.ng_1_value_list)
         m_bias_point = (m_flux - 1)*length(input_params.ng_1_value_list) + m_gate;
         run_params.ng_1_value = input_params.ng_1_value_list(m_gate);
         run_params.flux_1_value = input_params.flux_1_value_list(m_flux);
@@ -96,7 +96,11 @@ for m_flux = 1:2
                   sign_of_flux
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%
-
+        if ~isfield(input_params, 'done_parameter')
+            input_params.done_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
+                length(input_params.ng_1_value_list));
+        end        
+        
         if ~isfield(input_params, 'run_number')
             input_params.run_number = 0;
         elseif run_params.redo_previously_saved_run == 1
@@ -174,15 +178,9 @@ for m_flux = 1:2
             'bias point is ng = ' num2str(run_params.ng_1_value) ', flux = ' num2str(run_params.flux_1_value) 13 10 ...
             'correct bias point number and bias point calibration?'])
 %         pause
-        if (~run_params.redo_previously_saved_run && isfield(input_params, 'detunings')) 
+        if (~run_params.redo_previously_saved_run && input_params.done_parameter(m_power, m_flux, m_gate)) 
             disp('overwriting previously acquired data point. If deliberate, reset "run_params.redo_previously_saved_run" param and rerun')
             return
-        end
-        if isfield(input_params, 'detunings')
-            if (~run_params.redo_previously_saved_run && ~sum(sum(squeeze(input_params.detunings(m_power, m_flux, m_gate, :, :)))))
-                disp('overwriting previously acquired data point. If deliberate, reset "run_params.redo_previously_saved_run" param and rerun')
-                return
-            end
         end
         %% initialize arrays 
         if ~exist('data', 'var')
@@ -409,7 +407,7 @@ for m_flux = 1:2
         data.poisson_error_lifetime_2_in_us_array = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
                 length(input_params.ng_1_value_list), run_params.detuning_array_number, 2);
         end
-        %% loop initialization
+        %% detuning and repetition loop initialization
         detuning_point = run_params.detuning_point_start;
         m_detuning = m_detuning_start;
         res_freq = 5.9e9; % initialize well outside cCPT tunability so the VNA function has to find actual resonance.
@@ -579,6 +577,7 @@ for m_flux = 1:2
             detuning_point = detuning_point + run_params.detuning_point_step;
             m_detuning = m_detuning + run_params.detuning_point_step/0.5; % since the detuning is originally intended to be a step size of 0.5MHz
         end
+        input_params.done_parameter(m_power, m_flux, m_gate) = 1;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%        
         clear res_freq 
         %% capture final res freq
@@ -719,6 +718,8 @@ for m_flux = 1:2
     switch_vna_measurement
     vna_set_power(vna, -65, 1)
     vna_turn_output_on(vna)
+    vna_set_center_span(vna, 5.76e9, 250e6, 1)
+    vna_set_trigger_source(vna, 'int')
     clear_instruments
     %% save run data
     if run_params.save_data_and_png_param == 1

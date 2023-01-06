@@ -31,7 +31,7 @@ run_params.analysis.bin_edges = -180:input_params.analysis.clean_RTS_bin_width:1
             run_params.analysis.bin_edges, run_params.analysis.double_gaussian_fit_sigma_guess);
 temp.gaussian_difference = abs(temp.gaussian_1_mean - temp.gaussian_2_mean)  ; 
 %% Plotting Gaussian fits to RTS data
-if run_params.plot_visible == 1
+if run_params.plot_visible == 1d
     RTS_Gaussians = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 elseif run_params.plot_visible == 0    
     RTS_Gaussians = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
