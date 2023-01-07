@@ -767,13 +767,6 @@ raw_data.voltage = reshape(raw_data.voltage', [], 1);
 %%%%%%%%%%%%%%%%%%%%
 %%% reshape the transpose, since the reshape in next step (and always) goes down
 %%% column first and this way those are the time points that need to stay together
-
-%%%%% extract amp and phase and reshape to original array dimensions %%%%%%
-[raw_data.amp_extracted, raw_data.phase_extracted] = get_amp_and_phase(raw_data.time, raw_data.voltage, input_params.if_freq, input_params.digitizer.sample_rate);
-raw_data.amp_extracted = reshape(raw_data.amp_extracted', size_required)';
-raw_data.phase_extracted = 180/pi*reshape(raw_data.phase_extracted', size_required)';
-raw_data.time = reshape(raw_data.time', size_required)';
-raw_data.voltage = reshape(raw_data.voltage', size_required)';
 if ~run_params.analysis_during_acquisition
     if run_params.save_data_and_png_param == 1
         if ~exist('m_save_data_counter', 'var')
@@ -782,15 +775,14 @@ if ~run_params.analysis_during_acquisition
             m_record = 1;
         end
     end
-%     raw_data_matrix.time(m_save_data_counter, :) = raw_data.time;
-    raw_data_matrix.voltage(m_save_data_counter, :) = raw_data.voltage;
-    raw_data_matrix.detuning_point_number(m_save_data_counter) = m_detuning;
-    raw_data_matrix.repetition_number(m_save_data_counter) = m_repetition;
-%     raw_data_matrix.amp_extracted(m_save_data_counter, :) = raw_data.amp_extracted;
-%     raw_data_matrix.phase_extracted(m_save_data_counter, :) = raw_data.phase_extracted;
-    clear raw_data
 end
-clear size_required
+
+%%%%% extract amp and phase if performing analysis and reshape to original array dimensions %%%%%%
+[raw_data.amp_extracted, raw_data.phase_extracted] = get_amp_and_phase(raw_data.time, raw_data.voltage, input_params.if_freq, input_params.digitizer.sample_rate);
+raw_data.amp_extracted = reshape(raw_data.amp_extracted', size_required)';
+raw_data.phase_extracted = 180/pi*reshape(raw_data.phase_extracted', size_required)';
+raw_data.time = reshape(raw_data.time', size_required)';
+raw_data.voltage = reshape(raw_data.voltage', size_required)';
 %% turn off sig gens (not AWG unless the last detuning point)
 disp('sig gens are off. AWG still on')
 n5183b_toggle_output(keysight_sg, 'off')
@@ -807,6 +799,17 @@ if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_s
 end
 %% save only raw data matrix struct for further analysis later 
 if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquisition
+        %     raw_data_matrix.time(m_save_data_counter, :) = raw_data.time;
+    raw_data_matrix.voltage(m_save_data_counter, :) = raw_data.voltage;
+    raw_data_matrix.detuning_point_number(m_save_data_counter) = m_detuning;
+    raw_data_matrix.repetition_number(m_save_data_counter) = m_repetition;
+    raw_data_matrix.size_required(m_save_data_counter, :, :) = size_required;
+    raw_data_matrix.input_power_number(m_save_data_counter) = m_power;
+    raw_data_matrix.ng_number(m_save_data_counter) = m_gate;
+    raw_data_matrix.flux_number(m_save_data_counter) = m_flux;
+    %     raw_data_matrix.amp_extracted(m_save_data_counter, :) = raw_data.amp_extracted;
+    %     raw_data_matrix.phase_extracted(m_save_data_counter, :) = raw_data.phase_extracted;
+
     if m_save_data_counter == input_params.save_raw_data_frequency ||((detuning_point > run_params.detuning_point_end + run_params.detuning_point_step ...
             || detuning_point == run_params.detuning_point_end) && m_repetition == run_params.number_repetitions)    
         save([run_params.data_directory '\' num2str(m_power) '_' num2str(m_flux) '_' num2str(m_gate) '_' ...
@@ -816,6 +819,8 @@ if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquis
         disp('saved raw data')
         m_record = m_record + 1;
     end
+    clear raw_data ...
+          size_required
     m_save_data_counter = m_save_data_counter + 1;
 end
 %% clear some unrequired variables that will be reloaded next iteration of this function

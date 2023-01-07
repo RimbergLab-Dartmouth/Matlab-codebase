@@ -15,7 +15,7 @@ if run_params.concatenate_runs
 end
 run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in a pre recorded data set.
 input_params.ng_1_value_list = 0: 0.1:0.7;
-input_params.flux_1_value_list = 0: 0.4 : 2.4;
+input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 % m_flux = 1;
 % m_gate = 1;
