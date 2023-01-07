@@ -8,11 +8,14 @@ function[expected_bias_point_params_struct] = ...
     desired_flux_voltage = bias_finder_struct.flux_zero_voltage + (desired_flux_point * bias_finder_struct.flux_period);
     desired_gate_voltage = (bias_finder_struct.gate_offset + desired_gate_point * bias_finder_struct.gate_period/2);
     
-    [~, closest_gate_point] = min(abs(mod(desired_gate_point, 2) - circshift(pre_recorded_struct.gate_values, (length(pre_recorded_struct.gate_values) - 1)/2)));
+    [~, closest_gate_point] = min(abs(mod(desired_gate_point, 2) - pre_recorded_struct.gate_values));
     [~, closest_flux_point] = min(abs(mod(desired_flux_point, 1) - pre_recorded_struct.flux_values - 1));
     
-    mod(closest_gate_point - (length(pre_recorded_struct.gate_values) - 1)/2, length(pre_recorded_struct.gate_values))
-    closest_flux_point
+%     closest_gate_point = mod(closest_gate_point - (length(pre_recorded_struct.gate_values) - 1)/2, length(pre_recorded_struct.gate_values)) - 1;
+    
+    recorded_flux_comparison = pre_recorded_struct.flux_values(closest_flux_point);
+    recorded_gate_comparison = pre_recorded_struct.gate_values(closest_gate_point);
+    
     expected_freq = pre_recorded_struct.res_freqs(closest_flux_point, closest_gate_point);
     
     daq_handle=daq.createSession('ni');

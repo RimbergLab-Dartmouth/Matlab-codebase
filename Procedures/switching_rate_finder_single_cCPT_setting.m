@@ -791,7 +791,7 @@ n5183b_toggle_pulse_mod(keysight_sg,'off')
 n5183b_toggle_modulation(keysight_sg,'off')
 
 if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_step || detuning_point == run_params.detuning_point_end) && ...
-            m_repetition == run_params.number_repetitions    
+            m_repetition == input_params.number_repetitions    
         disp('sig gens off, AWG also off')
         awg_toggle_output(awg,'off',1)
         awg_toggle_output(awg,'off',2)
@@ -812,7 +812,7 @@ if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquis
     %     raw_data_matrix.phase_extracted(m_save_data_counter, :) = raw_data.phase_extracted;
 
     if m_save_data_counter == input_params.save_raw_data_frequency ||((detuning_point > run_params.detuning_point_end + run_params.detuning_point_step ...
-            || detuning_point == run_params.detuning_point_end) && m_repetition == run_params.number_repetitions)    
+            || detuning_point == run_params.detuning_point_end) && m_repetition == input_params.number_repetitions)    
         save([run_params.data_directory '\' num2str(m_power) '_' num2str(m_flux) '_' num2str(m_gate) '_' ...
             'raw_data_record_' num2str(m_record) '.mat'], 'raw_data_matrix')   
         m_save_data_counter = 0;

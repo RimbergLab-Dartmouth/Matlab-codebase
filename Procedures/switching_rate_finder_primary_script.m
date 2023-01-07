@@ -28,7 +28,7 @@ for m_power = 4 : 5
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
 
             run_params.detuning_point_start = -26; % in MHz % do not exceed +/- 50MHz
-            run_params.detuning_point_end = 26; % in MHz. 
+            run_params.detuning_point_end = -2; % in MHz. 
             run_params.detuning_point_step = 1; % in MHz. % typically set to 0.5MHz 
             m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
             %%% deliberately make expected detuning number large so dont have to worry
@@ -37,7 +37,7 @@ for m_power = 4 : 5
             input_params.detuning_array_number = 2 * 50 / 0.5 + 1;
             input_params.detuning_expected_number = abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;
             input_params.number_repetitions = 2;  
-            input_params.save_raw_data_frequency = 20 / run_params.number_repetitions; %%% saves raw data for every so many detunings.
+            input_params.save_raw_data_frequency = 20 / input_params.number_repetitions; %%% saves raw data for every so many detunings.
 
             %%%%% load gain profile and bias point
             if ~exist('gain_prof', 'var')
@@ -369,43 +369,43 @@ for m_power = 4 : 5
                     length(input_params.ng_1_value_list)); 
                 %% other data arrays
             data.detunings = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
             data.recorded_res_freq_GHz = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number);
             data.peripheral.awg_output_power = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number);
             data.lifetime_state_1_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
             data.lifetime_state_2_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
             data.gaussian_state_1_mean_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
             data.gaussian_state_2_mean_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
             data.sigma_gaussian_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
             data.double_gaussian_fit_error_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
             data.area_gaussian_1_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions); 
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions); 
             data.area_gaussian_2_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions); 
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions); 
             data.theory_hist_phases_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
             data.theory_gaussian_1_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
             data.theory_gaussian_2_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
             data.switch_finder_hist_phases_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, run_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions, 360/input_params.analysis.clean_RTS_bin_width); 
             data.switch_finder_hists_run_data = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number,1);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number,1);
             data.poisson_lifetime_state_2_array = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number,1);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number,1);
             data.poisson_error_lifetime_1_in_us_array = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, 2);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, 2);
             data.poisson_error_lifetime_2_in_us_array = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-                    length(input_params.ng_1_value_list), run_params.detuning_array_number, 2);
+                    length(input_params.ng_1_value_list), input_params.detuning_array_number, 2);
             end
             %% detuning and repetition loop initialization
             detuning_point = run_params.detuning_point_start;
@@ -414,10 +414,10 @@ for m_power = 4 : 5
 
             while detuning_point < run_params.detuning_point_end + run_params.detuning_point_step
                 m_repetition = 1;
-                while m_repetition < run_params.number_repetitions + 1
+                while m_repetition < input_params.number_repetitions + 1
                     disp([13 10 13 10 13 10 13 10 ...
-                        'running m_detuning = ' num2str(m_detuning - m_detuning_start + 1) ' of ' num2str(run_params.detuning_expected_number * run_params.detuning_point_step/0.5) ...
-                        ', m_repetition = ' num2str(m_repetition) ' of ' num2str(run_params.number_repetitions)])
+                        'running m_detuning = ' num2str(m_detuning - m_detuning_start + 1) ' of ' num2str(input_params.detuning_expected_number * run_params.detuning_point_step/0.5) ...
+                        ', m_repetition = ' num2str(m_repetition) ' of ' num2str(input_params.number_repetitions)])
                     elapsed_time = toc;
                     disp(['Elapsed time since start of run : ' num2str(floor(elapsed_time/3600)) 'hrs, ' num2str(floor(mod(elapsed_time, 3600)/60)) 'mins, ' ...
                         num2str(mod(mod(elapsed_time, 3600),60)) 'seconds'])
@@ -624,11 +624,11 @@ for m_power = 4 : 5
 
             if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate') % 'separate' or 'averaged', 'histogrammed_together'
                 hold on
-                for m_repetition = 1 : run_params.number_repetitions
-                    temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-                    temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+                for m_repetition = 1 : input_params.number_repetitions
+                    temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, m_repetition));
+                    temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, m_repetition));
+                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, m_repetition));
+                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_expected_number, 1)/1e6;
                     temp.x_array(temp.y_array == 0) = NaN;
                     temp.y_error(temp.y_array == 0) = NaN;
                     temp.x_error(temp.y_array == 0) = NaN;
@@ -638,11 +638,11 @@ for m_power = 4 : 5
                     'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
                 end
 
-                for m_repetition = 1 : run_params.number_repetitions
-                    temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-                    temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, m_repetition));
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+                for m_repetition = 1 : input_params.number_repetitions
+                    temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, m_repetition));
+                    temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, m_repetition));
+                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, m_repetition));
+                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_expected_number, 1)/1e6;
                     temp.x_array(temp.y_array == 0) = NaN;
                     temp.y_error(temp.y_array == 0) = NaN;
                     temp.x_error(temp.y_array == 0) = NaN;
@@ -652,10 +652,10 @@ for m_power = 4 : 5
                     'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)]) 
                 end
             elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'averaged')
-                temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-                temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-                temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-                temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1))/1e6;
+                temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, :)), 2);
+                temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, :)), 2);
+                temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, :)), 2);
+                temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_expected_number, 1))/1e6;
                 temp.x_array(temp.y_array == 0) = NaN;
                 temp.y_error(temp.y_array == 0) = NaN;
                 temp.x_error(temp.y_array == 0) = NaN;
@@ -666,10 +666,10 @@ for m_power = 4 : 5
 
                 hold on
 
-                temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-                temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-                temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, :)), 2);
-                temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1))/1e6;
+                temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, :)), 2);
+                temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, :)), 2);
+                temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, :)), 2);
+                temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_expected_number, 1))/1e6;
                 temp.x_array(temp.y_array == 0) = NaN;
                 temp.y_error(temp.y_array == 0) = NaN;
                 temp.x_error(temp.y_array == 0) = NaN;
@@ -678,18 +678,18 @@ for m_power = 4 : 5
                     'rx-', 'Linewidth', 3, 'DisplayName', 'State 2 lifetimes')
 
             elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together')    
-                    temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-                    temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+                    temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, end));
+                    temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, end));
+                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, end));
+                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_expected_number, 1)/1e6;
 
                     errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
                     'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
                     hold on
-                    temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-                    temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detuning_expected_number - 1, end));
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(run_params.detuning_expected_number, 1)/1e6;
+                    temp.x_array = squeeze(data.detunings(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, end));
+                    temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, end));
+                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning_start:m_detuning_start + input_params.detuning_expected_number - 1, end));
+                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_expected_number, 1)/1e6;
 
                     errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
                     'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)])         
