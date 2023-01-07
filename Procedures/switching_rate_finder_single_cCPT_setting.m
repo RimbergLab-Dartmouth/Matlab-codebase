@@ -800,20 +800,21 @@ end
 %% save only raw data matrix struct for further analysis later 
 if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquisition
         %     raw_data_matrix.time(m_save_data_counter, :) = raw_data.time;
-    raw_data_matrix.voltage(m_save_data_counter, :) = raw_data.voltage;
+    raw_data_matrix.voltage(m_save_data_counter, :, :) = raw_data.voltage;
     raw_data_matrix.detuning_point_number(m_save_data_counter) = m_detuning;
+    raw_data_matrix.detuning_point(m_save_data_counter) = detuning_point;
     raw_data_matrix.repetition_number(m_save_data_counter) = m_repetition;
-    raw_data_matrix.size_required(m_save_data_counter, :, :) = size_required;
     raw_data_matrix.input_power_number(m_save_data_counter) = m_power;
     raw_data_matrix.ng_number(m_save_data_counter) = m_gate;
     raw_data_matrix.flux_number(m_save_data_counter) = m_flux;
+    raw_data_matrix.bias_point_number(m_save_data_counter) = m_bias_point;
     %     raw_data_matrix.amp_extracted(m_save_data_counter, :) = raw_data.amp_extracted;
     %     raw_data_matrix.phase_extracted(m_save_data_counter, :) = raw_data.phase_extracted;
 
     if m_save_data_counter == input_params.save_raw_data_frequency ||((detuning_point > run_params.detuning_point_end + run_params.detuning_point_step ...
             || detuning_point == run_params.detuning_point_end) && m_repetition == run_params.number_repetitions)    
         save([run_params.data_directory '\' num2str(m_power) '_' num2str(m_flux) '_' num2str(m_gate) '_' ...
-            'raw_data_record_' num2str(m_record) '_raw_data.mat'], 'raw_data_matrix')   
+            'raw_data_record_' num2str(m_record) '.mat'], 'raw_data_matrix')   
         m_save_data_counter = 0;
         clear raw_data_matrix
         disp('saved raw data')
