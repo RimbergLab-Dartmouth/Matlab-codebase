@@ -28,15 +28,15 @@ for m_power = 4 : 5
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
 
             run_params.detuning_point_start = -26; % in MHz % do not exceed +/- 50MHz
-            run_params.detuning_point_end = -2; % in MHz. 
+            run_params.detuning_point_end = 26; % in MHz. 
             run_params.detuning_point_step = 1; % in MHz. % typically set to 0.5MHz 
             m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
             %%% deliberately make expected detuning number large so dont have to worry
             %%% about variation in array size. each array point corresponds to -50MHz to
             %%% +50, steps of 0.5
-            run_params.detuning_array_number = 2 * 50 / 0.5 + 1;
-            run_params.detuning_expected_number = abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;
-            run_params.number_repetitions = 2;  
+            input_params.detuning_array_number = 2 * 50 / 0.5 + 1;
+            input_params.detuning_expected_number = abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;
+            input_params.number_repetitions = 2;  
             input_params.save_raw_data_frequency = 20 / run_params.number_repetitions; %%% saves raw data for every so many detunings.
 
             %%%%% load gain profile and bias point
