@@ -784,6 +784,8 @@ if ~run_params.analysis_during_acquisition
     end
 %     raw_data_matrix.time(m_save_data_counter, :) = raw_data.time;
     raw_data_matrix.voltage(m_save_data_counter, :) = raw_data.voltage;
+    raw_data_matrix.detuning_point_number(m_save_data_counter) = m_detuning;
+    raw_data_matrix.repetition_number(m_save_data_counter) = m_repetition;
 %     raw_data_matrix.amp_extracted(m_save_data_counter, :) = raw_data.amp_extracted;
 %     raw_data_matrix.phase_extracted(m_save_data_counter, :) = raw_data.phase_extracted;
     clear raw_data
