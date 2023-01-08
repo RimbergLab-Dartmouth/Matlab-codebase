@@ -13,14 +13,14 @@ post_run_params.analysis.storing_time_for_RTS = 50e-6;
 post_run_params.analysis.save_RTS_PSD_extended_data = 0; % decides whether to save RTS PSD extracted or not, and also, RTS data for above storage time
 post_run_params.rts_fig_directory = [cd '\plots\rts\'];
 post_run_params.fig_directory = [cd '\plots\'];
-post_run_params.save_png_param = 1;
+post_run_params.save_png_param = 0;
 post_run_params.save_data_param = 1;
 post_run_params.save_fig_file_param = 0;
 post_run_params.poissonian_lifetime_repetitions_mode = 'separate';  % 'separate' or 'averaged', 'histogrammed_together'
 post_run_params.poissonian_fit_bin_number = 25;
 
 load(post_run_params.file_to_load_input_params_from, 'input_params', 'post_run_analysis')
-pause
+
 % input_params.analyzed_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
 %     length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
 
@@ -80,9 +80,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
         m_bias_point = raw_data_matrix.bias_point_number(m_data_counter);
         detuning_point = raw_data_matrix.detuning_point(m_data_counter);
         
-        disp(['cleaning RTS for power number ' num2str(m_power) ', flux number ' ...
-        num2str(m_flux) ', ' 13 10 'gate number ' num2str(m_gate) ...
-        'detuning number = ' num2str(m_detuning) ', repetition number = ' ...
+        disp(['cleaning RTS for power number = ' num2str(m_power) ', flux number = ' ...
+        num2str(m_flux) ', ' 13 10 'gate number = ' num2str(m_gate) ...
+        ', detuning number = ' num2str(m_detuning) ', repetition number = ' ...
             num2str(m_repetition)])
         
         moving_mean_average_time = post_run_params.analysis.moving_mean_average_time;
