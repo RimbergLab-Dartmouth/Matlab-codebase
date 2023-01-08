@@ -49,7 +49,7 @@ temp_filelist.raw_data_files_list_finder = contains(temp_filelist.raw_data_files
 
 temp_filelist.raw_data_files_list = temp_filelist.raw_data_files_list(~temp_filelist.raw_data_files_list_finder);
 %%%%%%%
-for m_record_count = 1 : length(temp_filelist.raw_data_files_list)
+for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
     temp_filelist.file_name = temp_filelist.raw_data_files_list(m_record_count);
     temp_filelist.file_name = convertStringsToChars(temp_filelist.file_name);
 %     if contains(temp_filelist.files, [temp_filelist.file_name '_analyzed'])
