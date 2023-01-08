@@ -18,8 +18,13 @@ post_run_params.poissonian_fit_bin_number = 25;
 
 load(post_run_params.file_to_load_input_params_from, 'input_params')
 
+% input_params.analyzed_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
+%     length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
+
+%%%% temp code
 input_params.analyzed_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
-    length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
+    length(input_params.ng_1_value_list), 201, 10);
+%%%%%
 
 temp_filelist.files = ls(post_run_params.directory_to_be_analyzed);
 
@@ -32,9 +37,10 @@ temp_filelist.raw_data_files_list = temp_filelist.files(~temp_filelist.unanalyze
 for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
     temp_filelist.file_name = temp_filelist.raw_data_files_list(m_record_count);
     temp_filelist.file_name = convertStringsToChars(temp_filelist.file_name);
-    if contains(temp_filelist.files, [temp_filelist.file_name(1:end-4) '_analyzed'])
-        break
-    end
+%     if contains(temp_filelist.files, [temp_filelist.file_name '_analyzed'])
+%         return
+%         disp('skip')
+%     end
     
     load([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name])
     
@@ -72,7 +78,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
         detuning_point = raw_data_matrix.detuning_point(m_data_counter);
         
         disp(['cleaning RTS for power number ' num2str(m_power) ', flux number ' ...
-        num2str(m_flux) ', ' 13 10 ', gate number ' num2str(m_gate) ...
+        num2str(m_flux) ', ' 13 10 'gate number ' num2str(m_gate) ...
         'detuning number = ' num2str(m_detuning) ', repetition number = ' ...
             num2str(m_repetition)])
         
@@ -468,10 +474,10 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
 
             if post_run_params.save_data_and_png_param == 1
-                    save_file_name = [run_params.rts_fig_directory  num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
+                    save_file_name = [post_run_params.rts_fig_directory  num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
                         '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.png'];
                     saveas(Poissonian_figure, save_file_name)
-                    save_file_name = [run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
+                    save_file_name = [post_run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
                         '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.fig'];
                     saveas(Poissonian_figure, save_file_name)
             end
@@ -490,8 +496,11 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
               m_bias_point ...
               detuning_point ...
               temp
+        close all
     end
-    movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name(1 : end -4) '_analyzed.mat'])
+    save_file_name = strtrim(temp_filelist.file_name);
+    movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' save_file_name(1 : end -4) '_analyzed'])
+    clear save_file_name
     %% save post run analysis to switching finder comprehensive mat file
     save(post_run_params.file_to_load_input_params_from,'post_run_params', 'post_run_analysis','-append')
 end
