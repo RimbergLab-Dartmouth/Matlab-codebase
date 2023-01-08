@@ -99,9 +99,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
 
         raw_data.time_corrected = raw_data.time;
         raw_data.amp_corrected = raw_data.amp_extracted;
-        raw_data.amp_corrected(isnan(raw_data.phase_corrected)) = [];
-        raw_data.time_corrected(isnan(raw_data.phase_corrected)) = [];
-        raw_data.phase_corrected(isnan(raw_data.phase_corrected)) = [];
+%         raw_data.amp_corrected(isnan(raw_data.phase_corrected)) = [];
+%         raw_data.time_corrected(isnan(raw_data.phase_corrected)) = [];
+%         raw_data.phase_corrected(isnan(raw_data.phase_corrected)) = [];
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         post_run_params.analysis.bin_edges = -180:input_params.analysis.clean_RTS_bin_width:180;
         %% Clean RTS data using function, and 
@@ -741,6 +741,10 @@ end
                     for m_data_count = 2 : length(fitting_times)
                         %%% find the histogram bin in which the current phase data falls. this will tell us what the probability 
                         %%% for that phase value to occur is
+                        m_data_count
+                        length(fitting_times)
+                        abs(fitting_RTS(m_data_count))
+                        gaussian_1_theory_values(find(abs(fitting_RTS(m_data_count) - hist_bin_middles) < hist_bin_width, 1))
                         hist_value_corresponding_gaussian_1 (m_data_count) = gaussian_1_theory_values(find(abs(fitting_RTS(m_data_count) - hist_bin_middles) < hist_bin_width, 1));
                         hist_value_corresponding_gaussian_2 (m_data_count) = gaussian_2_theory_values(find(abs(fitting_RTS(m_data_count) - hist_bin_middles) < hist_bin_width, 1));
                         if state_assignment(m_data_count - 1) == -1
