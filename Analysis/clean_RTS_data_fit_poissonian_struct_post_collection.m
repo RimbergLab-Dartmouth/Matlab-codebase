@@ -11,6 +11,7 @@ post_run_params.analysis.double_gaussian_fit_sigma_guess = 15;
 post_run_params.analysis.plotting_time_for_RTS = 50e-6;
 post_run_params.analysis.storing_time_for_RTS = 50e-6;
 post_run_params.rts_fig_directory = [cd '\plots\rts\'];
+post_run_params.fig_directory = [cd '\plots\'];
 post_run_params.save_data_and_png_param = 1;
 post_run_params.save_fig_file_param = 0;
 post_run_params.poissonian_lifetime_repetitions_mode = 'separate';  % 'separate' or 'averaged', 'histogrammed_together'
@@ -97,9 +98,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
 
         raw_data.time_corrected = raw_data.time;
         raw_data.amp_corrected = raw_data.amp_extracted;
-        raw_data.amp_corrected(isnan(raw_data.phase_corrected)) = [];
-        raw_data.time_corrected(isnan(raw_data.phase_corrected)) = [];
-        raw_data.phase_corrected(isnan(raw_data.phase_corrected)) = [];
+%         raw_data.amp_corrected(isnan(raw_data.phase_corrected)) = [];
+%         raw_data.time_corrected(isnan(raw_data.phase_corrected)) = [];
+%         raw_data.phase_corrected(isnan(raw_data.phase_corrected)) = [];
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         post_run_params.analysis.bin_edges = -180:input_params.analysis.clean_RTS_bin_width:180;
         %% Clean RTS data using function, and 
@@ -373,6 +374,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             post_run_analysis.RTS.moving_mean_average_amp(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
                 raw_data.amp_moving_mean(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
 
+            post_run_analysis.RTS.clean_time_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+                temp.clean_time_data(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+            
             post_run_analysis.RTS.clean_RTS_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
                 temp.clean_RTS_data(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
 
@@ -474,10 +478,10 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
 
             if post_run_params.save_data_and_png_param == 1
-                    save_file_name = [post_run_params.rts_fig_directory  num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
+                    save_file_name = [post_run_params.fig_directory  num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
                         '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.png'];
                     saveas(Poissonian_figure, save_file_name)
-                    save_file_name = [post_run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
+                    save_file_name = [post_run_params.fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
                         '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.fig'];
                     saveas(Poissonian_figure, save_file_name)
             end
