@@ -29,7 +29,7 @@ input_params.vna.span_zoom = 20e6; % Hz
 input_params.vna.electrical_delay = 62.6e-9;  %s
 
 %%% set VNA params
-switch_vna_measurement(ps_2)
+switch_vna_measurement
 vna_set_average(vna, input_params.vna.average_number, 1)
 vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
 vna_set_sweep_points(vna, input_params.vna.number_points, 1)
