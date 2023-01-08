@@ -27,7 +27,7 @@ for m_power = 6 : 6
             run_params.flux_1_value = input_params.flux_1_value_list(m_flux);
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
 
-            run_params.detuning_point_start = -26; % in MHz % do not exceed +/- 50MHz
+            run_params.detuning_point_start = -36; % in MHz % do not exceed +/- 50MHz
             run_params.detuning_point_end = -2; % in MHz. 
             run_params.detuning_point_step = 1; % in MHz. % typically set to 0.5MHz 
             m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
