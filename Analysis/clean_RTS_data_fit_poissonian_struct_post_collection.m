@@ -10,16 +10,17 @@ post_run_params.analysis.number_iterations = 5;
 post_run_params.analysis.double_gaussian_fit_sigma_guess = 15;
 post_run_params.analysis.plotting_time_for_RTS = 50e-6;
 post_run_params.analysis.storing_time_for_RTS = 50e-6;
+post_run_params.analysis.save_RTS_PSD_extended_data = 0; % decides whether to save RTS PSD extracted or not, and also, RTS data for above storage time
 post_run_params.rts_fig_directory = [cd '\plots\rts\'];
 post_run_params.fig_directory = [cd '\plots\'];
-post_run_params.save_png_param = 0;
+post_run_params.save_png_param = 1;
 post_run_params.save_data_param = 1;
 post_run_params.save_fig_file_param = 0;
 post_run_params.poissonian_lifetime_repetitions_mode = 'separate';  % 'separate' or 'averaged', 'histogrammed_together'
 post_run_params.poissonian_fit_bin_number = 25;
 
-load(post_run_params.file_to_load_input_params_from, 'input_params')
-
+load(post_run_params.file_to_load_input_params_from, 'input_params', 'post_run_analysis')
+pause
 % input_params.analyzed_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
 %     length(input_params.ng_1_value_list), input_params.detuning_array_number, input_params.number_repetitions);
 
@@ -341,19 +342,21 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
         post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.double_gaussian_existence;
 
         if temp.double_gaussian_existence == 1
-            post_run_analysis.RTS_PSD.freqs(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(temp.freqs)) = temp.freqs;
-            post_run_analysis.RTS_PSD.psd(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd;
-            post_run_analysis.RTS_PSD.psd_dBm(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd_dBm;
-%             post_run_analysis.RTS_PSD.theory_lorentzian_values(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian;
+            if post_run_params.analysis.save_RTS_PSD_extended_data
+                post_run_analysis.RTS_PSD.freqs(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(temp.freqs)) = temp.freqs;
+                post_run_analysis.RTS_PSD.psd(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd;
+                post_run_analysis.RTS_PSD.psd_dBm(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd_dBm;
+    %             post_run_analysis.RTS_PSD.theory_lorentzian_values(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian;
+            end
 %             post_run_analysis.RTS_PSD.lorentzian_fit_theory(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian_fit;
-            post_run_analysis.RTS_PSD.lorentzian_fit_lifetime_state_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_1_lorentz_fit;
-            post_run_analysis.RTS_PSD.lorentzian_fit_lifetime_state_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_2_lorentz_fit;
-            post_run_analysis.RTS_PSD.lorentzian_fit_amp_diff(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.amp_diff_lorentz_fit;
-            post_run_analysis.RTS_PSD.lorentzian_fit_err(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lorentz_fit_err;
+            post_run_analysis.RTS_PSD_fits.lorentzian_fit_lifetime_state_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_1_lorentz_fit;
+            post_run_analysis.RTS_PSD_fits.lorentzian_fit_lifetime_state_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_2_lorentz_fit;
+            post_run_analysis.RTS_PSD_fits.lorentzian_fit_amp_diff(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.amp_diff_lorentz_fit;
+            post_run_analysis.RTS_PSD_fits.lorentzian_fit_err(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lorentz_fit_err;
         end
 
         %%%% store necessary time data, delete rest
-        if post_run_params.analysis.storing_time_for_RTS ~= 0
+        if post_run_params.analysis.storing_time_for_RTS ~= 0 && post_run_params.analysis.save_RTS_PSD_extended_data
             input_params.start_index_of_RTS_raw_data_to_store = input_params.start_time_of_RTS_raw_data_to_store * input_params.digitizer.sample_rate;
             input_params.length_of_RTS_raw_data_to_store = input_params.time_length_of_RTS_raw_data_to_store * input_params.digitizer.sample_rate; 
             if input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store > length(temp.raw_data_out)
@@ -361,33 +364,33 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             end
 
             post_run_analysis.RTS.moving_mean_average_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                temp.raw_data_out(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+                temp.raw_data_out(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
 
             post_run_analysis.RTS.time(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...    
-                raw_data.time_corrected(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+                raw_data.time_corrected(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
 
             post_run_analysis.RTS.raw_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                raw_data.phase_extracted(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+                raw_data.phase_extracted(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
 
             post_run_analysis.RTS.raw_amp(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                raw_data.amp_extracted(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+                raw_data.amp_extracted(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
 
             post_run_analysis.RTS.moving_mean_average_amp(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                raw_data.amp_moving_mean(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+                raw_data.amp_moving_mean(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
 
             post_run_analysis.RTS.clean_time_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                temp.clean_time_data(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+                temp.clean_time_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
             
             post_run_analysis.RTS.clean_RTS_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                temp.clean_RTS_data(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+                temp.clean_RTS_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
 
             post_run_analysis.RTS.simple_threshold_clean_RTS_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                temp.simple_threshold_clean_RTS_data(input_params.start_index_of_RTS_raw_data_to_store : input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1);
+                temp.simple_threshold_clean_RTS_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
         end
 
         close all     
-        input_params.analysis.moving_mean_average_time(m_power, m_flux, m_gate, m_detuning) = post_run_params.analysis.moving_mean_average_time;
-        input_params.analysis.bin_edges(m_power, m_flux, m_gate, m_detuning, :) = post_run_params.analysis.bin_edges;
+        input_params.analysis.moving_mean_average_time(m_power, m_flux, m_gate, m_detuning, m_repetition) = post_run_params.analysis.moving_mean_average_time;
+        input_params.analysis.bin_edges(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = post_run_params.analysis.bin_edges;
         %% Fit Poissonian
         if post_run_params.analysis.current_run_bistability_existence == 1
             disp('fitting Poissonian')
@@ -505,12 +508,13 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
     end
     if post_run_params.save_data_param
         save_file_name = strtrim(temp_filelist.file_name);
-        movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' save_file_name(1 : end -4) '_analyzed'])
+        movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' ...
+            save_file_name(1 : end -4) '_analyzed.mat'])
         clear save_file_name
     end
     %% save post run analysis to switching finder comprehensive mat file
     if post_run_params.save_data_param
-        save(post_run_params.file_to_load_input_params_from,'post_run_params', 'post_run_analysis','-append')
+        save(post_run_params.file_to_load_input_params_from,'post_run_params', 'post_run_analysis','input_params', '-append')
     end
 end
 %% Function Clean RTS from noisy data
