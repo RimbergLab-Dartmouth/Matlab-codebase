@@ -413,6 +413,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
                     temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
                     post_run_params.poissonian_fit_bin_number);
+                if sum(temp.poisson_theory_1) == 0
+                    post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                end
             elseif strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition > 1
                 [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
@@ -421,6 +424,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                     squeeze(post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                     squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                     squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
+                if sum(temp.poisson_theory_1) == 0
+                    post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                end
             end
             post_run_params.Poisson_fig_plot_param = 1;
         else
@@ -950,6 +956,21 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
 %     lifetime_state_1_hist_data(lifetime_state_1_hist_data < 5) = NaN;
 %     time_bin_centers_state_2(lifetime_state_2_hist_data < 5) = NaN;
 %     lifetime_state_2_hist_data(lifetime_state_2_hist_data < 5) = NaN;
+    figure
+    bar(time_bin_centers_state_1(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_1_hist_data(lifetime_state_1_hist_data > 5)))
+    hold on
+    bar(time_bin_centers_state_2(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_2_hist_data(lifetime_state_1_hist_data > 5)))
+    if length(lifetime_state_1_hist_data(lifetime_state_1_hist_data > 5)) < 2 || length(lifetime_state_2_hist_data(lifetime_state_2_hist_data > 5)) < 2 
+        lifetime_1_us = 0;
+        lifetime_2_us = 0;
+        std_exp_fit_state_1 = 0;
+        std_exp_fit_state_2 = 0;
+        theory_values_state_1 = zeros(length(time_bin_centers_state_1), 1);
+        theory_values_state_2 = zeros(length(time_bin_centers_state_2), 1);
+        lifetime_state_1_hist_data = zeros(length(time_bin_centers_state_2), 1);
+        lifetime_state_2_hist_data = zeros(length(time_bin_centers_state_2), 1);
+        return
+    end
 %%%%% fit straight line to log(hist_count) vs time. (see Staumbaugh PRB 2007)    
     fit_state_1 = polyfitn(time_bin_centers_state_1(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_1_hist_data(lifetime_state_1_hist_data > 5)),1);
     fit_state_2 = polyfitn(time_bin_centers_state_2(lifetime_state_2_hist_data > 5)*1e6, log(lifetime_state_2_hist_data(lifetime_state_2_hist_data > 5)),1);
