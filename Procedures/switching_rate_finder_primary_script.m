@@ -19,7 +19,7 @@ input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 % m_flux = 1;
 % m_gate = 1;
-for m_power = 4 : 5
+for m_power = 6 : 6
     for m_flux = 1: length(input_params.flux_1_value_list)
         for m_gate = 1: length(input_params.ng_1_value_list)
             m_bias_point = (m_flux - 1)*length(input_params.ng_1_value_list) + m_gate;
@@ -78,7 +78,9 @@ for m_power = 4 : 5
             run_params.data_directory = [cd '\data\'];
 
             if run_params.concatenate_runs == 1 && run_params.initialize_or_load 
-                load([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params)$).')   
+                load([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params)$).')  
+                disp(['loaded ' run_params.file_name '. Continue?'])
+                pause
             elseif ~run_params.concatenate_runs
                 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
                 sign_of_ng = num2str(sign(run_params.ng_1_value));
