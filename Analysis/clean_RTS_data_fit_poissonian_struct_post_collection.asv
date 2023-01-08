@@ -30,7 +30,6 @@ load(post_run_params.file_to_load_input_params_from, 'input_params', 'post_run_a
 % input_params.analyzed_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
 %     length(input_params.ng_1_value_list), 201, 10);
 %%%%%
-
 %%%% ignore files that have already been analyzed, and also comprehensive
 %%%% data and only analysis files 
 temp_filelist.files = ls(post_run_params.directory_to_be_analyzed);
@@ -41,15 +40,13 @@ temp_filelist.unanalyzed_files_finder = contains(temp_filelist.files, 'analyzed'
 
 temp_filelist.raw_data_files_list = temp_filelist.files(~temp_filelist.unanalyzed_files_finder);
 
-temp_filelist.raw_data_files_list_finder = contains(temp_filelist.raw_data_files_list, 'comprehensive_data');
+temp_filelist.unanalyzed_files_finder = contains(temp_filelist.files, 'analyzed');
 
-temp_filelist.raw_data_files_list = temp_filelist.raw_data_files_list(~temp_filelist.raw_data_files_list_finder);
+temp_filelist.raw_data_files_list = temp_filelist.files(~temp_filelist.unanalyzed_files_finder);
 
-temp_filelist.raw_data_files_list_finder = contains(temp_filelist.raw_data_files_list, 'only_analysis');
 
-temp_filelist.raw_data_files_list = temp_filelist.raw_data_files_list(~temp_filelist.raw_data_files_list_finder);
-%%%%%%%
-for m_record_count = 1 : length(temp_filelist.raw_data_files_list)
+
+for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
     temp_filelist.file_name = temp_filelist.raw_data_files_list(m_record_count);
     temp_filelist.file_name = convertStringsToChars(temp_filelist.file_name);
 %     if contains(temp_filelist.files, [temp_filelist.file_name '_analyzed'])
