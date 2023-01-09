@@ -12,6 +12,7 @@ post_run_params.analysis.number_iterations = 5;
 post_run_params.analysis.double_gaussian_fit_sigma_guess = 15;
 post_run_params.analysis.plotting_time_for_RTS = 50e-6;
 post_run_params.analysis.storing_time_for_RTS = 50e-6;
+post_run_params.minimum_number_switches = 50; % if there aren't atleast this many switching events, the Poisson fit is not done.
 post_run_params.analysis.save_RTS_PSD_extended_data = 0; % decides whether to save RTS PSD extracted or not, and also, RTS data for above storage time
 post_run_params.rts_fig_directory = [cd '\plots\rts\'];
 post_run_params.fig_directory = [cd '\plots\'];
@@ -412,7 +413,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
                     temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
-                    post_run_params.poissonian_fit_bin_number);
+                    post_run_params.minimum_number_switches, post_run_params.poissonian_fit_bin_number);
                 if sum(temp.poisson_theory_1) == 0
                     post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
                 end
@@ -420,7 +421,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
                     temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
-                    [], squeeze(post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
+                    post_run_params.minimum_number_switches, [], squeeze(post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
                     squeeze(post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                     squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                     squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
@@ -876,7 +877,7 @@ end
         end
 %% Function extract Poissonian lifetimes
 function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2, theory_values_state_1, theory_values_state_2, time_bin_centers_state_1, lifetime_state_1_hist_data, ...
-    time_bin_centers_state_2,  lifetime_state_2_hist_data] =  extract_poissonian_lifetimes(clean_time_data, clean_amp_data, gaussian_1_mean, gaussian_2_mean,bin_number, hist_count_state_1, ...
+    time_bin_centers_state_2,  lifetime_state_2_hist_data] =  extract_poissonian_lifetimes(clean_time_data, clean_amp_data, gaussian_1_mean, gaussian_2_mean, min_switching_number, bin_number, hist_count_state_1, ...
                                         hist_count_state_2, bin_centers_state_1, bin_centers_state_2)
 
     if ~exist('bin_number', 'var') && ~exist('bin_centers', 'var') && ~exist('hist_state_1', 'var') && ~exist('hist_state_2', 'var')
@@ -930,6 +931,17 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
 
 %%%%%%%% calculate time points at which state switches
     switching_points = analysis_time_data(diff(states) ~= 0);
+    if length(switching_points) < min_switching_number
+        lifetime_1_us = 0;
+        lifetime_2_us = 0;
+        std_exp_fit_state_1 = 0;
+        std_exp_fit_state_2 = 0;
+        theory_values_state_1 = zeros(length(time_bin_centers_state_1), 1);
+        theory_values_state_2 = zeros(length(time_bin_centers_state_2), 1);
+        lifetime_state_1_hist_data = zeros(length(time_bin_centers_state_2), 1);
+        lifetime_state_2_hist_data = zeros(length(time_bin_centers_state_2), 1);
+        return
+    end
 %%%% calculate time since the last switch, assign as the time in corresponding state     
     lifetime_both_states = diff(switching_points);
     if states(1) == 1
