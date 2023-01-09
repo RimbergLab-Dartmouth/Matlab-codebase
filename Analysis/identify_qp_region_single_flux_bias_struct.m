@@ -78,14 +78,16 @@ function [resonance_freqs_no_qp,gate_values_no_qp]=identify_qp_region_single_flu
              return
          elseif user == 0
              close
-             qp_free_indices = input('enter array of indices which are only in the even bad and will be fit to parabolas');
+             qp_free_indices = input('enter array of indices below the red cutoff line which are in the odd bad that will be deleted');
              resonance_freqs_no_qp = resonance_freqs;
              gate_values_no_qp = gate_values;
-             gate_values_no_values(qp_free_indices) = [];
+             size(resonance_freqs_no_qp)
+             gate_values_no_qp(qp_free_indices) = [];
              resonance_freqs_no_qp(qp_free_indices) = [];
              figure
              fig_2=plot(gate_values_no_qp,resonance_freqs_no_qp,'o','DisplayName','even band');
              legend show
+             
          end
      end
      pause
