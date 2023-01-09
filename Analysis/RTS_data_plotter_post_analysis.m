@@ -6,11 +6,10 @@ m_repetition = 1;
 plotting.plot_visible = 1;
 plotting.save_png = 0;
 plotting.save_fig = 0;
-plotting.file_to_load_input_params_from = ['\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\switching_rate_finder\data_230106\data\' ...
+plotting.file_to_load_input_params_from = ['\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\switching_rate_finder\data_230107\data\' ...
         'switching_finder_comprehensive_data.mat'];
 load(post_run_params.file_to_load_input_params_from, 'input_params', 'post_run_analysis')
 detuning_point = input_params.detunings(m_power, m_flux, m_gate, m_detuning, m_repetition);
-
 
 %% retrieve plotting info for specific point from saved dataset
 temp.hist_RTS_bins = post_run_analysis.hist_RTS_bins(m_power, m_flux, m_gate, m_detuning, m_repetition, :);

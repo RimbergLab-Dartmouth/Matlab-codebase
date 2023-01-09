@@ -25,6 +25,7 @@ if run_params.awg.files_generation_param == 1 || m_detuning == run_params.detuni
         awg_create_directory(awg, run_params.awg_directory(end-7:end))
     end
     awg_change_directory(awg, run_params.awg_directory)
+    clear awg_file_list
 end
 %% set bias point and record set value
 if bias_set_param == 1
