@@ -338,6 +338,27 @@ if plotting.figs_visible
         saveas(gcf, [plotting.fig_file_dir 'fit_angle_surf_plots.fig'])
     end     
 end
+%% Surface Plotting sigma freq flucs VNA surf plot
+if plotting.figs_visible
+    figure
+    surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 4)/1e6), 'linestyle', 'none')
+    xlabel('Gate electrons', 'interpreter', 'latex')    
+    ylabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
+    title('Freq fluctuations $\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex')
+    caxis([.3 1.7])
+    c = colorbar;
+    hL = ylabel(c,'$\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex');     
+    set(hL,'Rotation',90);
+    clear c ...
+          hL
+    view(0,90)
+    if plotting.save_figures_png
+        saveas(gcf, [plotting.png_file_dir 'freq_flucs_surf_plots.png'])
+    end
+    if plotting.save_figures_fig
+        saveas(gcf, [plotting.fig_file_dir 'freq_flucs_surf_plots.fig'])
+    end     
+end
 %% Surface Plotting simulated Kerr 
 if plotting.figs_visible
     figure
@@ -367,27 +388,6 @@ if plotting.figs_visible
     end
     if plotting.save_figures_fig
         saveas(gcf, [plotting.fig_file_dir 'kerr_surf_plots.fig'])
-    end     
-end
-%% Surface Plotting sigma freq flucs noise spectrum 
-if plotting.figs_visible
-    figure
-    surf(input_params.ng_values, input_params.flux_values, analysis.spectrum.sigma, 'linestyle', 'none')
-    xlabel('Gate electrons', 'interpreter', 'latex')    
-    ylabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
-    title('Freq fluctuations from spectrum $\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex')
-    caxis([.3 1.7])
-    c = colorbar;
-    hL = ylabel(c,'$\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex');     
-    set(hL,'Rotation',90);
-    clear c ...
-          hL
-    view(0,90)
-    if plotting.save_figures_png
-        saveas(gcf, [plotting.png_file_dir 'noise_spectrum_surf_plots.png'])
-    end
-    if plotting.save_figures_fig
-        saveas(gcf, [plotting.fig_file_dir 'noise_spectrum_surf_plots.fig'])
     end     
 end
 %% Gate Plotting res freqs vs gates, different fluxes are different colours
@@ -970,13 +970,13 @@ if plotting.figs_visible
 end
 
 
-%% Plotting sigma freq flucs VNA surf plot
+%% Surface Plotting sigma freq flucs noise spectrum 
 if plotting.figs_visible
     figure
-    surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.flucs_angle.resonance_fits(:, : , 4)/1e6), 'linestyle', 'none')
+    surf(input_params.ng_values, input_params.flux_values, analysis.spectrum.sigma, 'linestyle', 'none')
     xlabel('Gate electrons', 'interpreter', 'latex')    
     ylabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
-    title('Freq fluctuations $\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex')
+    title('Freq fluctuations from spectrum $\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex')
     caxis([.3 1.7])
     c = colorbar;
     hL = ylabel(c,'$\sigma_{\omega_0}/2\pi$(MHz)', 'interpreter', 'latex');     
@@ -985,9 +985,9 @@ if plotting.figs_visible
           hL
     view(0,90)
     if plotting.save_figures_png
-        saveas(gcf, [plotting.png_file_dir 'freq_flucs_surf_plots.png'])
+        saveas(gcf, [plotting.png_file_dir 'noise_spectrum_surf_plots.png'])
     end
     if plotting.save_figures_fig
-        saveas(gcf, [plotting.fig_file_dir 'freq_flucs_surf_plots.fig'])
+        saveas(gcf, [plotting.fig_file_dir 'noise_spectrum_surf_plots.fig'])
     end     
 end
