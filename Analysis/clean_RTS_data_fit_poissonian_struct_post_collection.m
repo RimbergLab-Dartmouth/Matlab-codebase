@@ -936,10 +936,12 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
         lifetime_2_us = 0;
         std_exp_fit_state_1 = 0;
         std_exp_fit_state_2 = 0;
-        theory_values_state_1 = zeros(length(time_bin_centers_state_1), 1);
-        theory_values_state_2 = zeros(length(time_bin_centers_state_2), 1);
-        lifetime_state_1_hist_data = zeros(length(time_bin_centers_state_2), 1);
-        lifetime_state_2_hist_data = zeros(length(time_bin_centers_state_2), 1);
+        theory_values_state_1 = NaN;
+        theory_values_state_2 = NaN;
+        time_bin_centers_state_1 = NaN;
+        time_bin_centers_state_2 = NaN;
+        lifetime_state_1_hist_data = NaN;
+        lifetime_state_2_hist_data = NaN;
         return
     end
 %%%% calculate time since the last switch, assign as the time in corresponding state     
@@ -977,10 +979,10 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
         lifetime_2_us = 0;
         std_exp_fit_state_1 = 0;
         std_exp_fit_state_2 = 0;
-        theory_values_state_1 = zeros(length(time_bin_centers_state_1), 1);
-        theory_values_state_2 = zeros(length(time_bin_centers_state_2), 1);
-        lifetime_state_1_hist_data = zeros(length(time_bin_centers_state_2), 1);
-        lifetime_state_2_hist_data = zeros(length(time_bin_centers_state_2), 1);
+        theory_values_state_1 = NaN;
+        theory_values_state_2 = NaN;
+        lifetime_state_1_hist_data = NaN;
+        lifetime_state_2_hist_data = NaN;
         return
     end
 %%%%% fit straight line to log(hist_count) vs time. (see Staumbaugh PRB 2007)    
