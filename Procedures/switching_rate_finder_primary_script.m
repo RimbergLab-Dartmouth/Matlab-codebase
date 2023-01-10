@@ -6,7 +6,7 @@
 %%%% and a 'gain_profile_struct' that contains :
 %%%% freq, amp, phase
 run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
-run_params.initialize_or_load  = 0; % 0 - initialize, 1 - load old data.
+run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 run_params.analysis_during_acquisition = 0; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
 if run_params.concatenate_runs
@@ -19,7 +19,7 @@ input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 % m_flux = 1;                   
 % m_gate = 1;
-for m_power = 7 : 7
+for m_power = 8 : 8
     for m_flux = 1: length(input_params.flux_1_value_list)
         for m_gate = 1: length(input_params.ng_1_value_list)
             m_bias_point = (m_flux - 1)*length(input_params.ng_1_value_list) + m_gate;
@@ -27,7 +27,7 @@ for m_power = 7 : 7
             run_params.flux_1_value = input_params.flux_1_value_list(m_flux);
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
 
-            run_params.detuning_point_start = -36; % in MHz % do not exceed +/- 50MHz
+            run_params.detuning_point_start = -44; % in MHz % do not exceed +/- 50MHz
             run_params.detuning_point_end = -2; % in MHz. 
             run_params.detuning_point_step = 1; % in MHz. % typically set to 0.5MHz 
             m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
@@ -79,8 +79,10 @@ for m_power = 7 : 7
 
             if run_params.concatenate_runs == 1 && run_params.initialize_or_load 
                 load([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params)$).')  
-                disp(['loaded ' run_params.file_name '. Continue?'])
-                pause
+                if m_bias_point == 1
+                    disp(['loaded ' run_params.file_name '. Continue?'])
+                    pause
+                end
             elseif ~run_params.concatenate_runs
                 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
                 sign_of_ng = num2str(sign(run_params.ng_1_value));
