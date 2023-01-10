@@ -1,6 +1,17 @@
 function [kerr_required_MHz] = find_kerr_MHz_ng_flux(ng_value, flux_value)
+    try 
+        load('C:\Users\rimberg-lab\Desktop\Git_backed\Analysis\kerr_data_for_jules_sample.mat', 'kerr_data_struct');
+    catch
+    end
+    try 
+       load('D:\Academics\E-Books\Dartmouth\Rimberg_Lab\Matlab-codebase\Analysis\kerr_data_for_jules_sample.mat', 'kerr_data_struct');
+    catch
+    end
+    try 
+       load('C:\Users\Sisira\Desktop\Matlab-codebase\Analysis\kerr_data_for_jules_sample.mat', 'kerr_data_struct');
+    catch
+    end
     
-    load(['C:\Users\rimberg-lab\Desktop\Git_backed\Analysis\kerr_data_for_jules_sample.mat'], 'kerr_data_struct');
 
     ng_value = mod(ng_value,1);
     flux_value = mod(flux_value, 1);
