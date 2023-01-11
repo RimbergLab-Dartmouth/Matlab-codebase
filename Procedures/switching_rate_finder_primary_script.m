@@ -19,9 +19,13 @@ input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 % m_flux = 1;                   
 % m_gate = 1;
+run_params.m_flux = 
+run_params.m_gate = 
 for m_power = 8 : 8
-    for m_flux = 1: length(input_params.flux_1_value_list)
-        for m_gate = 1: length(input_params.ng_1_value_list)
+%     for m_flux = 1: length(input_params.flux_1_value_list)
+%         for m_gate = 1: length(input_params.ng_1_value_list)
+    for m_flux = run_params.m_flux : run_params.m_gate
+        for m_gate = run_params.m_gate : run_params.m_gate
             m_bias_point = (m_flux - 1)*length(input_params.ng_1_value_list) + m_gate;
             run_params.ng_1_value = input_params.ng_1_value_list(m_gate);
             run_params.flux_1_value = input_params.flux_1_value_list(m_flux);
@@ -605,9 +609,11 @@ for m_power = 8 : 8
                     vna_get_data(vna, 1, 2);
             [~,manual_index] = min(squeeze(data.vna.single_photon.final.rough.amp(m_power, m_flux, m_gate,:)) ...
                     - gain_prof.amp');
-            data.vna.single_photon.final.rough_resonance = squeeze(data.vna.single_photon.final.rough.freq(m_power, m_flux, m_gate, manual_index));
+            data.vna.single_photon.final.rough_resonance (m_power, m_flux, m_gate)= squeeze(data.vna.single_photon.final.rough.freq(m_power, m_flux, m_gate, manual_index));
+            data.vna.single_photon.final.res_freq_shift_during_run = data.vna.single_photon.final.rough_resonance (m_power, m_flux, m_gate) - ...
+                analysis.vna.single_photon.fits_flucs_and_angle.res_freq(m_power, m_flux, m_gate);
             vna_set_center_span(vna,data.vna.single_photon.final.rough_resonance,input_params.vna.zoom_scan_span,1);
-            clear manual_index rough_resonance
+            clear manual_index
             vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
             vna_set_average(vna, input_params.vna.average_number, 1, 1);
             vna_set_sweep_points(vna, input_params.vna.number_points, 1);

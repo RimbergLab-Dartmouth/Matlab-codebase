@@ -37,10 +37,10 @@ if bias_set_param == 1
         [output_bias_point_struct] = ...
             set_bias_point_using_offset_period_struct (run_params.ng_1_value, run_params.flux_1_value, bias_point, 0,1,vna);
     end
-    data.peripheral.flux_voltage_output (m_power, m_bias_point) = output_bias_point_struct.desired_flux_voltage;
-    data.peripheral.gate_voltage_output (m_power, m_bias_point) = output_bias_point_struct.desired_gate_voltage;
-    data.peripheral.expected_freq (m_power, m_bias_point) = output_bias_point_struct.expected_freq;
-    data.peripheral.freq_error (m_power, m_bias_point) = output_bias_point_struct.freq_error;
+    data.peripheral.flux_voltage_output (m_power, m_flux, m_gate) = output_bias_point_struct.desired_flux_voltage;
+    data.peripheral.gate_voltage_output (m_power, m_flux, m_gate) = output_bias_point_struct.desired_gate_voltage;
+    data.peripheral.expected_freq (m_power, m_flux, m_gate) = output_bias_point_struct.expected_freq;
+    data.peripheral.freq_error (m_power, m_flux, m_gate) = output_bias_point_struct.freq_error;
     daq_handle=daq.createSession('ni');
     addAnalogOutputChannel(daq_handle,'Dev1','ao0','Voltage');
     addAnalogOutputChannel(daq_handle,'Dev1','ao1','Voltage');
@@ -756,7 +756,7 @@ raw_data.time = reshape(raw_data.time, [], size(raw_data.voltage, 2));
 clear mean_matrix amp_row_mean
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%% get rid of CH B data (just noise, but collected, to avoid digitizer hanging up 
+%%% get rid of CH B data (just noise, but collected to avoid digitizer hanging up 
 raw_data.time = raw_data.time(:, 1:size(raw_data.time,2)/2);
 raw_data.voltage = raw_data.voltage(:, 1:size(raw_data.voltage,2)/2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -779,6 +779,7 @@ if ~run_params.analysis_during_acquisition
 end
 
 %%%%% extract amp and phase if performing analysis and reshape to original array dimensions %%%%%%
+% if run_params.analysis_during_acquisition 
 [raw_data.amp_extracted, raw_data.phase_extracted] = get_amp_and_phase(raw_data.time, raw_data.voltage, input_params.if_freq, input_params.digitizer.sample_rate);
 raw_data.amp_extracted = reshape(raw_data.amp_extracted', size_required)';
 raw_data.phase_extracted = 180/pi*reshape(raw_data.phase_extracted', size_required)';
