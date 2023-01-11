@@ -736,7 +736,7 @@ end
 clear result
 
 % Acquire data, optionally saving it to a file
-[ret_code, raw_data_array.time, raw_data_array.voltage] = acquireData(boardHandle, input_params.digitizer.sample_rate, input_params.digitizer.data_collection_time, ...
+[ret_code, raw_data.time, raw_data.voltage] = acquireData(boardHandle, input_params.digitizer.sample_rate, input_params.digitizer.data_collection_time, ...
     run_params.number_repetitions, convert_dBm_to_Vp(run_params.input_power_value + input_params.fridge_attenuation));
 if ~ret_code
     fprintf('Error: Acquisition failed\n');
@@ -747,25 +747,25 @@ disp('acquired raw data')
 disp('reshaping raw data')
 %%%% get rid of unfilled buffers - since they have all elements 0
 %%%% each buffer is in dimension 1, time and voltage points of that buffer in dimension 2
-amp_row_mean = mean(raw_data_array.voltage, 2);
-mean_matrix = repmat(amp_row_mean, 1, size(raw_data_array.voltage,2));
-raw_data_array.voltage(mean_matrix == 0) = [];
-raw_data_array.voltage = reshape(raw_data_array.voltage, [], size(raw_data_array.time, 2));
-raw_data_array.time(mean_matrix == 0) = [];
-raw_data_array.time = reshape(raw_data_array.time, [], size(raw_data_array.voltage, 2));
+amp_row_mean = mean(raw_data.voltage, 2);
+mean_matrix = repmat(amp_row_mean, 1, size(raw_data.voltage,2));
+raw_data.voltage(mean_matrix == 0) = [];
+raw_data.voltage = reshape(raw_data.voltage, [], size(raw_data.time, 2));
+raw_data.time(mean_matrix == 0) = [];
+raw_data.time = reshape(raw_data.time, [], size(raw_data.voltage, 2));
 clear mean_matrix amp_row_mean
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% get rid of CH B data (just noise, but collected to avoid digitizer hanging up 
-raw_data_array.time = raw_data_array.time(:, 1:size(raw_data_array.time,2)/2);
-raw_data_array.voltage = raw_data_array.voltage(:, 1:size(raw_data_array.voltage,2)/2);
+raw_data.time = raw_data.time(:, 1:size(raw_data.time,2)/2);
+raw_data.voltage = raw_data.voltage(:, 1:size(raw_data.voltage,2)/2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% prepare to save data for post run analysis
 if ~run_params.analysis_during_acquisition
     if run_params.save_data_and_png_param == 1
         if ~exist('m_save_data_counter', 'var')
             disp('doesnt exist')
-            m_save_data_counter = 0;
+            m_save_data_counter = 1;
             m_save_data_index = 1;
             m_record = 1;
         end
@@ -778,7 +778,8 @@ e8257c_toggle_output(e8257c_sig_gen,'off')
 n5183b_toggle_pulse_mod(keysight_sg,'off')
 n5183b_toggle_modulation(keysight_sg,'off')
 
-if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_step || detuning_point == run_params.detuning_point_end)
+if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_step || detuning_point == run_params.detuning_point_end) && ...
+            m_repetition == run_params.number_repetitions    
         disp('sig gens off, AWG also off')
         awg_toggle_output(awg,'off',1)
         awg_toggle_output(awg,'off',2)
@@ -786,8 +787,8 @@ if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_s
 end
 %% save only raw data matrix struct for further analysis later 
 if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquisition
-        %     raw_data_matrix.time(m_save_data_counter, :) = raw_data_array.time;
-    raw_data_matrix.voltage(m_save_data_index, :, :) = raw_data_array.voltage;
+        %     raw_data_matrix.time(m_save_data_counter, :) = raw_data.time;
+    raw_data_matrix.voltage(m_save_data_index, :, :) = raw_data.voltage;
     raw_data_matrix.detuning_point_number(m_save_data_index) = m_detuning;
     raw_data_matrix.detuning_point(m_save_data_index) = detuning_point;
     raw_data_matrix.input_power_number(m_save_data_index) = m_power;
@@ -800,13 +801,12 @@ if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquis
     m_save_data_counter = m_save_data_counter + run_params.number_repetitions;
     m_save_data_index = m_save_data_index + 1;
     
-    if m_save_data_counter >= run_params.save_raw_data_frequency ||(detuning_point > run_params.detuning_point_end + run_params.detuning_point_step ...
-            || detuning_point == run_params.detuning_point_end)   
-        disp('saving raw data')
+    if m_save_data_counter > run_params.save_raw_data_frequency ||((detuning_point > run_params.detuning_point_end + run_params.detuning_point_step ...
+            || detuning_point == run_params.detuning_point_end) && m_repetition == run_params.number_repetitions)    
         save([run_params.data_directory '\' num2str(m_power) '_' num2str(m_flux) '_' num2str(m_gate) '_' ...
             'raw_data_record_' num2str(m_record) '.mat'], 'raw_data_matrix')   
         m_save_data_counter = 0;
-        m_save_data_index = 1;
+        m_save_data_index = 0;
         clear raw_data_matrix
         disp('saved raw data')
         m_record = m_record + 1;

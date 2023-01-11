@@ -1,24 +1,6 @@
-disp(['cleaning RTS for repetition number ' num2str(m_repetition) ' of ' num2str(run_params.number_repetitions)])
+disp('cleaning RTS')
 moving_mean_average_time = run_params.analysis.moving_mean_average_time*1e-6;
 moving_mean_average_number = moving_mean_average_time * input_params.digitizer.sample_rate;
-%% reshape the data, and extract amp and phase
-%%%% resize to a vector to feed into the digital heterodyning code
-raw_data.time = raw_data_array.time(m_repetition, :);
-raw_data.voltage = raw_data_array.voltage(m_repetition, :);
-size_required = size(raw_data.time');
-raw_data.time = reshape(raw_data.time', [], 1);
-raw_data.voltage = reshape(raw_data.voltage', [], 1);
-%%%%%%%%%%%%%%%%%%%%
-%%% reshape the transpose, since the reshape in next step (and always) goes down
-%%% column first and this way those are the time points that need to stay together
-
-%%%%% extract amp and phase if performing analysis and reshape to original array dimensions %%%%%%
-% if run_params.analysis_during_acquisition 
-[raw_data.amp_extracted, raw_data.phase_extracted] = get_amp_and_phase(raw_data.time, raw_data.voltage, input_params.if_freq, input_params.digitizer.sample_rate);
-raw_data.amp_extracted = reshape(raw_data.amp_extracted', size_required)';
-raw_data.phase_extracted = 180/pi*reshape(raw_data.phase_extracted', size_required)';
-raw_data.time = reshape(raw_data.time', size_required)';
-raw_data.voltage = reshape(raw_data.voltage', size_required)';
 %% clean up phase data a little bit by shifting center to 0 degs, and by
 %%%%% getting rid of gross outliers
 raw_data.phase_extracted = wrapTo180(raw_data.phase_extracted - 180/pi *circ_mean(pi/180*raw_data.phase_extracted));
@@ -55,11 +37,9 @@ elseif run_params.plot_visible == 0
 end
 bar(temp.hist_RTS_bins, temp.hist_count_data, 'DisplayName', 'raw data')
 hold on
-if temp.double_gaussian_existence
-    plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values,'r', 'linewidth', 3,'DisplayName', 'Gaussian 1 theory')
-    plot(temp.hist_RTS_bins, temp.gaussian_2_theory_values,'k', 'linewidth', 3, 'DisplayName', 'Gaussian 2 theory')
-end
-plot(temp.hist_RTS_bins, temp.single_gaussian_theory_values,'g', 'linewidth', 3,'DisplayName', 'Single Gaussian theory')
+plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values,'r', 'linewidth', 3,'DisplayName', 'Gaussian 1 theory')
+plot(temp.hist_RTS_bins, temp.gaussian_2_theory_values,'k', 'linewidth', 3, 'DisplayName', 'Gaussian 2 theory')
+plot(temp.hist_RTS_bins, temp.single_gaussian_theory_values,'g', 'linewidth', 3,'DisplayName', 'Gaussian 1 theory')
 xlabel('Phase ($^\circ$)', 'interpreter', 'latex')
 ylabel('Count', 'interpreter', 'latex')
 title(['RTS Gaussians for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
@@ -88,45 +68,43 @@ clear RTS_Gaussians ...
       save_file_name     
 %% Plotting a section of the RTS
 run_params.analysis.plotting_number_for_RTS = input_params.digitizer.sample_rate * run_params.analysis.plotting_time_for_RTS;
-if run_params.save_data_and_png_param && temp.double_gaussian_existence
-    if run_params.plot_visible == 1
-        RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-    elseif run_params.plot_visible == 0    
-        RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-    end
-    start_point = randi([50e-6 * input_params.digitizer.sample_rate, length(raw_data.phase_corrected) - run_params.analysis.plotting_number_for_RTS - 1]);
-    plot(temp.clean_time_data(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
-        raw_data.phase_extracted(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS), 'r', 'DisplayName', 'raw data')
-    hold on
-    plot(raw_data.time_corrected(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
-        squeeze(temp.raw_data_out(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)), ...
-        'b', 'DisplayName', 'moving averaged data')
-    plot(raw_data.time_corrected(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
-        squeeze(temp.clean_RTS_data(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)), ...
-        'k', 'linewidth', 3, 'DisplayName', 'cleaned data')
-    xlabel('Time ($\mu$s)', 'interpreter', 'latex')
-    ylabel('Phase($S_{21}) (^\circ$)', 'interpreter', 'latex')
-    title(['RTS for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
-        '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
-                '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
-    legend show
-
-    if run_params.save_data_and_png_param == 1
-            save_file_name = [run_params.rts_fig_directory num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_detuning) '_' num2str(m_repetition) ...
-                '_' num2str(run_params.input_power_value) 'dBm_' num2str(m_bias_point) '_ng_' num2str(run_params.ng_1_value) '_flux_' ...
-                num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_RTS_signal.png'];
-            saveas(RTS_figure, save_file_name)
-            if run_params.save_fig_file_param == 1
-                save_file_name = [run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_detuning) '_' num2str(m_repetition) ...
-                '_' num2str(run_params.input_power_value) 'dBm_' num2str(m_bias_point) '_ng_' num2str(run_params.ng_1_value) '_flux_' ...
-                num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_RTS_signal.fig'];
-                saveas(RTS_figure, save_file_name)
-            end
-    end
-    clear RTS_figure ...
-          save_file_name ...
-          start_point
+if run_params.plot_visible == 1
+    RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+elseif run_params.plot_visible == 0    
+    RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
+start_point = randi([50e-6 * input_params.digitizer.sample_rate, length(raw_data.phase_corrected) - run_params.analysis.plotting_number_for_RTS - 1]);
+plot(temp.clean_time_data(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
+    raw_data.phase_extracted(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS), 'r', 'DisplayName', 'raw data')
+hold on
+plot(raw_data.time_corrected(1,start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
+    squeeze(temp.raw_data_out(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)), ...
+    'b', 'DisplayName', 'moving averaged data')
+plot(raw_data.time_corrected(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)*1e6, ...
+    squeeze(temp.clean_RTS_data(1, start_point : start_point + run_params.analysis.plotting_number_for_RTS)), ...
+    'k', 'linewidth', 3, 'DisplayName', 'cleaned data')
+xlabel('Time ($\mu$s)', 'interpreter', 'latex')
+ylabel('Phase($S_{21}) (^\circ$)', 'interpreter', 'latex')
+title(['RTS for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
+    '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
+            '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
+legend show
+
+if run_params.save_data_and_png_param == 1
+        save_file_name = [run_params.rts_fig_directory num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_detuning) '_' num2str(m_repetition) ...
+            '_' num2str(run_params.input_power_value) 'dBm_' num2str(m_bias_point) '_ng_' num2str(run_params.ng_1_value) '_flux_' ...
+            num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_RTS_signal.png'];
+        saveas(RTS_figure, save_file_name)
+        if run_params.save_fig_file_param == 1
+            save_file_name = [run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_detuning) '_' num2str(m_repetition) ...
+            '_' num2str(run_params.input_power_value) 'dBm_' num2str(m_bias_point) '_ng_' num2str(run_params.ng_1_value) '_flux_' ...
+            num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_RTS_signal.fig'];
+            saveas(RTS_figure, save_file_name)
+        end
+end
+clear RTS_figure ...
+      save_file_name ...
+      start_point
 %% Find PSD of cleaned RTS signal    
 if temp.double_gaussian_existence == 1 % no point analysing if double gaussian doesn't exist
     disp('finding PSD of RTS')
@@ -174,16 +152,16 @@ if temp.double_gaussian_existence == 1
 
     semilogx(temp.freqs/1e3, temp.psd_dBm, 'r', 'DisplayName', 'PSD data')
     hold on
-    semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian), 'b', 'linewidth', 3,  'DisplayName', 'Theoretical Lorentzian')
-    semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian_fit), 'k', 'linewidth', 3,  'DisplayName', 'Fit Lorentzian')
+    semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian), 'b', 'DisplayName', 'Theoretical Lorentzian')
+    semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian_fit), 'k', 'DisplayName', 'Fit Lorentzian')
     xlabel('Freq (kHz)', 'interpreter', 'latex')
     ylabel('PSD (dB $^\circ$))', 'interpreter', 'latex')
     title(['RTS PSD for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
         '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
         '$\Delta$ = ' num2str(detuning_point) 'MHz' ...
-        'lifetime 1 from RTS = ' num2str(round(temp.lifetime_state_1_final_iteration*1e6, 2)) '$\mu$s, ' ...
+        'lifetime 1 from RTS = ' num2str(round(temp.lifetime_state_1_final_iteration*1e6, 2)) '$\mu$s' ...
         'lifetime 2 from RTS = ' num2str(round(temp.lifetime_state_2_final_iteration*1e6, 2)) '$\mu$s' 13 10 ...
-        'lifetime 1 from PSD fit = ' num2str(round(temp.lifetime_state_1_lorentz_fit*1e6, 2)) '$\mu$s, ' ...
+        'lifetime 1 from PSD fit = ' num2str(round(temp.lifetime_state_1_lorentz_fit*1e6, 2)) '$\mu$s' ...
         'lifetime 2 from PSD fit = ' num2str(round(temp.lifetime_state_2_lorentz_fit*1e6, 2)) '$\mu$s'], 'interpreter', 'latex')
     legend show
 
@@ -201,6 +179,7 @@ if temp.double_gaussian_existence == 1
           save_file_name
 end
 %% Assigning values to long term variables
+
 run_params.analysis.current_run_bistability_existence = temp.double_gaussian_existence;
 
 analysis.gaussian_1_mean(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.gaussian_1_mean;
@@ -239,14 +218,12 @@ analysis.single_gaussian_theory_values(m_power, m_flux, m_gate, m_detuning, m_re
 analysis.single_gaussian_fit_error(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.single_gaussian_fit_error;
 analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.double_gaussian_existence;
 
-if temp.double_gaussian_existence == 1 
-    if run_params.analysis.save_RTS_PSD_extended_data
-        analysis.RTS_PSD.freqs(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(temp.freqs)) = temp.freqs;
-        analysis.RTS_PSD.psd(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd;
-        analysis.RTS_PSD.psd_dBm(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd_dBm;
-%         analysis.RTS_PSD.theory_lorentzian_values(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian;
-%         analysis.RTS_PSD.lorentzian_fit_theory(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian_fit;
-    end
+if temp.double_gaussian_existence == 1
+    analysis.RTS_PSD.freqs(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(temp.freqs)) = temp.freqs;
+    analysis.RTS_PSD.psd(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd;
+    analysis.RTS_PSD.psd_dBm(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd_dBm;
+    analysis.RTS_PSD.theory_lorentzian_values(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian;
+    analysis.RTS_PSD.lorentzian_fit_theory(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian_fit;
     analysis.RTS_PSD.lorentzian_fit_lifetime_state_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_1_lorentz_fit;
     analysis.RTS_PSD.lorentzian_fit_lifetime_state_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_2_lorentz_fit;
     analysis.RTS_PSD.lorentzian_fit_amp_diff(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.amp_diff_lorentz_fit;
@@ -254,7 +231,7 @@ if temp.double_gaussian_existence == 1
 end
 
 %%%% store necessary time data, delete rest
-if run_params.analysis.plotting_time_for_RTS ~= 0 && run_params.analysis.save_RTS_PSD_extended_data
+if run_params.analysis.plotting_time_for_RTS ~= 0
     input_params.start_index_of_RTS_raw_data_to_store = input_params.start_time_of_RTS_raw_data_to_store * input_params.digitizer.sample_rate;
     input_params.length_of_RTS_raw_data_to_store = input_params.time_length_of_RTS_raw_data_to_store * input_params.digitizer.sample_rate; 
     if input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store > length(temp.raw_data_out)
@@ -286,9 +263,6 @@ end
 clear moving_mean_average_time ...
       moving_mean_average_number ...
       raw_data
-if m_repetition == run_params.number_repetitions
-    clear raw_data_array
-end
 close all      
 %% Function Clean RTS from noisy data
 function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existence, gaussian_1_mean, gaussian_2_mean, sigma_double_gaussian, double_gaussian_fit_error, area_gaussian_1, area_gaussian_2, ...
