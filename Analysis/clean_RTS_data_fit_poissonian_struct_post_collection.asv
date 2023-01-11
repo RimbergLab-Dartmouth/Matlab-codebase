@@ -10,14 +10,14 @@ post_run_params.analysis.min_gaussian_center_to_center_phase = 15;
 post_run_params.analysis.max_gaussian_center_to_center_phase = 60;
 post_run_params.analysis.number_iterations = 5;
 post_run_params.min_gaussian_count = 1500;
-post_run_params.phase_outlier_cutoff = 45; % in degs, this is the phase above and below the mean phase, over which the phase is classified as an outlier (after moving mean)
+post_run_params.phase_outlier_cutoff = 70; % in degs, this is the phase above and below the mean phase, over which the phase is classified as an outlier (after moving mean)
 post_run_params.analysis.clean_RTS_bin_width = 6; % degs - phase histogramming bin size
 post_run_params.analysis.double_gaussian_fit_sigma_guess = 15;
-post_run_params.analysis.plotting_time_for_RTS = 50e-6;
+post_run_params.analysis.plotting_time_for_RTS = 150e-6;
 post_run_params.analysis.storing_time_for_RTS = 50e-6;
 post_run_params.minimum_number_switches = 50; % if there aren't atleast this many switching events, the Poisson fit is not done.
 post_run_params.poissonian_fit_bin_number = 25;
-post_run_params.poissonian_lifetime_repetitions_mode = 'separate';  % 'separate' or 'averaged', 'histogrammed_together'
+post_run_params.poissonian_lifetime_repetitions_mode = 'separate_and_together';  % 'separate' or 'averaged', 'histogrammed_together'
 post_run_params.analysis.save_RTS_PSD_extended_data = 0; % decides whether to save RTS PSD extracted or not, and also, RTS data for above storage time
 post_run_params.rts_fig_directory = [cd '\plots\rts\'];
 post_run_params.fig_directory = [cd '\plots\'];
@@ -71,473 +71,529 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
         m_detuning = raw_data_matrix.detuning_point_number(m_data_counter);
         m_bias_point = raw_data_matrix.bias_point_number(m_data_counter);
         detuning_point = raw_data_matrix.detuning_point(m_data_counter);
-        for m_repetition = 1 : data.repetition_number(m_
-%         %%%% temp testing code
-%         temp_filelist.bias_extractor = temp_filelist.file_name(1:9);
-%         raw_data_matrix.input_power_number(m_data_counter) = str2double(temp_filelist.file_name(1));
-%         raw_data_matrix.ng_number(m_data_counter) = str2double(temp_filelist.file_name(5));
-%         raw_data_matrix.flux_number(m_data_counter) = str2double(temp_filelist.file_name(3));
-%         raw_data_matrix.repetition_number(m_data_counter) = mod(m_data_counter - 1, 2) + 1;
-%         raw_data_matrix.detuning_point(m_data_counter) = m_data_counter;
-%         raw_data_matrix.detuning_point_number(m_data_counter) = m_data_counter;
-%         raw_data_matrix.bias_point_number(m_data_counter) = (raw_data_matrix.flux_number(m_data_counter) - 1)* 8 + raw_data_matrix.ng_number(m_data_counter);
-%         %%%%%%%
-        %% demodulate to extract amplitude and phase
-        raw_data.voltage = squeeze(raw_data_matrix.voltage(m_data_counter, :, :));
-        raw_data.size_required = size(raw_data.voltage');
-        raw_data.voltage = reshape(raw_data.voltage', [], 1);
-        raw_data.time  = 0:1/input_params.digitizer.sample_rate : length(raw_data.voltage)/input_params.digitizer.sample_rate-1/input_params.digitizer.sample_rate;
-        raw_data.time = raw_data.time';
-        [raw_data.amp_extracted, raw_data.phase_extracted] = ...
-                                get_amp_and_phase(raw_data.time, raw_data.voltage, input_params.if_freq, input_params.digitizer.sample_rate);
+        for m_repetition = 1 : squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))
+    %         %%%% temp testing code
+    %         temp_filelist.bias_extractor = temp_filelist.file_name(1:9);
+    %         raw_data_matrix.input_power_number(m_data_counter) = str2double(temp_filelist.file_name(1));
+    %         raw_data_matrix.ng_number(m_data_counter) = str2double(temp_filelist.file_name(5));
+    %         raw_data_matrix.flux_number(m_data_counter) = str2double(temp_filelist.file_name(3));
+    %         raw_data_matrix.repetition_number(m_data_counter) = mod(m_data_counter - 1, 2) + 1;
+    %         raw_data_matrix.detuning_point(m_data_counter) = m_data_counter;
+    %         raw_data_matrix.detuning_point_number(m_data_counter) = m_data_counter;
+    %         raw_data_matrix.bias_point_number(m_data_counter) = (raw_data_matrix.flux_number(m_data_counter) - 1)* 8 + raw_data_matrix.ng_number(m_data_counter);
+    %         %%%%%%%
+            %% demodulate to extract amplitude and phase
+            raw_data.voltage = squeeze(raw_data_matrix.voltage(m_data_counter, m_repetition, :));
+            raw_data.size_required = size(raw_data.voltage');
+            raw_data.voltage = reshape(raw_data.voltage', [], 1);
+            raw_data.time  = 0:1/input_params.digitizer.sample_rate : length(raw_data.voltage)/input_params.digitizer.sample_rate-1/input_params.digitizer.sample_rate;
+            raw_data.time = raw_data.time';
+            [raw_data.amp_extracted, raw_data.phase_extracted] = ...
+                                    get_amp_and_phase(raw_data.time, raw_data.voltage, input_params.if_freq, input_params.digitizer.sample_rate);
 
-        raw_data.amp_extracted = reshape(raw_data.amp_extracted', raw_data.size_required)';
-        raw_data.phase_extracted = 180/pi*reshape(raw_data.phase_extracted', raw_data.size_required)';
-        raw_data.time = reshape(raw_data.time', raw_data.size_required)';
-        raw_data.voltage = reshape(raw_data.voltage', raw_data.size_required)';
-        
-        disp(['cleaning RTS for power number = ' num2str(m_power) ', flux number = ' ...
-        num2str(m_flux) ', ' 13 10 'gate number = ' num2str(m_gate) ...
-        ', detuning number = ' num2str(m_detuning) ', repetition number = ' ...
-            num2str(m_repetition)])
-        
-        moving_mean_average_time = post_run_params.analysis.moving_mean_average_time;
-        moving_mean_average_number = moving_mean_average_time * input_params.digitizer.sample_rate;
-        %% clean up phase data a little bit by shifting center to 0 degs, and by
-        %%%%% getting rid of gross outliers
-        raw_data.phase_extracted = wrapTo180(raw_data.phase_extracted - 180/pi *circ_mean(pi/180*raw_data.phase_extracted));
-        %% moving average of phase and amp (having done the cleaning above, the moving mean is the same as the moving circ mean)
-        raw_data.phase_moving_mean = movmean(raw_data.phase_extracted, moving_mean_average_number);
-        raw_data.amp_moving_mean = movmean(raw_data.amp_extracted, moving_mean_average_number);
-        raw_data.phase_corrected = raw_data.phase_moving_mean;
+            raw_data.amp_extracted = reshape(raw_data.amp_extracted', raw_data.size_required)';
+            raw_data.phase_extracted = 180/pi*reshape(raw_data.phase_extracted', raw_data.size_required)';
+            raw_data.time = reshape(raw_data.time', raw_data.size_required)';
+            raw_data.voltage = reshape(raw_data.voltage', raw_data.size_required)';
 
-        raw_data.phase_corrected(raw_data.phase_corrected > 180/pi*circ_mean(raw_data.phase_moving_mean*pi/180) + post_run_params.phase_outlier_cutoff) = NaN;
-        raw_data.phase_corrected(raw_data.phase_corrected < 180/pi*circ_mean(raw_data.phase_moving_mean*pi/180) - post_run_params.phase_outlier_cutoff) = NaN;
+            disp(['cleaning RTS for power number = ' num2str(m_power) ', flux number = ' ...
+            num2str(m_flux) ', ' 13 10 'gate number = ' num2str(m_gate) ...
+            ', detuning number = ' num2str(m_detuning) ', repetition number = ' ...
+                num2str(m_repetition)])
 
-        raw_data.time_corrected = raw_data.time;
-        raw_data.amp_corrected = raw_data.amp_extracted;
-        raw_data.amp_corrected(isnan(raw_data.phase_corrected)) = [];
-        raw_data.time_corrected(isnan(raw_data.phase_corrected)) = [];
-        raw_data.phase_corrected(isnan(raw_data.phase_corrected)) = [];
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        post_run_params.analysis.bin_edges = -180:input_params.analysis.clean_RTS_bin_width:180;
-        %% Clean RTS data using function, and 
-        [temp.clean_time_data, temp.raw_data_out, temp.clean_RTS_data, temp.double_gaussian_existence, temp.gaussian_1_mean, temp.gaussian_2_mean, temp.sigma_double_gaussian, temp.double_gaussian_fit_error, ...
-            temp.area_gaussian_1, temp.area_gaussian_2, temp.lifetime_state_1_final_iteration, temp.lifetime_state_2_final_iteration, temp.lifetime_state_1_iteration_array, ...
-            temp.lifetime_state_2_iteration_array, temp.simple_threshold_clean_RTS_data, temp.simple_threshold_lifetime_state_1, temp.simple_threshold_lifetime_state_2, ...
-            temp.threshold_1_iteration_array, temp.threshold_2_iteration_array, temp.number_switches_both_states_iteration_array, ...
-            temp.number_switches_both_states_final_iteration, temp.gaussian_1_theory_values, temp.gaussian_2_theory_values, temp.hist_RTS_bins, ...
-            temp.hist_count_data, temp.single_gaussian_fit_params, temp.single_gaussian_theory_values, temp.single_gaussian_fit_error] = ...
-            clean_noisy_RTS_signal(raw_data.time_corrected, raw_data.phase_corrected, post_run_params.analysis.min_gaussian_center_to_center_phase, post_run_params.analysis.number_iterations, ...
-                    post_run_params.analysis.bin_edges, post_run_params.analysis.double_gaussian_fit_sigma_guess);
-        temp.gaussian_difference = abs(temp.gaussian_1_mean - temp.gaussian_2_mean)  ; 
-        %% Plotting Gaussian fits to RTS data
-        if post_run_params.plot_visible == 1
-            RTS_Gaussians = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-        elseif post_run_params.plot_visible == 0    
-            RTS_Gaussians = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-        end
-        bar(temp.hist_RTS_bins, temp.hist_count_data, 'DisplayName', 'raw data')
-        hold on
-        if temp.double_gaussian_existence 
-            plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values,'r', 'linewidth', 3,'DisplayName', 'Gaussian 1 theory')
-            plot(temp.hist_RTS_bins, temp.gaussian_2_theory_values,'k', 'linewidth', 3, 'DisplayName', 'Gaussian 2 theory')
-        end
-        plot(temp.hist_RTS_bins, temp.single_gaussian_theory_values,'g', 'linewidth', 3,'DisplayName', 'Single Gaussian theory')
-        xlabel('Phase ($^\circ$)', 'interpreter', 'latex')
-        ylabel('Count', 'interpreter', 'latex')
-        title(['RTS Gaussians for P$_{\mathrm{in}}$ = ' num2str(input_params.input_power_value_list(m_power)) 'dBm' 13 10 ...
-            '$n_g = $' num2str(input_params.ng_1_value_list(m_gate)) ', $\Phi_{\mathrm{ext}}$ = ' ...
-            num2str(input_params.flux_1_value_list(m_flux)) '$\Phi_0$' 13 10 ...
-            '$\Delta$ = ' num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz, ' ...
-            'Repetition number= ' num2str(m_repetition) 13 10 ...
-            'center gaussian 1 = ' num2str(round(temp.gaussian_1_mean, 2)) '$^\circ$, ' ...
-            'center gaussian 2 = ' num2str(round(temp.gaussian_2_mean, 2)) '$^\circ$, ' ...
-            'double gaussian $\sigma$ = ' num2str(round(temp.sigma_double_gaussian, 2)) '$^\circ$' 13 10 ...
-            'single gaussian center = ' num2str(round(temp.single_gaussian_fit_params(2), 2)) '$^\circ$', ...
-            'single gaussian $\sigma$ = ' num2str(round(temp.single_gaussian_fit_params(3), 2)) '$^\circ$'], 'interpreter', 'latex')
-        legend show
+            moving_mean_average_time = post_run_params.analysis.moving_mean_average_time;
+            moving_mean_average_number = moving_mean_average_time * input_params.digitizer.sample_rate;
+            %% clean up phase data a little bit by shifting center to 0 degs, and by
+            %%%%% getting rid of gross outliers
+            raw_data.phase_extracted = wrapTo180(raw_data.phase_extracted - 180/pi *circ_mean(pi/180*raw_data.phase_extracted));
+            %% moving average of phase and amp (having done the cleaning above, the moving mean is the same as the moving circ mean)
+            raw_data.phase_moving_mean = movmean(raw_data.phase_extracted, moving_mean_average_number);
+            raw_data.amp_moving_mean = movmean(raw_data.amp_extracted, moving_mean_average_number);
+            raw_data.phase_corrected = raw_data.phase_moving_mean;
 
-        if post_run_params.save_png_param == 1
-                save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
-                    num2str(m_bias_point) '_' num2str(m_detuning) ...
-                    '_' num2str(m_repetition) ...
-                    '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
-                    '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
-                    num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
-                    num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_gaussian.png'];
-                saveas(RTS_Gaussians, save_file_name)
-                if post_run_params.save_fig_file_param == 1
-                    save_file_name = [post_run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' ...
-                    num2str(m_bias_point) '_' num2str(m_detuning) ...
-                    '_' num2str(m_repetition) ...
-                    '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
-                    '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
-                    num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
-                    num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_gaussian.fig'];
-                    saveas(RTS_Gaussians, save_file_name)
-                end
-        end
-        clear RTS_Gaussians ...
-              save_file_name     
-        %% Plotting a section of the RTS
-        post_run_params.analysis.plotting_number_for_RTS = input_params.digitizer.sample_rate * post_run_params.analysis.plotting_time_for_RTS;
-        if post_run_params.plot_visible == 1
-            RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-        elseif post_run_params.plot_visible == 0    
-            RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-        end
-        start_point = randi([50e-6 * input_params.digitizer.sample_rate, length(raw_data.phase_corrected) - post_run_params.analysis.plotting_number_for_RTS - 1]);
-        plot(temp.clean_time_data(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)*1e6, ...
-            raw_data.phase_extracted(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS), 'r', 'DisplayName', 'raw data')
-        hold on
-        plot(raw_data.time_corrected(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)*1e6, ...
-            squeeze(temp.raw_data_out(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)), ...
-            'b', 'DisplayName', 'moving averaged data')
-        plot(raw_data.time_corrected(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)*1e6, ...
-            squeeze(temp.clean_RTS_data(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)), ...
-            'k', 'linewidth', 3, 'DisplayName', 'cleaned data')
-        xlabel('Time ($\mu$s)', 'interpreter', 'latex')
-        ylabel('Phase($S_{21}) (^\circ$)', 'interpreter', 'latex')
-        title(['RTS for P$_{\mathrm{in}}$ = ' num2str(input_params.input_power_value_list(m_power)) 'dBm' 13 10 ...
-            '$n_g = $' num2str(input_params.ng_1_value_list(m_gate)) ', $\Phi_{\mathrm{ext}}$ = ' ...
-            num2str(input_params.flux_1_value_list(m_flux)) '$\Phi_0$' 13 10 ...
-                    '$\Delta$ = ' num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz, ' ...
-            'Repetition number= ' num2str(m_repetition)], 'interpreter', 'latex')
-        legend show
+            raw_data.phase_corrected(raw_data.phase_corrected > 180/pi*circ_mean(raw_data.phase_moving_mean*pi/180) + post_run_params.phase_outlier_cutoff) = NaN;
+            raw_data.phase_corrected(raw_data.phase_corrected < 180/pi*circ_mean(raw_data.phase_moving_mean*pi/180) - post_run_params.phase_outlier_cutoff) = NaN;
 
-        if post_run_params.save_png_param == 1
-                save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
-                    num2str(m_bias_point) '_' num2str(m_detuning) ...
-                    '_' num2str(m_repetition) ...
-                    '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
-                    '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
-                    num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
-                    num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_signal.png'];
-                saveas(RTS_figure, save_file_name)
-                if post_run_params.save_fig_file_param == 1
-                    save_file_name = [post_run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' ...
-                    num2str(m_bias_point) '_' num2str(m_detuning) ...
-                    '_' num2str(m_repetition) ...
-                    '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
-                    '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
-                    num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
-                    num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_signal_sample.fig'];
-                    saveas(RTS_figure, save_file_name)
-                end
-        end
-        
-        clear RTS_figure ...
-              save_file_name ...
-              start_point
-        %% Find PSD of cleaned RTS signal    
-        if temp.double_gaussian_existence == 1 % no point analysing if double gaussian doesn't exist
-            disp('finding PSD of RTS')
-            [temp.freqs, temp.psd, temp.psd_dBm] = ...
-                extract_PSD(raw_data.time_corrected, temp.clean_RTS_data);
-        end
-        %% Find theoretical Lorentzian from the obtained lifetimes 
-        if temp.double_gaussian_existence == 1
-            %%%% see eqn. 9.34 in https://www.nii.ac.jp/qis/first-quantum/e/forStudents/lecture/pdf/noise/chapter9.pdf
-            %%%% or
-            %%%%% eqn. 3.28 of https://ris.utwente.nl/ws/portalfiles/portal/6038220/thesis-Kolhatkar.pdf 
-            temp.theory_lorentzian = 4*(abs(temp.gaussian_1_mean - temp.gaussian_2_mean))^2 ./ ((temp.lifetime_state_1_final_iteration + temp.lifetime_state_2_final_iteration) .* ...
-                ((1/temp.lifetime_state_1_final_iteration + 1/ temp.lifetime_state_2_final_iteration)^2 + (2*pi*temp.freqs).^2));
-        end
-        %% Fit a Lorentzian to the PSD
-        if temp.double_gaussian_existence == 1
-            % get rid of high frequency components. the moving mean got rid of that anyway
-            temp.psd (temp.freqs > 3 / moving_mean_average_time) = [];
-            temp.psd_dBm(temp.freqs > 3 / moving_mean_average_time) = [];
-            temp.theory_lorentzian (temp.freqs > 3 / moving_mean_average_time) = [];
-            temp.freqs(temp.freqs > 3 / moving_mean_average_time) = [];
-
-            [temp.lifetime_state_1_lorentz_fit, temp.lifetime_state_2_lorentz_fit, temp.amp_diff_lorentz_fit, temp.theory_lorentzian_fit, temp.lorentz_fit_err] = ...
-                    fit_RTS_lorentzian(temp.freqs, temp.psd, temp.lifetime_state_1_final_iteration, temp.lifetime_state_2_final_iteration, abs(temp.gaussian_1_mean - temp.gaussian_2_mean));
-        end
-        %% neglect some unreasonable lifetime values 
-        % temp.lifetime_state_1_final_iteration (temp.lifetime_state_1_final_iteration < 1/moving_mean_average_time) = NaN;
-        % temp.lifetime_state_2_final_iteration (temp.lifetime_state_2_final_iteration < 1/moving_mean_average_time) = NaN;
-        % temp.lifetime_state_1_final_iteration (temp.gaussian_difference < post_run_params.analysis.min_gaussian_center_to_center_phase) = NaN;
-        % temp.lifetime_state_2_final_iteration (temp.gaussian_difference < post_run_params.analysis.min_gaussian_center_to_center_phase) = NaN;
-        % temp.lifetime_state_1_final_iteration (temp.gaussian_difference > post_run_params.analysis.max_gaussian_center_to_center_phase) = NaN;
-        % temp.lifetime_state_2_final_iteration (temp.gaussian_difference > post_run_params.analysis.max_gaussian_center_to_center_phase) = NaN;
-        % temp.lifetime_state_1_final_iteration (temp.number_switches_both_states_final_iteration < input_params.minimum_number_switches) = NaN;
-        % temp.lifetime_state_2_final_iteration (temp.number_switches_both_states_final_iteration < input_params.minimum_number_switches) = NaN;
-        % temp.lifetime_state_1_final_iteration (temp.area_gaussian_1 > post_run_params.min_gaussian_count) = NaN;
-        % temp.lifetime_state_2_final_iteration (temp.area_gaussian_2 > post_run_params.min_gaussian_count) = NaN;
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %% Plotting PSD 
-        if temp.double_gaussian_existence == 1
+            raw_data.time_corrected = raw_data.time;
+            raw_data.amp_corrected = raw_data.amp_extracted;
+            raw_data.amp_corrected(isnan(raw_data.phase_corrected)) = [];
+            raw_data.time_corrected(isnan(raw_data.phase_corrected)) = [];
+            raw_data.phase_corrected(isnan(raw_data.phase_corrected)) = [];
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            post_run_params.analysis.bin_edges = -180:input_params.analysis.clean_RTS_bin_width:180;
+            %% Clean RTS data using function, and 
+            [temp.clean_time_data, temp.raw_data_out, temp.clean_RTS_data, temp.double_gaussian_existence, temp.gaussian_1_mean, temp.gaussian_2_mean, temp.sigma_double_gaussian, temp.double_gaussian_fit_error, ...
+                temp.area_gaussian_1, temp.area_gaussian_2, temp.lifetime_state_1_final_iteration, temp.lifetime_state_2_final_iteration, temp.lifetime_state_1_iteration_array, ...
+                temp.lifetime_state_2_iteration_array, temp.simple_threshold_clean_RTS_data, temp.simple_threshold_lifetime_state_1, temp.simple_threshold_lifetime_state_2, ...
+                temp.threshold_1_iteration_array, temp.threshold_2_iteration_array, temp.number_switches_both_states_iteration_array, ...
+                temp.number_switches_both_states_final_iteration, temp.gaussian_1_theory_values, temp.gaussian_2_theory_values, temp.hist_RTS_bins, ...
+                temp.hist_count_data, temp.single_gaussian_fit_params, temp.single_gaussian_theory_values, temp.single_gaussian_fit_error] = ...
+                clean_noisy_RTS_signal(raw_data.time_corrected, raw_data.phase_corrected, post_run_params.analysis.min_gaussian_center_to_center_phase, post_run_params.analysis.number_iterations, ...
+                        post_run_params.analysis.bin_edges, post_run_params.analysis.double_gaussian_fit_sigma_guess);
+            temp.gaussian_difference = abs(temp.gaussian_1_mean - temp.gaussian_2_mean)  ; 
+            %% Plotting Gaussian fits to RTS data
             if post_run_params.plot_visible == 1
-                RTS_PSD_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-            elseif post_run_params.plot_visible == 0 
-                RTS_PSD_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+                RTS_Gaussians = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+            elseif post_run_params.plot_visible == 0    
+                RTS_Gaussians = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
             end
-
-            semilogx(temp.freqs/1e3, temp.psd_dBm, 'r', 'DisplayName', 'PSD data')
+            bar(temp.hist_RTS_bins, temp.hist_count_data, 'DisplayName', 'raw data')
             hold on
-            semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian), 'b', 'DisplayName', 'Theoretical Lorentzian')
-            semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian_fit), 'k', 'DisplayName', 'Fit Lorentzian')
-            xlabel('Freq (kHz)', 'interpreter', 'latex')
-            ylabel('PSD (dB $^\circ$))', 'interpreter', 'latex')
-            
-            title(['RTS PSD for P$_{\mathrm{in}}$ = ' num2str(input_params.input_power_value_list(m_power)) 'dBm' 13 10 ...
+            if temp.double_gaussian_existence 
+                plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values,'r', 'linewidth', 3,'DisplayName', 'Gaussian 1 theory')
+                plot(temp.hist_RTS_bins, temp.gaussian_2_theory_values,'k', 'linewidth', 3, 'DisplayName', 'Gaussian 2 theory')
+            end
+            plot(temp.hist_RTS_bins, temp.single_gaussian_theory_values,'g', 'linewidth', 3,'DisplayName', 'Single Gaussian theory')
+            xlabel('Phase ($^\circ$)', 'interpreter', 'latex')
+            ylabel('Count', 'interpreter', 'latex')
+            title(['RTS Gaussians for P$_{\mathrm{in}}$ = ' num2str(input_params.input_power_value_list(m_power)) 'dBm' 13 10 ...
                 '$n_g = $' num2str(input_params.ng_1_value_list(m_gate)) ', $\Phi_{\mathrm{ext}}$ = ' ...
                 num2str(input_params.flux_1_value_list(m_flux)) '$\Phi_0$' 13 10 ...
                 '$\Delta$ = ' num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz, ' ...
-                'Repetition number= ' num2str(m_repetition) 13 10 ... ...
-                'lifetime 1 from RTS = ' num2str(round(temp.lifetime_state_1_final_iteration*1e6, 2)) '$\mu$s' ...
-                'lifetime 2 from RTS = ' num2str(round(temp.lifetime_state_2_final_iteration*1e6, 2)) '$\mu$s' 13 10 ...
-                'lifetime 1 from PSD fit = ' num2str(round(temp.lifetime_state_1_lorentz_fit*1e6, 2)) '$\mu$s' ...
-                'lifetime 2 from PSD fit = ' num2str(round(temp.lifetime_state_2_lorentz_fit*1e6, 2)) '$\mu$s'], 'interpreter', 'latex')
+                'Repetition number= ' num2str(m_repetition) 13 10 ...
+                'center gaussian 1 = ' num2str(round(temp.gaussian_1_mean, 2)) '$^\circ$, ' ...
+                'center gaussian 2 = ' num2str(round(temp.gaussian_2_mean, 2)) '$^\circ$, ' ...
+                'double gaussian $\sigma$ = ' num2str(round(temp.sigma_double_gaussian, 2)) '$^\circ$' 13 10 ...
+                'single gaussian center = ' num2str(round(temp.single_gaussian_fit_params(2), 2)) '$^\circ$', ...
+                'single gaussian $\sigma$ = ' num2str(round(temp.single_gaussian_fit_params(3), 2)) '$^\circ$'], 'interpreter', 'latex')
             legend show
-            
+
             if post_run_params.save_png_param == 1
-                save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
-                    num2str(m_bias_point) '_' num2str(m_detuning) ...
-                    '_' num2str(m_repetition) ...
-                    '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
-                    '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
-                    num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
-                    num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_PSD.png'];
-                saveas(RTS_PSD_figure, save_file_name)
-                if post_run_params.save_fig_file_param == 1
-                    save_file_name = [post_run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' ...
-                    num2str(m_bias_point) '_' num2str(m_detuning) ...
-                    '_' num2str(m_repetition) ...
-                    '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
-                    '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
-                    num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
-                    num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_PSD.fig'];
-                    saveas(RTS_PSD_figure, save_file_name)
-                end
+                    save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
+                        num2str(m_bias_point) '_' num2str(m_detuning) ...
+                        '_' num2str(m_repetition) ...
+                        '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
+                        '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
+                        num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
+                        num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_gaussian.png'];
+                    saveas(RTS_Gaussians, save_file_name)
+                    if post_run_params.save_fig_file_param == 1
+                        save_file_name = [post_run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' ...
+                        num2str(m_bias_point) '_' num2str(m_detuning) ...
+                        '_' num2str(m_repetition) ...
+                        '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
+                        '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
+                        num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
+                        num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_gaussian.fig'];
+                        saveas(RTS_Gaussians, save_file_name)
+                    end
             end
-            
-            clear RTS_PSD_figure ...
-                  save_file_name
-        end
-        %% Assigning values to long term variables
-
-        post_run_params.analysis.current_run_bistability_existence = temp.double_gaussian_existence;
-
-        post_run_analysis.gaussian_1_mean(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.gaussian_1_mean;
-        post_run_analysis.gaussian_2_mean(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.gaussian_2_mean;
-        post_run_analysis.gaussian_difference(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.gaussian_difference;
-        post_run_analysis.sigma_double_gaussian(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.sigma_double_gaussian;
-        post_run_analysis.double_gaussian_fit_error(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.double_gaussian_fit_error;
-        post_run_analysis.area_gaussian_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.area_gaussian_1;
-        post_run_analysis.area_gaussian_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.area_gaussian_2;
-        post_run_analysis.number_switches_both_states_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.number_switches_both_states_iteration_array;
-        post_run_analysis.number_switches_both_states_final_iteration(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.number_switches_both_states_final_iteration;
-
-        post_run_analysis.lifetime_state_1_final_iteration(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_1_final_iteration;
-        post_run_analysis.lifetime_state_2_final_iteration(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_2_final_iteration;
-        post_run_analysis.lifetime_state_1_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:post_run_params.analysis.number_iterations) = ...
-                                                                    temp.lifetime_state_1_iteration_array;
-        post_run_analysis.lifetime_state_2_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:post_run_params.analysis.number_iterations) = ...
-                                                                    temp.lifetime_state_2_iteration_array;
-        post_run_analysis.simple_threshold_lifetime_state_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.simple_threshold_lifetime_state_1;
-        post_run_analysis.simple_threshold_lifetime_state_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.simple_threshold_lifetime_state_2;
-        post_run_analysis.threshold_1_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:post_run_params.analysis.number_iterations) = ...
-                                                                    temp.threshold_1_iteration_array;
-        post_run_analysis.threshold_2_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:post_run_params.analysis.number_iterations) = ...
-                                                                    temp.threshold_2_iteration_array;
-        post_run_analysis.gaussian_1_theory_values(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
-                                                                    temp.gaussian_1_theory_values;
-        post_run_analysis.gaussian_2_theory_values(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
-                                                                    temp.gaussian_2_theory_values;
-        post_run_analysis.hist_RTS_bins(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
-                                                                    temp.hist_RTS_bins;
-        post_run_analysis.hist_count_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
-                                                                    temp.hist_count_data;
-        post_run_analysis.single_gaussian_fit_params(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:3) = temp.single_gaussian_fit_params;
-        post_run_analysis.single_gaussian_theory_values(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
-                                                                    temp.single_gaussian_theory_values;
-        post_run_analysis.single_gaussian_fit_error(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.single_gaussian_fit_error;
-        post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.double_gaussian_existence;
-
-        if temp.double_gaussian_existence == 1
-            if post_run_params.analysis.save_RTS_PSD_extended_data
-                post_run_analysis.RTS_PSD.freqs(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(temp.freqs)) = temp.freqs;
-                post_run_analysis.RTS_PSD.psd(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd;
-                post_run_analysis.RTS_PSD.psd_dBm(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd_dBm;
-    %             post_run_analysis.RTS_PSD.theory_lorentzian_values(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian;
+            clear RTS_Gaussians ...
+                  save_file_name     
+            %% Plotting a section of the RTS
+            post_run_params.analysis.plotting_number_for_RTS = input_params.digitizer.sample_rate * post_run_params.analysis.plotting_time_for_RTS;
+            if post_run_params.plot_visible == 1
+                RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+            elseif post_run_params.plot_visible == 0    
+                RTS_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
             end
-%             post_run_analysis.RTS_PSD.lorentzian_fit_theory(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian_fit;
-            post_run_analysis.RTS_PSD_fits.lorentzian_fit_lifetime_state_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_1_lorentz_fit;
-            post_run_analysis.RTS_PSD_fits.lorentzian_fit_lifetime_state_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_2_lorentz_fit;
-            post_run_analysis.RTS_PSD_fits.lorentzian_fit_amp_diff(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.amp_diff_lorentz_fit;
-            post_run_analysis.RTS_PSD_fits.lorentzian_fit_err(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lorentz_fit_err;
-        end
-
-        %%%% store necessary time data, delete rest
-        if post_run_params.analysis.storing_time_for_RTS ~= 0 && post_run_params.analysis.save_RTS_PSD_extended_data
-            input_params.start_index_of_RTS_raw_data_to_store = input_params.start_time_of_RTS_raw_data_to_store * input_params.digitizer.sample_rate;
-            input_params.length_of_RTS_raw_data_to_store = input_params.time_length_of_RTS_raw_data_to_store * input_params.digitizer.sample_rate; 
-            if input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store > length(temp.raw_data_out)
-                input_params.start_index_of_RTS_raw_data_to_store = length(temp.raw_data_out) - input_params.length_of_RTS_raw_data_to_store - 1;
-            end
-
-            post_run_analysis.RTS.moving_mean_average_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                temp.raw_data_out(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
-
-            post_run_analysis.RTS.time(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...    
-                raw_data.time_corrected(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
-
-            post_run_analysis.RTS.raw_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                raw_data.phase_extracted(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
-
-            post_run_analysis.RTS.raw_amp(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                raw_data.amp_extracted(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
-
-            post_run_analysis.RTS.moving_mean_average_amp(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                raw_data.amp_moving_mean(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
-
-            post_run_analysis.RTS.clean_time_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                temp.clean_time_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
-            
-            post_run_analysis.RTS.clean_RTS_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                temp.clean_RTS_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
-
-            post_run_analysis.RTS.simple_threshold_clean_RTS_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
-                temp.simple_threshold_clean_RTS_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
-        end
-
-        close all     
-        post_run_analysis.analysis.moving_mean_average_time(m_power, m_flux, m_gate, m_detuning, m_repetition) = post_run_params.analysis.moving_mean_average_time;
-        post_run_analysis.analysis.bin_edges(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = post_run_params.analysis.bin_edges;
-        %% Fit Poissonian
-        if post_run_params.analysis.current_run_bistability_existence == 1
-            disp('fitting Poissonian')
-            if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate') || ...
-                    strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'averaged') || ...
-                    (strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition == 1)
-                [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
-                    temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
-                    temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
-                    post_run_params.minimum_number_switches, post_run_params.poissonian_fit_bin_number);
-                if sum(temp.poisson_theory_1) == 0
-                    post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
-                end
-            elseif strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition > 1
-                [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
-                    temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
-                    temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
-                    post_run_params.minimum_number_switches, [], squeeze(post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
-                    squeeze(post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                    squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                    squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
-                if sum(temp.poisson_theory_1) == 0
-                    post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
-                end
-            end
-            post_run_params.Poisson_fig_plot_param = 1;
-        else
-            temp.poisson_lifetime_1_us = NaN;
-            temp.poisson_lifetime_2_us = NaN;
-            temp.error_poisson_lifetime_1_us = NaN;
-            temp.error_poisson_lifetime_2_us = NaN;
-            temp.poisson_theory_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
-            temp.poisson_theory_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
-            post_run_params.Poisson_fig_plot_param = 0;
-            temp.switch_time_bin_centers_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
-            temp.hist_count_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
-            temp.switch_time_bin_centers_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
-            temp.hist_count_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
-        end
-
-        post_run_analysis.analysis.current_run_bistability_existence (m_power, m_flux, m_gate, m_repetition) = post_run_params.analysis.current_run_bistability_existence;
-        post_run_analysis.analysis.poissonian_fit_bin_number(m_power, m_flux, m_gate, m_detuning) = post_run_params.poissonian_fit_bin_number;
-        post_run_analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_1_us;
-        post_run_analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_2_us;
-        post_run_analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_1_us;
-        post_run_analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_2_us;
-        post_run_analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_1;
-        post_run_analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_2;
-
-        if m_repetition > 1 && strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together')
-            post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1 - ...
-                        post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
-
-            post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2 - ...
-                    post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
-
-            post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1 - ...
-                post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
-
-            post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2 - ...
-                post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
-        else
-            post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1;
-            post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2;
-
-            post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1;
-            post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2;
-        end
-        %% Plot Poissonian
-        if post_run_params.analysis.current_run_bistability_existence && post_run_params.Poisson_fig_plot_param 
-            if post_run_params.plot_visible == 1 
-                Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-            elseif post_run_params.plot_visible == 0 
-                Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-            end
-
-            bar(temp.switch_time_bin_centers_1*1e6, log(temp.hist_count_1), 'r', 'FaceAlpha', 0.25, 'DisplayName', 'State 1 hist')
+            start_point = randi([50e-6 * input_params.digitizer.sample_rate, length(raw_data.phase_corrected) - post_run_params.analysis.plotting_number_for_RTS - 1]);
+            plot(temp.clean_time_data(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)*1e6, ...
+                raw_data.phase_extracted(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS), 'r', 'DisplayName', 'raw data')
             hold on
-            bar(temp.switch_time_bin_centers_2*1e6, log(temp.hist_count_2), 'b', 'FaceAlpha', 0.25, 'DisplayName', 'State 2 hist')
-            plot(temp.switch_time_bin_centers_1*1e6, temp.poisson_theory_1, 'r', 'linewidth', 2, 'DisplayName', 'State 1 fit')
-            plot(temp.switch_time_bin_centers_2*1e6, temp.poisson_theory_2, 'b', 'linewidth', 2, 'DisplayName', 'State 2 fit')
-            xlabel('Switching time ($\mu$s)', 'interpreter', 'latex')
-            ylabel('log(Count)', 'interpreter', 'latex')
-            title(['Poisson fit for P$_{\mathrm{in}}$ = ' num2str(input_params.input_power_value_list(m_power)) 'dBm' 13 10 ...
-                '$n_g = $' num2str(input_params.ng_1_value_list(m_gate)) ', $\Phi_{\mathrm{ext}}$ = ' num2str(input_params.flux_1_value_list(m_flux)) '$\Phi_0$' 13 10 ...
-                '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
+            plot(raw_data.time_corrected(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)*1e6, ...
+                squeeze(temp.raw_data_out(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)), ...
+                'b', 'DisplayName', 'moving averaged data')
+            plot(raw_data.time_corrected(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)*1e6, ...
+                squeeze(temp.clean_RTS_data(start_point : start_point + post_run_params.analysis.plotting_number_for_RTS)), ...
+                'k', 'linewidth', 3, 'DisplayName', 'cleaned data')
+            xlabel('Time ($\mu$s)', 'interpreter', 'latex')
+            ylabel('Phase($S_{21}) (^\circ$)', 'interpreter', 'latex')
+            title(['RTS for P$_{\mathrm{in}}$ = ' num2str(input_params.input_power_value_list(m_power)) 'dBm' 13 10 ...
+                '$n_g = $' num2str(input_params.ng_1_value_list(m_gate)) ', $\Phi_{\mathrm{ext}}$ = ' ...
+                num2str(input_params.flux_1_value_list(m_flux)) '$\Phi_0$' 13 10 ...
+                        '$\Delta$ = ' num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz, ' ...
+                'Repetition number= ' num2str(m_repetition)], 'interpreter', 'latex')
             legend show
-            annotation('textbox', [0.67, 0.33, 0.55, 0.3], 'String', ['Lifetime state 1 = ' 13 10 num2str(round(temp.poisson_lifetime_1_us, 2)) ...
-                '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-            annotation('textbox', [0.67, 0.23, 0.55, 0.3], 'String', ['Lifetime state 2 = ' 13 10 num2str(round(temp.poisson_lifetime_2_us, 2)) ...
-                '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
-            annotation('textbox', [0.35, 0.45, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_1))], ...
-                'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-            annotation('textbox', [0.35, 0.5, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_2))], ...
-                'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
 
             if post_run_params.save_png_param == 1
-                    save_file_name = [post_run_params.fig_directory  num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
-                        '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.png'];
-                    saveas(Poissonian_figure, save_file_name)
-                    save_file_name = [post_run_params.fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
-                        '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.fig'];
-                    saveas(Poissonian_figure, save_file_name)
+                    save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
+                        num2str(m_bias_point) '_' num2str(m_detuning) ...
+                        '_' num2str(m_repetition) ...
+                        '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
+                        '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
+                        num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
+                        num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_signal.png'];
+                    saveas(RTS_figure, save_file_name)
+                    if post_run_params.save_fig_file_param == 1
+                        save_file_name = [post_run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' ...
+                        num2str(m_bias_point) '_' num2str(m_detuning) ...
+                        '_' num2str(m_repetition) ...
+                        '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
+                        '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
+                        num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
+                        num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_signal_sample.fig'];
+                        saveas(RTS_figure, save_file_name)
+                    end
             end
-            clear Poissonian_figure ...
-                  save_file_name
+
+            clear RTS_figure ...
+                  save_file_name ...
+                  start_point
+            %% Find PSD of cleaned RTS signal    
+            if temp.double_gaussian_existence == 1 % no point analysing if double gaussian doesn't exist
+                disp('finding PSD of RTS')
+                [temp.freqs, temp.psd, temp.psd_dBm] = ...
+                    extract_PSD(raw_data.time_corrected, temp.clean_RTS_data);
+            end
+            %% Find theoretical Lorentzian from the obtained lifetimes 
+            if temp.double_gaussian_existence == 1
+                %%%% see eqn. 9.34 in https://www.nii.ac.jp/qis/first-quantum/e/forStudents/lecture/pdf/noise/chapter9.pdf
+                %%%% or
+                %%%%% eqn. 3.28 of https://ris.utwente.nl/ws/portalfiles/portal/6038220/thesis-Kolhatkar.pdf 
+                temp.theory_lorentzian = 4*(abs(temp.gaussian_1_mean - temp.gaussian_2_mean))^2 ./ ((temp.lifetime_state_1_final_iteration + temp.lifetime_state_2_final_iteration) .* ...
+                    ((1/temp.lifetime_state_1_final_iteration + 1/ temp.lifetime_state_2_final_iteration)^2 + (2*pi*temp.freqs).^2));
+            end
+            %% Fit a Lorentzian to the PSD
+            if temp.double_gaussian_existence == 1
+                % get rid of high frequency components. the moving mean got rid of that anyway
+                temp.psd (temp.freqs > 3 / moving_mean_average_time) = [];
+                temp.psd_dBm(temp.freqs > 3 / moving_mean_average_time) = [];
+                temp.theory_lorentzian (temp.freqs > 3 / moving_mean_average_time) = [];
+                temp.freqs(temp.freqs > 3 / moving_mean_average_time) = [];
+
+                [temp.lifetime_state_1_lorentz_fit, temp.lifetime_state_2_lorentz_fit, temp.amp_diff_lorentz_fit, temp.theory_lorentzian_fit, temp.lorentz_fit_err] = ...
+                        fit_RTS_lorentzian(temp.freqs, temp.psd, temp.lifetime_state_1_final_iteration, temp.lifetime_state_2_final_iteration, abs(temp.gaussian_1_mean - temp.gaussian_2_mean));
+            end
+            %% neglect some unreasonable lifetime values 
+            % temp.lifetime_state_1_final_iteration (temp.lifetime_state_1_final_iteration < 1/moving_mean_average_time) = NaN;
+            % temp.lifetime_state_2_final_iteration (temp.lifetime_state_2_final_iteration < 1/moving_mean_average_time) = NaN;
+            % temp.lifetime_state_1_final_iteration (temp.gaussian_difference < post_run_params.analysis.min_gaussian_center_to_center_phase) = NaN;
+            % temp.lifetime_state_2_final_iteration (temp.gaussian_difference < post_run_params.analysis.min_gaussian_center_to_center_phase) = NaN;
+            % temp.lifetime_state_1_final_iteration (temp.gaussian_difference > post_run_params.analysis.max_gaussian_center_to_center_phase) = NaN;
+            % temp.lifetime_state_2_final_iteration (temp.gaussian_difference > post_run_params.analysis.max_gaussian_center_to_center_phase) = NaN;
+            % temp.lifetime_state_1_final_iteration (temp.number_switches_both_states_final_iteration < input_params.minimum_number_switches) = NaN;
+            % temp.lifetime_state_2_final_iteration (temp.number_switches_both_states_final_iteration < input_params.minimum_number_switches) = NaN;
+            % temp.lifetime_state_1_final_iteration (temp.area_gaussian_1 > post_run_params.min_gaussian_count) = NaN;
+            % temp.lifetime_state_2_final_iteration (temp.area_gaussian_2 > post_run_params.min_gaussian_count) = NaN;
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% Plotting PSD 
+            if temp.double_gaussian_existence == 1
+                if post_run_params.plot_visible == 1
+                    RTS_PSD_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+                elseif post_run_params.plot_visible == 0 
+                    RTS_PSD_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+                end
+
+                semilogx(temp.freqs/1e3, temp.psd_dBm, 'r', 'DisplayName', 'PSD data')
+                hold on
+                semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian), 'b', 'linewidth', 3, 'DisplayName', 'Theoretical Lorentzian')
+                semilogx(temp.freqs/1e3, convert_fraction_to_dB(temp.theory_lorentzian_fit), 'k', 'linewidth', 3, 'DisplayName', 'Fit Lorentzian')
+                xlabel('Freq (kHz)', 'interpreter', 'latex')
+                ylabel('PSD (dB $^\circ$))', 'interpreter', 'latex')
+
+                title(['RTS PSD for P$_{\mathrm{in}}$ = ' num2str(input_params.input_power_value_list(m_power)) 'dBm' 13 10 ...
+                    '$n_g = $' num2str(input_params.ng_1_value_list(m_gate)) ', $\Phi_{\mathrm{ext}}$ = ' ...
+                    num2str(input_params.flux_1_value_list(m_flux)) '$\Phi_0$' 13 10 ...
+                    '$\Delta$ = ' num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz, ' ...
+                    'Repetition number= ' num2str(m_repetition) 13 10 ... ...
+                    'lifetime 1 from RTS = ' num2str(round(temp.lifetime_state_1_final_iteration*1e6, 2)) '$\mu$s, ' ...
+                    'lifetime 2 from RTS = ' num2str(round(temp.lifetime_state_2_final_iteration*1e6, 2)) '$\mu$s' 13 10 ...
+                    'lifetime 1 from PSD fit = ' num2str(round(temp.lifetime_state_1_lorentz_fit*1e6, 2)) '$\mu$s, ' ...
+                    'lifetime 2 from PSD fit = ' num2str(round(temp.lifetime_state_2_lorentz_fit*1e6, 2)) '$\mu$s'], 'interpreter', 'latex')
+                legend show
+
+                if post_run_params.save_png_param == 1
+                    save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
+                        num2str(m_bias_point) '_' num2str(m_detuning) ...
+                        '_' num2str(m_repetition) ...
+                        '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
+                        '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
+                        num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
+                        num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_PSD.png'];
+                    saveas(RTS_PSD_figure, save_file_name)
+                    if post_run_params.save_fig_file_param == 1
+                        save_file_name = [post_run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' ...
+                        num2str(m_bias_point) '_' num2str(m_detuning) ...
+                        '_' num2str(m_repetition) ...
+                        '_' num2str(input_params.input_power_value_list(m_power)) 'dBm_' ...
+                        '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' ...
+                        num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' ...
+                        num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz_RTS_PSD.fig'];
+                        saveas(RTS_PSD_figure, save_file_name)
+                    end
+                end
+
+                clear RTS_PSD_figure ...
+                      save_file_name
+            end
+            %% Assigning values to long term variables
+
+            post_run_params.analysis.current_run_bistability_existence = temp.double_gaussian_existence;
+
+            post_run_analysis.gaussian_1_mean(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.gaussian_1_mean;
+            post_run_analysis.gaussian_2_mean(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.gaussian_2_mean;
+            post_run_analysis.gaussian_difference(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.gaussian_difference;
+            post_run_analysis.sigma_double_gaussian(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.sigma_double_gaussian;
+            post_run_analysis.double_gaussian_fit_error(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.double_gaussian_fit_error;
+            post_run_analysis.area_gaussian_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.area_gaussian_1;
+            post_run_analysis.area_gaussian_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.area_gaussian_2;
+            post_run_analysis.number_switches_both_states_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.number_switches_both_states_iteration_array;
+            post_run_analysis.number_switches_both_states_final_iteration(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.number_switches_both_states_final_iteration;
+
+            post_run_analysis.lifetime_state_1_final_iteration(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_1_final_iteration;
+            post_run_analysis.lifetime_state_2_final_iteration(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_2_final_iteration;
+            post_run_analysis.lifetime_state_1_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:post_run_params.analysis.number_iterations) = ...
+                                                                        temp.lifetime_state_1_iteration_array;
+            post_run_analysis.lifetime_state_2_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:post_run_params.analysis.number_iterations) = ...
+                                                                        temp.lifetime_state_2_iteration_array;
+            post_run_analysis.simple_threshold_lifetime_state_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.simple_threshold_lifetime_state_1;
+            post_run_analysis.simple_threshold_lifetime_state_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.simple_threshold_lifetime_state_2;
+            post_run_analysis.threshold_1_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:post_run_params.analysis.number_iterations) = ...
+                                                                        temp.threshold_1_iteration_array;
+            post_run_analysis.threshold_2_iteration_array(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:post_run_params.analysis.number_iterations) = ...
+                                                                        temp.threshold_2_iteration_array;
+            post_run_analysis.gaussian_1_theory_values(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
+                                                                        temp.gaussian_1_theory_values;
+            post_run_analysis.gaussian_2_theory_values(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
+                                                                        temp.gaussian_2_theory_values;
+            post_run_analysis.hist_RTS_bins(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
+                                                                        temp.hist_RTS_bins;
+            post_run_analysis.hist_count_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
+                                                                        temp.hist_count_data;
+            post_run_analysis.single_gaussian_fit_params(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:3) = temp.single_gaussian_fit_params;
+            post_run_analysis.single_gaussian_theory_values(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(post_run_params.analysis.bin_edges)-1) = ...
+                                                                        temp.single_gaussian_theory_values;
+            post_run_analysis.single_gaussian_fit_error(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.single_gaussian_fit_error;
+            post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.double_gaussian_existence;
+
+            if temp.double_gaussian_existence == 1
+                if post_run_params.analysis.save_RTS_PSD_extended_data
+                    post_run_analysis.RTS_PSD.freqs(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(temp.freqs)) = temp.freqs;
+                    post_run_analysis.RTS_PSD.psd(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd;
+                    post_run_analysis.RTS_PSD.psd_dBm(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.psd_dBm;
+        %             post_run_analysis.RTS_PSD.theory_lorentzian_values(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian;
+                end
+    %             post_run_analysis.RTS_PSD.lorentzian_fit_theory(m_power, m_flux, m_gate, m_detuning, m_repetition,  1:length(temp.freqs)) = temp.theory_lorentzian_fit;
+                post_run_analysis.RTS_PSD_fits.lorentzian_fit_lifetime_state_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_1_lorentz_fit;
+                post_run_analysis.RTS_PSD_fits.lorentzian_fit_lifetime_state_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lifetime_state_2_lorentz_fit;
+                post_run_analysis.RTS_PSD_fits.lorentzian_fit_amp_diff(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.amp_diff_lorentz_fit;
+                post_run_analysis.RTS_PSD_fits.lorentzian_fit_err(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.lorentz_fit_err;
+            end
+
+            %%%% store necessary time data, delete rest
+            if post_run_params.analysis.storing_time_for_RTS ~= 0 && post_run_params.analysis.save_RTS_PSD_extended_data
+                input_params.start_index_of_RTS_raw_data_to_store = input_params.start_time_of_RTS_raw_data_to_store * input_params.digitizer.sample_rate;
+                input_params.length_of_RTS_raw_data_to_store = input_params.time_length_of_RTS_raw_data_to_store * input_params.digitizer.sample_rate; 
+                if input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store > length(temp.raw_data_out)
+                    input_params.start_index_of_RTS_raw_data_to_store = length(temp.raw_data_out) - input_params.length_of_RTS_raw_data_to_store - 1;
+                end
+
+                post_run_analysis.RTS.moving_mean_average_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+                    temp.raw_data_out(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
+
+                post_run_analysis.RTS.time(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...    
+                    raw_data.time_corrected(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
+
+                post_run_analysis.RTS.raw_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+                    raw_data.phase_extracted(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
+
+                post_run_analysis.RTS.raw_amp(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+                    raw_data.amp_extracted(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
+
+                post_run_analysis.RTS.moving_mean_average_amp(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+                    raw_data.amp_moving_mean(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
+
+                post_run_analysis.RTS.clean_time_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+                    temp.clean_time_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
+
+                post_run_analysis.RTS.clean_RTS_phase(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+                    temp.clean_RTS_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
+
+                post_run_analysis.RTS.simple_threshold_clean_RTS_data(m_power, m_flux, m_gate, m_detuning, m_repetition, 1 : input_params.length_of_RTS_raw_data_to_store) = ...
+                    temp.simple_threshold_clean_RTS_data(round(input_params.start_index_of_RTS_raw_data_to_store) : round(input_params.start_index_of_RTS_raw_data_to_store + input_params.length_of_RTS_raw_data_to_store - 1));
+            end
+
+            close all     
+            post_run_analysis.analysis.moving_mean_average_time(m_power, m_flux, m_gate, m_detuning, m_repetition) = post_run_params.analysis.moving_mean_average_time;
+            post_run_analysis.analysis.bin_edges(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = post_run_params.analysis.bin_edges;
+            %% Fit Poissonian
+            if post_run_params.analysis.current_run_bistability_existence == 1
+                disp('fitting Poissonian')
+                if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate') || ...
+                        strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'averaged') || ...
+                        (strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition == 1)
+                    [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
+                        temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
+                        temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
+                        post_run_params.minimum_number_switches, post_run_params.poissonian_fit_bin_number);
+                    if sum(temp.poisson_theory_1) == 0
+                        post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                    end
+                elseif strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition > 1
+                    [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
+                        temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
+                        temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
+                        post_run_params.minimum_number_switches, [], squeeze(post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
+                        squeeze(post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
+                        squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
+                        squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
+                    if sum(temp.poisson_theory_1) == 0
+                        post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                    end
+                end
+                
+                if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_averaged') 
+                    [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
+                        temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
+                        temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
+                        post_run_params.minimum_number_switches, post_run_params.poissonian_fit_bin_number);
+                    if sum(temp.poisson_theory_1) == 0
+                        post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                    end
+                    if m_repetition == 1
+                        temp.hist_together.poisson_lifetime_1_us = temp.poisson_lifetime_1_us;
+                        temp.hist_together.poisson_lifetime_2_us = temp.poisson_lifetime_2_us;
+                        temp.hist_together.error_poisson_lifetime_1_us = temp.error_poisson_lifetime_1_us;
+                        temp.hist_together.error_poisson_lifetime_2_us = temp.error_poisson_lifetime_2_us;
+                        temp.hist_together.poisson_theory_1 = temp.poisson_theory_1;
+                        temp.hist_together.poisson_theory_2 = temp.poisson_theory_2;
+                        temp.hist_together.switch_time_bin_centers_1 = temp.switch_time_bin_centers_1;
+                        temp.hist_together.hist_count_1 = temp.hist_count_1;
+                        temp.hist_together.switch_time_bin_centers_2 = temp.switch_time_bin_centers_2;
+                        temp.hist_together.hist_count_2 = temp.hist_count_2;
+                    elseif m_repetition > 1                    
+                    [temp.hist_together.poisson_lifetime_1_us, temp.hist_together.poisson_lifetime_2_us, temp.hist_together.error_poisson_lifetime_1_us, ...
+                        temp.hist_together.error_poisson_lifetime_2_us, temp.hist_together.poisson_theory_1, temp.hist_together.poisson_theory_2, ...
+                        temp.hist_together.switch_time_bin_centers_1, temp.hist_together.hist_count_1, temp.hist_together.switch_time_bin_centers_2, ...
+                        temp.hist_together.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
+                        post_run_params.minimum_number_switches, [], ...
+                        squeeze(post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
+                        squeeze(post_run_analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
+                        squeeze(post_run_analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
+                        squeeze(post_run_analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
+                    if sum(temp.poisson_theory_1) == 0
+                        post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                    end
+                end
+                
+                post_run_params.Poisson_fig_plot_param = 1;
+            else
+                temp.poisson_lifetime_1_us = NaN;
+                temp.poisson_lifetime_2_us = NaN;
+                temp.error_poisson_lifetime_1_us = NaN;
+                temp.error_poisson_lifetime_2_us = NaN;
+                temp.poisson_theory_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
+                temp.poisson_theory_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
+                post_run_params.Poisson_fig_plot_param = 0;
+                temp.switch_time_bin_centers_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
+                temp.hist_count_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
+                temp.switch_time_bin_centers_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
+                temp.hist_count_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
+            end
+
+            post_run_analysis.analysis.current_run_bistability_existence (m_power, m_flux, m_gate, m_repetition) = post_run_params.analysis.current_run_bistability_existence;
+            post_run_analysis.analysis.poissonian_fit_bin_number(m_power, m_flux, m_gate, m_detuning) = post_run_params.poissonian_fit_bin_number;
+            post_run_analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_1_us;
+            post_run_analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_2_us;
+            post_run_analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_1_us;
+            post_run_analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_2_us;
+            post_run_analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_1;
+            post_run_analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_2;
+
+            if m_repetition > 1 && strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together')
+                post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1 - ...
+                            post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+
+                post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2 - ...
+                        post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+
+                post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1 - ...
+                    post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+
+                post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2 - ...
+                    post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+            else
+                post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1;
+                post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2;
+
+                post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1;
+                post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2;
+            end
+            
+            if m_repetition > 1 && strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together')
+                post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1 - ...
+                            post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+
+                post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2 - ...
+                        post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+
+                post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1 - ...
+                    post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+
+                post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2 - ...
+                    post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+            else
+                post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1;
+                post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2;
+
+                post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1;
+                post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2;
+            end
+            %% Plot Poissonian
+            if post_run_params.analysis.current_run_bistability_existence && post_run_params.Poisson_fig_plot_param 
+                if post_run_params.plot_visible == 1 
+                    Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+                elseif post_run_params.plot_visible == 0 
+                    Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+                end
+
+                bar(temp.switch_time_bin_centers_1*1e6, log(temp.hist_count_1), 'r', 'FaceAlpha', 0.25, 'DisplayName', 'State 1 hist')
+                hold on
+                bar(temp.switch_time_bin_centers_2*1e6, log(temp.hist_count_2), 'b', 'FaceAlpha', 0.25, 'DisplayName', 'State 2 hist')
+                plot(temp.switch_time_bin_centers_1*1e6, temp.poisson_theory_1, 'r', 'linewidth', 2, 'DisplayName', 'State 1 fit')
+                plot(temp.switch_time_bin_centers_2*1e6, temp.poisson_theory_2, 'b', 'linewidth', 2, 'DisplayName', 'State 2 fit')
+                xlabel('Switching time ($\mu$s)', 'interpreter', 'latex')
+                ylabel('log(Count)', 'interpreter', 'latex')
+                title(['Poisson fit for P$_{\mathrm{in}}$ = ' num2str(input_params.input_power_value_list(m_power)) 'dBm' 13 10 ...
+                    '$n_g = $' num2str(input_params.ng_1_value_list(m_gate)) ', $\Phi_{\mathrm{ext}}$ = ' num2str(input_params.flux_1_value_list(m_flux)) '$\Phi_0$' 13 10 ...
+                    '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
+                legend show
+                annotation('textbox', [0.67, 0.33, 0.55, 0.3], 'String', ['Lifetime state 1 = ' 13 10 num2str(round(temp.poisson_lifetime_1_us, 2)) ...
+                    '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
+                annotation('textbox', [0.67, 0.23, 0.55, 0.3], 'String', ['Lifetime state 2 = ' 13 10 num2str(round(temp.poisson_lifetime_2_us, 2)) ...
+                    '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
+                annotation('textbox', [0.35, 0.45, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_1))], ...
+                    'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
+                annotation('textbox', [0.35, 0.5, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_2))], ...
+                    'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
+
+                if post_run_params.save_png_param == 1
+                        save_file_name = [post_run_params.fig_directory  num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
+                            '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.png'];
+                        saveas(Poissonian_figure, save_file_name)
+                        save_file_name = [post_run_params.fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_repetition)...
+                            '_ng_' num2str(input_params.ng_1_value_list(m_gate)) '_flux_' num2str(input_params.flux_1_value_list(m_flux)*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.fig'];
+                        saveas(Poissonian_figure, save_file_name)
+                end
+                clear Poissonian_figure ...
+                      save_file_name
+            end
+            post_run_analysis.analyzed_parameter(m_power, m_flux, m_gate, m_detuning, m_repetition) = 1;
+            clear moving_mean_average_time ...
+                  moving_mean_average_number ...
+                  raw_data ...
+                  m_power ...
+                  m_flux ...
+                  m_gate ...
+                  m_detuning ...
+                  m_repetition ...
+                  m_bias_point ...
+                  detuning_point ...
+                  temp
+            close all
         end
-        post_run_analysis.analyzed_parameter(m_power, m_flux, m_gate, m_detuning, m_repetition) = 1;
-        clear moving_mean_average_time ...
-              moving_mean_average_number ...
-              raw_data ...
-              m_power ...
-              m_flux ...
-              m_gate ...
-              m_detuning ...
-              m_repetition ...
-              m_bias_point ...
-              detuning_point ...
-              temp
-        close all
-    end
-    if post_run_params.save_data_param
-        save_file_name = strtrim(temp_filelist.file_name);
-        movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' ...
-            save_file_name(1 : end -4) '_analyzed.mat'])
-        clear save_file_name
-    end
-    %% save post run analysis to switching finder comprehensive mat file
-    if post_run_params.save_data_param
-        save(post_run_params.file_to_load_input_params_from,'post_run_params', 'post_run_analysis', '-append')
-        save(post_run_params.file_to_save_post_run_analysis_separately,'post_run_params', 'post_run_analysis', '-append')
+        if post_run_params.save_data_param
+            save_file_name = strtrim(temp_filelist.file_name);
+            movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' ...
+                save_file_name(1 : end -4) '_analyzed.mat'])
+            clear save_file_name
+        end
+        %% save post run analysis to switching finder comprehensive mat file
+        if post_run_params.save_data_param
+            save(post_run_params.file_to_load_input_params_from,'post_run_params', 'post_run_analysis', '-append')
+            save(post_run_params.file_to_save_post_run_analysis_separately,'post_run_params', 'post_run_analysis', '-append')
+        end
     end
 end
 %% Function Clean RTS from noisy data
@@ -890,6 +946,7 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
         hist_count_state_1 = [];
         hist_count_state_2 = [];
     end
+    at_least_so_many_counts = 20; % has to have at least 2 bins with so many counts. if not, reject poisson fit
     
     %%%% figures out when the clean_RTS_noise_broadening function starts
     %%%% spitting out 0 and 1 states it is sure about. 
@@ -977,7 +1034,7 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
 %     bar(time_bin_centers_state_1(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_1_hist_data(lifetime_state_1_hist_data > 5)))
 %     hold on
 %     bar(time_bin_centers_state_2(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_2_hist_data(lifetime_state_1_hist_data > 5)))
-    if length(lifetime_state_1_hist_data(lifetime_state_1_hist_data > 20)) < 2 || length(lifetime_state_2_hist_data(lifetime_state_2_hist_data > 20)) < 2 
+    if length(lifetime_state_1_hist_data(lifetime_state_1_hist_data > at_least_so_many_counts)) < 2 || length(lifetime_state_2_hist_data(lifetime_state_2_hist_data > at_least_so_many_counts)) < 2 
         lifetime_1_us = 0;
         lifetime_2_us = 0;
         std_exp_fit_state_1 = 0;
