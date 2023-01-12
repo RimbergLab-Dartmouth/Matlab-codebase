@@ -8,7 +8,7 @@
 run_params.concatenate_runs = 0; % 0/1 - decides whether this run is going to concatenate data to an existing file
 run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
-run_params.analysis_during_acquisition = 0; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
+run_params.analysis_during_acquisition = 1; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
 run_params.analysis.save_RTS_PSD_extended_data = 0; % to save PSD and RTS data for a short period of time set later. This is only if analyzed during acquisition
 if run_params.concatenate_runs
     run_params.data_directory = [cd '\data'];
@@ -146,7 +146,7 @@ for m_power = 4 : 4
                 input_params.time_length_of_RTS_raw_data_to_store = 50e-6; % in s
                 input_params.start_time_of_RTS_raw_data_to_store = 5.1e-3; % in s
                 run_params.poissonian_fit_bin_number = 25;
-                run_params.poissonian_lifetime_repetitions_mode = 'separate'; % 'separate' or 'averaged', 'histogrammed_together'
+                run_params.poissonian_lifetime_repetitions_mode = 'separate_and_together'; % 'separate' or 'averaged', 'histogrammed_together', 'separate_and_together'
             end
             %% VNA parameter settings
             input_params.vna.average_number = 50;
@@ -494,7 +494,7 @@ for m_power = 4 : 4
                                 [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
                                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
                                     temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
-                                    [], squeeze(analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
+                                    input_params.minimum_number_switches, [], squeeze(analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
                                     squeeze(analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                                     squeeze(analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                                     squeeze(analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
@@ -503,7 +503,7 @@ for m_power = 4 : 4
                                 [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
                                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
                                     temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
-                                    post_run_params.minimum_number_switches, post_run_params.poissonian_fit_bin_number);
+                                    input_params.minimum_number_switches, run_params.poissonian_fit_bin_number);
                                 if sum(temp.poisson_theory_1) == 0
                                    analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
                                 end
@@ -523,11 +523,11 @@ for m_power = 4 : 4
                                         temp.hist_together.error_poisson_lifetime_2_us, temp.hist_together.poisson_theory_1, temp.hist_together.poisson_theory_2, ...
                                         temp.hist_together.switch_time_bin_centers_1, temp.hist_together.hist_count_1, temp.hist_together.switch_time_bin_centers_2, ...
                                         temp.hist_together.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
-                                        post_run_params.minimum_number_switches, [], ...
-                                        squeeze(analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
-                                        squeeze(analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                                        squeeze(analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                                        squeeze(analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
+                                        input_params.minimum_number_switches, [], ...
+                                        squeeze(analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :))',  ...
+                                        squeeze(analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :))', ...
+                                        squeeze(analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
+                                        squeeze(analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
                                     if sum(temp.poisson_theory_1) == 0
                                         analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
                                     end
@@ -547,7 +547,7 @@ for m_power = 4 : 4
                             temp.switch_time_bin_centers_2 = zeros(1, run_params.poissonian_fit_bin_number);
                             temp.hist_count_2 = zeros(1, run_params.poissonian_fit_bin_number);
                             
-                            if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
+                            if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
                                 temp.hist_together.poisson_lifetime_1_us = NaN;
                                 temp.hist_together.poisson_lifetime_2_us = NaN;
                                 temp.hist_together.error_poisson_lifetime_1_us = NaN;
@@ -590,19 +590,19 @@ for m_power = 4 : 4
                             analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2;
                         end
                         
-                        if m_repetition > 1 && strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together')
+                        if m_repetition > 1 && strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together')
                             analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_1 - ...
-                                        analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+                                        squeeze(analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :))';
 
                            analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_2 - ...
-                                    analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+                                    squeeze(analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :))';
 
-                            analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_1 - ...
-                                analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+                            analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_1(:) - ...
+                                squeeze(analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :));
 
-                            analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_2 - ...
-                                analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
-                        elseif strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together')
+                            analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_2(:) - ...
+                                squeeze(analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :));
+                        elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together')
                             analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1;
                             analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2;
 
@@ -649,10 +649,9 @@ for m_power = 4 : 4
                             clear Poissonian_figure ...
                                   save_file_name
                         end
-                        
                         %% Plot Poissonian of together if histogrammed together and separately
                         if run_params.analysis.current_run_bistability_existence && run_params.Poisson_fig_plot_param && ...
-                                strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && m_repetition == run_params.number_repetitions
+                                strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && m_repetition == run_params.number_repetitions
                             if run_params.plot_visible == 1 
                                 Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
                             elseif run_params.plot_visible == 0 
@@ -880,7 +879,8 @@ end
 clear run_params
 %% Function extract Poissonian lifetimes
 function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2, theory_values_state_1, theory_values_state_2, time_bin_centers_state_1, lifetime_state_1_hist_data, ...
-    time_bin_centers_state_2,  lifetime_state_2_hist_data] =  extract_poissonian_lifetimes(clean_time_data, clean_amp_data, gaussian_1_mean, gaussian_2_mean, min_switching_number, bin_number, hist_count_state_1, ...
+    time_bin_centers_state_2,  lifetime_state_2_hist_data] =  extract_poissonian_lifetimes(clean_time_data, clean_amp_data, gaussian_1_mean, gaussian_2_mean, min_switching_number, ...
+                                        bin_number, hist_count_state_1, ...
                                         hist_count_state_2, bin_centers_state_1, bin_centers_state_2)
 
     if ~exist('bin_number', 'var') && ~exist('bin_centers', 'var') && ~exist('hist_state_1', 'var') && ~exist('hist_state_2', 'var')
