@@ -433,7 +433,6 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                         post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
                     end
                 end
-                post_run_params.poissonian_lifetime_repetitions_mode
                 
                 if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
                     [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
