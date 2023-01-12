@@ -676,46 +676,47 @@ for m_power = 4 : 4
                         end
                         %% Plot Poissonian of together if histogrammed together and separately
                         if run_params.analysis.current_run_bistability_existence && ...
-                                analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, run_params.number_repetitions) && ...
                                 strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && m_repetition == run_params.number_repetitions
-                            if run_params.plot_visible == 1 
-                                Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-                            elseif run_params.plot_visible == 0 
-                                Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-                            end
+                            if analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, run_params.number_repetitions) 
+                                if run_params.plot_visible == 1 
+                                    Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+                                elseif run_params.plot_visible == 0 
+                                    Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+                                end
 
-                            bar(temp.hist_together.switch_time_bin_centers_1*1e6, log(temp.hist_together.hist_count_1), 'r', 'FaceAlpha', 0.25, 'DisplayName', 'State 1 hist')
-                            hold on
-                            bar(temp.hist_together.switch_time_bin_centers_2*1e6, log(temp.hist_together.hist_count_2), 'b', 'FaceAlpha', 0.25, 'DisplayName', 'State 2 hist')
-                            plot(temp.hist_together.switch_time_bin_centers_1*1e6, temp.hist_together.poisson_theory_1, 'r', 'linewidth', 2, 'DisplayName', 'State 1 fit')
-                            plot(temp.hist_together.switch_time_bin_centers_2*1e6, temp.hist_together.poisson_theory_2, 'b', 'linewidth', 2, 'DisplayName', 'State 2 fit')
-                            xlabel('Switching time ($\mu$s)', 'interpreter', 'latex')
-                            ylabel('log(Count)', 'interpreter', 'latex')
-                            title(['Poisson fit histogrammed over repetitions for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
-                                '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
-                                '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
-                            legend show
-                            annotation('textbox', [0.55, 0.45, 0.5, 0.3], 'String', ['Lifetime state 1 = ' num2str(round(temp.poisson_lifetime_1_us, 2)) ...
-                                '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-                            annotation('textbox', [0.55, 0.35, 0.5, 0.3], 'String', ['Lifetime state 2 = ' num2str(round(temp.poisson_lifetime_2_us, 2)) ...
-                                '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
-                            annotation('textbox', [0.35, 0.2, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_1))], ...
-                                'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-                            annotation('textbox', [0.35, 0.25, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_2))], ...
-                                'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
+                                bar(temp.hist_together.switch_time_bin_centers_1*1e6, log(temp.hist_together.hist_count_1), 'r', 'FaceAlpha', 0.25, 'DisplayName', 'State 1 hist')
+                                hold on
+                                bar(temp.hist_together.switch_time_bin_centers_2*1e6, log(temp.hist_together.hist_count_2), 'b', 'FaceAlpha', 0.25, 'DisplayName', 'State 2 hist')
+                                plot(temp.hist_together.switch_time_bin_centers_1*1e6, temp.hist_together.poisson_theory_1, 'r', 'linewidth', 2, 'DisplayName', 'State 1 fit')
+                                plot(temp.hist_together.switch_time_bin_centers_2*1e6, temp.hist_together.poisson_theory_2, 'b', 'linewidth', 2, 'DisplayName', 'State 2 fit')
+                                xlabel('Switching time ($\mu$s)', 'interpreter', 'latex')
+                                ylabel('log(Count)', 'interpreter', 'latex')
+                                title(['Poisson fit histogrammed over repetitions for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
+                                    '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
+                                    '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
+                                legend show
+                                annotation('textbox', [0.55, 0.45, 0.5, 0.3], 'String', ['Lifetime state 1 = ' num2str(round(temp.poisson_lifetime_1_us, 2)) ...
+                                    '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
+                                annotation('textbox', [0.55, 0.35, 0.5, 0.3], 'String', ['Lifetime state 2 = ' num2str(round(temp.poisson_lifetime_2_us, 2)) ...
+                                    '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
+                                annotation('textbox', [0.35, 0.2, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_1))], ...
+                                    'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
+                                annotation('textbox', [0.35, 0.25, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_2))], ...
+                                    'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
 
-                            if run_params.save_data_and_png_param == 1
-                                    save_file_name = [run_params.rts_fig_directory  num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_detuning)...
-                                        '_' num2str(m_repetition) '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) ...
-                                        'm_detuning_' num2str(detuning_point) 'MHz_poisson_hist_together_fit.png'];
-                                    saveas(Poissonian_figure, save_file_name)
-                                    save_file_name = [run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_detuning)...
-                                        '_' num2str(m_repetition) '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' ...
-                                        num2str(detuning_point) 'MHz_poisson_hist_together_.fig'];
-                                    saveas(Poissonian_figure, save_file_name)
+                                if run_params.save_data_and_png_param == 1
+                                        save_file_name = [run_params.rts_fig_directory  num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_detuning)...
+                                            '_' num2str(m_repetition) '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) ...
+                                            'm_detuning_' num2str(detuning_point) 'MHz_poisson_hist_together_fit.png'];
+                                        saveas(Poissonian_figure, save_file_name)
+                                        save_file_name = [run_params.rts_fig_directory '/fig_files/' num2str(m_power) '_' num2str(m_bias_point) '_' num2str(m_detuning)...
+                                            '_' num2str(m_repetition) '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' ...
+                                            num2str(detuning_point) 'MHz_poisson_hist_together_.fig'];
+                                        saveas(Poissonian_figure, save_file_name)
+                                end
+                                clear Poissonian_figure ...
+                                      save_file_name
                             end
-                            clear Poissonian_figure ...
-                                  save_file_name
                         end
                     end
                 end
