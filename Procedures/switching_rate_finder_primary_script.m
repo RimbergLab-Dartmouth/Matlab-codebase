@@ -1008,8 +1008,8 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
     if isempty(bin_number)
         [lifetime_state_1_hist_data, time_bin_centers_state_1] = hist(lifetime_state_1_array, bin_centers_state_1 );
         [lifetime_state_2_hist_data, time_bin_centers_state_2] = hist(lifetime_state_2_array, bin_centers_state_2);
-        lifetime_state_1_hist_data = lifetime_state_1_hist_data + hist_count_state_1;
-        lifetime_state_2_hist_data = lifetime_state_2_hist_data + hist_count_state_2;
+        lifetime_state_1_hist_data = lifetime_state_1_hist_data(:) + hist_count_state_1(:);
+        lifetime_state_2_hist_data = lifetime_state_2_hist_data(:)+ hist_count_state_2(:);
     else
         [lifetime_state_1_hist_data, time_bin_centers_state_1] = hist(lifetime_state_1_array, bin_number);
         [lifetime_state_2_hist_data, time_bin_centers_state_2] = hist(lifetime_state_2_array, bin_number);

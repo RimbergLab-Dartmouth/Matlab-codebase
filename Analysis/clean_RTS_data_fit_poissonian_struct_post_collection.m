@@ -98,9 +98,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             raw_data.voltage = reshape(raw_data.voltage', raw_data.size_required)';
 
             disp(['cleaning RTS for power number = ' num2str(m_power) ', flux number = ' ...
-            num2str(m_flux) ', ' 13 10 'gate number = ' num2str(m_gate) ...
+            num2str(m_flux) ', ' 13 'gate number = ' num2str(m_gate) ...
             ', detuning number = ' num2str(m_detuning) ', repetition number = ' ...
-                num2str(m_repetition)])
+                num2str(m_repetition) 13 10 13 10])
 
             moving_mean_average_time = post_run_params.analysis.moving_mean_average_time;
             moving_mean_average_number = moving_mean_average_time * input_params.digitizer.sample_rate;
@@ -412,7 +412,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             post_run_analysis.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0; %%% initiate fit success at 0.
             %%%%% if conditions to only fit poissonian if bistability exists.
             if post_run_params.analysis.current_run_bistability_existence == 1
-                disp('fitting Poissonian')
+                disp('bistability detected, fitting Poissonian')
                 %%%% if conditions to analyze according to chosen poisson fitting method. averaged and separate are straight forward. 
                 %%%% histogrammed together and separate_and_together are a little involved to cover all failure modes
                 if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate') || ...
@@ -1098,8 +1098,8 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
     if isempty(bin_number)
         [lifetime_state_1_hist_data, time_bin_centers_state_1] = hist(lifetime_state_1_array, bin_centers_state_1 );
         [lifetime_state_2_hist_data, time_bin_centers_state_2] = hist(lifetime_state_2_array, bin_centers_state_2);
-        lifetime_state_1_hist_data = lifetime_state_1_hist_data + hist_count_state_1;
-        lifetime_state_2_hist_data = lifetime_state_2_hist_data + hist_count_state_2;
+        lifetime_state_1_hist_data = lifetime_state_1_hist_data(:) + hist_count_state_1(:);
+        lifetime_state_2_hist_data = lifetime_state_2_hist_data(:) + hist_count_state_2(:);
     else
         [lifetime_state_1_hist_data, time_bin_centers_state_1] = hist(lifetime_state_1_array, bin_number);
         [lifetime_state_2_hist_data, time_bin_centers_state_2] = hist(lifetime_state_2_array, bin_number);
