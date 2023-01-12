@@ -487,7 +487,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 temp.switch_time_bin_centers_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                 temp.hist_count_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                 temp.fit_success = 0;
-                if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
+                if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
                     temp.hist_together.poisson_lifetime_1_us = NaN;
                     temp.hist_together.poisson_lifetime_2_us = NaN;
                     temp.hist_together.error_poisson_lifetime_1_us = NaN;
