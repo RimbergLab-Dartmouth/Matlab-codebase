@@ -8,7 +8,7 @@
 run_params.concatenate_runs = 0; % 0/1 - decides whether this run is going to concatenate data to an existing file
 run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
-run_params.analysis_during_acquisition = 1; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
+run_params.analysis_during_acquisition = 0; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
 run_params.analysis.save_RTS_PSD_extended_data = 0; % to save PSD and RTS data for a short period of time set later. This is only if analyzed during acquisition
 if run_params.concatenate_runs
     run_params.data_directory = [cd '\data'];
@@ -117,7 +117,7 @@ for m_power = 4 : 4
             if ~isfield(data, 'done_parameter') 
                 data.done_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
                     length(input_params.ng_1_value_list));
-                rmfield(data, 'dummy')
+                rmfield(data, 'dummy');
             end        
 
             if ~isfield(input_params, 'run_number')
@@ -443,7 +443,7 @@ for m_power = 4 : 4
                 data.run_number(m_power, m_flux, m_gate, m_detuning) = input_params.run_number;
                 input_params.run_order(m_power, m_flux, m_gate, m_detuning) = input_params.run_number;
                 data.run_order(m_power, m_flux, m_gate, m_detuning) = input_params.run_number;
-                data.detunings(m_power, m_flux, m_gate, m_detuning, m_repetition) = detuning_point;
+                data.detunings(m_power, m_flux, m_gate, m_detuning, 1:run_params.number_repetitions) = detuning_point;
                 data.peripheral.bias_point_offset_and_periods(m_power, m_flux, m_gate) = bias_point;
                 data.peripheral.gain_profile(m_power, m_flux, m_gate) = gain_prof;
                 data.peripheral.awg_output_power(m_power, m_flux, m_gate) = run_params.awg.output_power;
@@ -473,9 +473,9 @@ for m_power = 4 : 4
                 %% record some other data variables
                 data.drive_freq_GHz(m_power, m_flux, m_gate, m_detuning) = detuning_point/1e3 + res_freq/1e9;
                 data.recorded_res_freq_GHz(m_power, m_flux, m_gate) = res_freq/1e9;
-                data.poissonian_lifetime_repetitions_mode(m_power, m_flux, m_gate, m_detuning) = run_params.poissonian_lifetime_repetitions_mode;
                 %% clean the RTS data %%%%%%%%
                 if run_params.analysis_during_acquisition
+                    data.poissonian_lifetime_repetitions_mode{m_power, m_flux, m_gate, m_detuning} = run_params.poissonian_lifetime_repetitions_mode;
                     input_params.analysis.moving_mean_average_time(m_power, m_flux, m_gate, m_detuning) = run_params.analysis.moving_mean_average_time;
                     for m_repetition = 1 : run_params.number_repetitions
                         clean_RTS_data_struct
@@ -499,13 +499,13 @@ for m_power = 4 : 4
                                     squeeze(analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                                     squeeze(analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
                             end
-                            if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
+                            if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
                                 [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
                                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
                                     temp.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
                                     post_run_params.minimum_number_switches, post_run_params.poissonian_fit_bin_number);
                                 if sum(temp.poisson_theory_1) == 0
-                                    post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                                   analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
                                 end
                                 if m_repetition == 1
                                     temp.hist_together.poisson_lifetime_1_us = temp.poisson_lifetime_1_us;
@@ -524,12 +524,12 @@ for m_power = 4 : 4
                                         temp.hist_together.switch_time_bin_centers_1, temp.hist_together.hist_count_1, temp.hist_together.switch_time_bin_centers_2, ...
                                         temp.hist_together.hist_count_2] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
                                         post_run_params.minimum_number_switches, [], ...
-                                        squeeze(post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
-                                        squeeze(post_run_analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                                        squeeze(post_run_analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                                        squeeze(post_run_analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
+                                        squeeze(analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
+                                        squeeze(analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
+                                        squeeze(analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
+                                        squeeze(analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
                                     if sum(temp.poisson_theory_1) == 0
-                                        post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                                        analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
                                     end
                                 end
                             end
