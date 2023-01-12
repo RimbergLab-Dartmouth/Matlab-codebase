@@ -1002,7 +1002,7 @@ end
         end
 %% Function extract Poissonian lifetimes
 function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2, theory_values_state_1, theory_values_state_2, time_bin_centers_state_1, lifetime_state_1_hist_data, ...
-    time_bin_centers_state_2,  lifetime_state_2_hist_data] =  extract_poissonian_lifetimes(clean_time_data, clean_amp_data, gaussian_1_mean, gaussian_2_mean, min_switching_number, bin_number, hist_count_state_1, ...
+    time_bin_centers_state_2,  lifetime_state_2_hist_data, fit_success] =  extract_poissonian_lifetimes(clean_time_data, clean_amp_data, gaussian_1_mean, gaussian_2_mean, min_switching_number, bin_number, hist_count_state_1, ...
                                         hist_count_state_2, bin_centers_state_1, bin_centers_state_2)
 
     clean_time_data = clean_time_data(:);
@@ -1044,6 +1044,7 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
         time_bin_centers_state_2 = NaN;
         lifetime_state_1_hist_data = NaN;
         lifetime_state_2_hist_data = NaN;
+        fit_success = 0;
         return
     end
     
@@ -1075,6 +1076,7 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
         time_bin_centers_state_2 = NaN;
         lifetime_state_1_hist_data = NaN;
         lifetime_state_2_hist_data = NaN;
+        fit_success = 0;
         return
     end
 %%%% calculate time since the last switch, assign as the time in corresponding state     
@@ -1116,6 +1118,7 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
         theory_values_state_2 = NaN;
         lifetime_state_1_hist_data = NaN;
         lifetime_state_2_hist_data = NaN;
+        fit_success = 0;
         return
     end
 %%%%% fit straight line to log(hist_count) vs time. (see Staumbaugh PRB 2007)    
@@ -1150,6 +1153,7 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
     
     theory_values_state_1 = polyval(exp_fit_state_1, time_bin_centers_state_1*1e6);
     theory_values_state_2 =  polyval(exp_fit_state_2, time_bin_centers_state_2*1e6);
+    fit_success = 1;
 %     figure
 %     bar(time_bin_centers_state_1*1e6, log(lifetime_state_1_hist_data))
 %     hold on
