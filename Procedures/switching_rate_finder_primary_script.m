@@ -624,7 +624,7 @@ for m_power = 4 : 4
                             analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_2(:) - ...
                                 squeeze(analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :));
                             
-                            analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.Poissonian.fit_success;
+                            analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.fit_success;
                         elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together')
                             analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1(:);
                             analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2(:);
@@ -632,7 +632,7 @@ for m_power = 4 : 4
                             analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1(:);
                             analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2(:);
                             
-                            analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.Poissonian.fit_success;
+                            analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.fit_success;
                         end
                         %% Plot Poissonian
                         if run_params.analysis.current_run_bistability_existence && run_params.Poisson_fig_plot_param 
