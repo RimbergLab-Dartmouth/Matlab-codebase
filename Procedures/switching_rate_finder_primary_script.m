@@ -1023,7 +1023,7 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
 %     bar(time_bin_centers_state_1(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_1_hist_data(lifetime_state_1_hist_data > 5)))
 %     hold on
 %     bar(time_bin_centers_state_2(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_2_hist_data(lifetime_state_1_hist_data > 5)))
-    if length(lifetime_state_1_hist_data(lifetime_state_1_hist_data > at_least_so_many_counts)) < 2 || length(lifetime_state_2_hist_data(lifetime_state_2_hist_data > at_least_so_many_counts)) < 2 
+    if length(lifetime_state_1_hist_data(lifetime_state_1_hist_data > at_least_so_many_counts)) < 4 || length(lifetime_state_2_hist_data(lifetime_state_2_hist_data > at_least_so_many_counts)) < 4 
         lifetime_1_us = 0;
         lifetime_2_us = 0;
         std_exp_fit_state_1 = 0;
