@@ -918,10 +918,12 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
 
     clean_time_data = clean_time_data(:);
     clean_amp_data = clean_amp_data(:);
-    hist_count_state_1 = hist_count_state_1(:);
-    hist_count_state_2 = hist_count_state_2(:);
-    bin_centers_state_1 = bin_centers_state_1(:);
-    bin_centers_state_2 = bin_centers_state_2(:);
+    if exist('hist_count_state_1', 'var')
+        hist_count_state_1 = hist_count_state_1(:);
+        hist_count_state_2 = hist_count_state_2(:);
+        bin_centers_state_1 = bin_centers_state_1(:);
+        bin_centers_state_2 = bin_centers_state_2(:);
+    end
                                     
     if ~exist('bin_number', 'var') && ~exist('bin_centers', 'var') && ~exist('hist_state_1', 'var') && ~exist('hist_state_2', 'var')
         bin_number = 25;
