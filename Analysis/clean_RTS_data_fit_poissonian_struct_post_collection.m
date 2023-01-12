@@ -424,6 +424,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                         temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
                         temp.hist_count_2, temp.fit_success] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, ...
                         post_run_params.minimum_number_switches, post_run_params.poissonian_fit_bin_number);
+                    if ~temp.fit_success
+                       analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                    end
                 elseif strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition > 1
                     [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
                         temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
@@ -432,9 +435,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                         squeeze(post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                         squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                         squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
-                end
-                if ~temp.fit_success
-                   analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                    if ~temp.fit_success
+                       analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                    end
                 end
                 
                 %%%% for separate and together - first part for separate, same as usual, second part for histogramming together
@@ -468,9 +471,6 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                             squeeze(post_run_analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :))', ...
                             squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                             squeeze(post_run_analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
-                        if ~temp.fit_success
-                            analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
-                        end
                     end
                 end
                 %%%% if not enough switching events to fit poissonian, allocate 0s                
@@ -649,18 +649,18 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                       temp
             end
         end
-        if post_run_params.save_data_param
-            save_file_name = strtrim(temp_filelist.file_name);
-            movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' ...
-                save_file_name(1 : end -4) '_analyzed.mat'])
-            clear save_file_name
-        end
+    end
+    if post_run_params.save_data_param
+        save_file_name = strtrim(temp_filelist.file_name);
+        movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' ...
+            save_file_name(1 : end -4) '_analyzed.mat'])
+        clear save_file_name
     end
     %% save post run analysis to switching finder comprehensive mat file
-        if post_run_params.save_data_param
-            save(post_run_params.file_to_load_input_params_from,'post_run_params', 'post_run_analysis', '-append')
-            save(post_run_params.file_to_save_post_run_analysis_separately,'post_run_params', 'post_run_analysis', '-append')
-        end
+    if post_run_params.save_data_param
+        save(post_run_params.file_to_load_input_params_from,'post_run_params', 'post_run_analysis', '-append')
+        save(post_run_params.file_to_save_post_run_analysis_separately,'post_run_params', 'post_run_analysis', '-append')
+    end
 end
 %% Function Clean RTS from noisy data
         function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existence, gaussian_1_mean, gaussian_2_mean, sigma_double_gaussian, double_gaussian_fit_error, area_gaussian_1, area_gaussian_2, ...

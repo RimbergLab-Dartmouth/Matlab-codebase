@@ -498,6 +498,9 @@ for m_power = 4 : 4
                                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
                                     temp.hist_count_2, temp.fit_success] = extract_poissonian_lifetimes(temp.clean_time_data(:), temp.clean_RTS_data(:), temp.gaussian_1_mean, ...
                                     temp.gaussian_2_mean, run_params.poissonian_fit_bin_number);
+                                if ~temp.fit_success
+                                   analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                                end
                             elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition > 1
                                 [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
                                     temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
@@ -507,9 +510,9 @@ for m_power = 4 : 4
                                     squeeze(analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                                     squeeze(analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                                     squeeze(analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
-                            end
-                            if ~temp.fit_success
-                               analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                                if ~temp.fit_success
+                                   analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
+                                end
                             end
                             
                             %%%% for separate and together - first part for separate, same as usual, second part for histogramming together
@@ -544,9 +547,6 @@ for m_power = 4 : 4
                                         squeeze(analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                                         squeeze(analysis.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
                                         squeeze(analysis.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
-                                    if ~temp.fit_success
-                                        analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
-                                    end
                                 end
                             end
                         else
