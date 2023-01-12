@@ -488,6 +488,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 temp.switch_time_bin_centers_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                 temp.hist_count_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                 temp.fit_success = 0;
+                temp.fit_flag = 'lack of bistability from Gaussians';
                 if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
                     temp.hist_together.poisson_lifetime_1_us = NaN;
                     temp.hist_together.poisson_lifetime_2_us = NaN;
@@ -500,6 +501,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                     temp.hist_together.switch_time_bin_centers_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                     temp.hist_together.hist_count_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                     temp.hist_together.fit_success = 0;
+                    temp.hist_together.fit_flag = 'lack of bistability from Gaussians';
                 end
             end
             post_run_params.Poisson_fig_plot_param = temp.fit_success;
