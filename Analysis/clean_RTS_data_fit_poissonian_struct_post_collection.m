@@ -143,6 +143,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             if temp.double_gaussian_existence 
                 plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values,'r', 'linewidth', 3,'DisplayName', 'Gaussian 1 theory')
                 plot(temp.hist_RTS_bins, temp.gaussian_2_theory_values,'k', 'linewidth', 3, 'DisplayName', 'Gaussian 2 theory')
+                plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values + temp.gaussian_2_theory_values,'y', 'linewidth', 3, 'DisplayName', 'Double Gaussian theory')
             end
             plot(temp.hist_RTS_bins, temp.single_gaussian_theory_values,'g', 'linewidth', 3,'DisplayName', 'Single Gaussian theory')
             xlabel('Phase ($^\circ$)', 'interpreter', 'latex')
@@ -519,17 +520,13 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             
             if m_repetition > 1 && strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && ...
                     post_run_analysis.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition - 1) ~= 0
-                post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1 - ...
-                            squeeze(post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :))';
+                post_run_analysis.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1;
 
-                post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2 - ...
-                        squeeze(post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :))';
+                post_run_analysis.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2;
 
-                post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1(:) - ...
-                    post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+                post_run_analysis.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1(:);
 
-                post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2(:) - ...
-                    post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
+                post_run_analysis.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2(:);
                 
                 post_run_analysis.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.fit_flag;
             else
@@ -544,18 +541,24 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             
             if m_repetition > 1 && strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && ...
                     post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition - 1) ~= 0
-                post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_1 (:)- ...
-                            squeeze(post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :));
+                    
+                post_run_analysis.hist_together.Poissonian.poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.poisson_lifetime_1_us;
+                post_run_analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.poisson_lifetime_2_us;
+                post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_1_us;
+                post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_2_us;
+                post_run_analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.switch_time_bin_centers_1;
+                post_run_analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.switch_time_bin_centers_2;
+                
+                post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_1 (:);
+                
+                post_run_analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_2(:);
 
-                post_run_analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_2(:) - ...
-                        squeeze(post_run_analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :));
+                post_run_analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_1 (:);
 
-                post_run_analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_1 (:)- ...
-                    squeeze(post_run_analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :));
-
-                post_run_analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_2(:) - ...
-                    squeeze(post_run_analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :));
+                post_run_analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_2(:);
+                
                 post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.fit_success;
+                
                 post_run_analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.hist_together.fit_flag;                
             elseif strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together')
                 post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1(:);
@@ -563,8 +566,14 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
 
                 post_run_analysis.hist_together.Poissonian.poisson_theory_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1(:);
                 post_run_analysis.hist_together.Poissonian.poisson_theory_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2(:);
-                post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.fit_success;
-                post_run_analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.hist_together.fit_flag;
+                post_run_analysis.hist_together.Poissonian.poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_1_us;
+                post_run_analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_2_us;
+                post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_1_us;
+                post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_2_us;
+                post_run_analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.switch_time_bin_centers_1;
+                post_run_analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.switch_time_bin_centers_2;
+                post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.fit_success;
+                post_run_analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.fit_flag;
             end
             %% Plot Poissonian
             if post_run_params.analysis.current_run_bistability_existence && post_run_params.Poisson_fig_plot_param 
@@ -631,13 +640,13 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                         '$n_g = $' num2str(input_params.ng_1_value_list(m_gate)) ', $\Phi_{\mathrm{ext}}$ = ' num2str(input_params.flux_1_value_list(m_flux)) '$\Phi_0$' 13 10 ...
                         '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
                     legend show
-                    annotation('textbox', [0.55, 0.45, 0.5, 0.3], 'String', ['Lifetime state 1 = ' num2str(round(temp.poisson_lifetime_1_us, 2)) ...
-                        '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-                    annotation('textbox', [0.55, 0.35, 0.5, 0.3], 'String', ['Lifetime state 2 = ' num2str(round(temp.poisson_lifetime_2_us, 2)) ...
-                        '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
-                    annotation('textbox', [0.35, 0.2, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_1))], ...
+                    annotation('textbox', [0.55, 0.45, 0.5, 0.3], 'String', ['Lifetime state 1 = ' num2str(round(temp.hist_together.poisson_lifetime_1_us, 2)) ...
+                        '$\pm$' num2str(round(temp.hist_together.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
+                    annotation('textbox', [0.55, 0.35, 0.5, 0.3], 'String', ['Lifetime state 2 = ' num2str(round(temp.hist_together.poisson_lifetime_2_us, 2)) ...
+                        '$\pm$' num2str(round(temp.hist_together.error_poisson_lifetime_1_us)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
+                    annotation('textbox', [0.35, 0.2, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_together.hist_count_1))], ...
                         'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-                    annotation('textbox', [0.35, 0.25, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_2))], ...
+                    annotation('textbox', [0.35, 0.25, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_together.hist_count_2))], ...
                         'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
     
                     if post_run_params.save_png_param == 1
