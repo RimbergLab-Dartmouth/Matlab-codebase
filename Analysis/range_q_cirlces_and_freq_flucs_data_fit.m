@@ -395,9 +395,9 @@ if plotting.figs_visible
     y_axis_start_value = 5.7;
     y_axis_end_value = 5.815;
     colors = parula(input_params.flux_number);
-    figure
+%     figure
     hold on
-    for m_flux = 1 : input_params.flux_number
+    for m_flux = 3 : 3%input_params.flux_number
         plot(input_params.ng_values,squeeze(analysis.flucs_angle.resonance_fits(m_flux, :, 1))/1e9, '-x', ...
         'markersize', 16, 'color', colors(m_flux, :))
     end

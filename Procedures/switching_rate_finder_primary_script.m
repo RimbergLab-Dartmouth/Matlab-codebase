@@ -537,6 +537,7 @@ for m_power = 4 : 4
                                     temp.hist_together.switch_time_bin_centers_2 = temp.switch_time_bin_centers_2;
                                     temp.hist_together.hist_count_2 = temp.hist_count_2;
                                     temp.hist_together.fit_success = temp.fit_success;
+                                    temp.hist_together.fit_flag = temp.fit_flag;
                                 elseif m_repetition > 1                     
                                     [temp.hist_together.poisson_lifetime_1_us, temp.hist_together.poisson_lifetime_2_us, temp.hist_together.error_poisson_lifetime_1_us, ...
                                         temp.hist_together.error_poisson_lifetime_2_us, temp.hist_together.poisson_theory_1, temp.hist_together.poisson_theory_2, ...

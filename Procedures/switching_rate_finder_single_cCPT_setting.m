@@ -811,7 +811,7 @@ if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquis
         disp('saved raw data')
         m_record = m_record + 1;
     end
-    clear raw_data ...
+    clear raw_data_array ...
           size_required
 end
 %% clear some unrequired variables that will be reloaded next iteration of this function
