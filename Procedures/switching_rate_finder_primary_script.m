@@ -625,8 +625,8 @@ for m_power = 4 : 4
                             analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.poisson_lifetime_2_us;
                             analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_1_us;
                             analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_2_us;
-                            analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.switch_time_bin_centers_1;
-                            analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.switch_time_bin_centers_2;
+                            analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_1;
+                            analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_2;
                             
                             analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_1(:);
 
@@ -651,8 +651,8 @@ for m_power = 4 : 4
                             analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_2_us;
                             analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_1_us;
                             analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_2_us;
-                            analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.switch_time_bin_centers_1;
-                            analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.switch_time_bin_centers_2;
+                            analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_1;
+                            analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_2;
                             analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.fit_success;
                             analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.fit_flag;                            
                         end
