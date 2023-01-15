@@ -1,8 +1,8 @@
 %% post run analysis params
-post_run_params.directory_to_be_analyzed = 'C:\Users\bharg\Downloads\data';
-post_run_params.file_to_load_input_params_from = ['C:\Users\bharg\Downloads\data\' ...
+post_run_params.directory_to_be_analyzed = 'C:\Users\Sisira\Desktop\d230111_223055_ng_00p0_flux_00p0\data';
+post_run_params.file_to_load_input_params_from = ['C:\Users\Sisira\Desktop\d230111_223055_ng_00p0_flux_00p0\data\' ...
         'unanalyzed_data.mat'];
-post_run_params.file_to_save_post_run_analysis_separately  = ['C:\Users\bharg\Downloads\data\' ...
+post_run_params.file_to_save_post_run_analysis_separately  = ['C:\Users\Sisira\Desktop\d230111_223055_ng_00p0_flux_00p0\data\' ...
         'switching_finder_only_analysis.mat'];
 post_run_params.plot_visible = 0;    
 post_run_params.analysis.moving_mean_average_time = 3e-6; % in seconds
@@ -143,7 +143,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             if temp.double_gaussian_existence 
                 plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values,'r', 'linewidth', 3,'DisplayName', 'Gaussian 1 theory')
                 plot(temp.hist_RTS_bins, temp.gaussian_2_theory_values,'k', 'linewidth', 3, 'DisplayName', 'Gaussian 2 theory')
-                plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values + temp.gaussian_2_theory_values,'y', 'linewidth', 3, 'DisplayName', 'Gaussian 2 theory')
+                plot(temp.hist_RTS_bins, temp.gaussian_1_theory_values + temp.gaussian_2_theory_values,'y', 'linewidth', 3, 'DisplayName', 'Double Gaussian theory')
             end
             plot(temp.hist_RTS_bins, temp.single_gaussian_theory_values,'g', 'linewidth', 3,'DisplayName', 'Single Gaussian theory')
             xlabel('Phase ($^\circ$)', 'interpreter', 'latex')
@@ -570,8 +570,8 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 post_run_analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_2_us;
                 post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_1_us;
                 post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_2_us;
-                post_run_analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.switch_time_bin_centers_1;
-                post_run_analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.switch_time_bin_centers_2;
+                post_run_analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_1;
+                post_run_analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_2;
                 post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.fit_success;
                 post_run_analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.fit_flag;
             end
