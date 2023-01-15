@@ -2,13 +2,13 @@
 plotting.figs_visible = 1;
 plotting.save_figures_png = 0;
 plotting.save_figures_fig = 0;
-plotting.save_analyzed_data = 0;
+plotting.save_analyzed_data = 1;
 plotting.f_inverse_start_index = 3; 
 plotting.f_inverse_stop_index = 3; % index from end to which stop fit
-plotting.reanalyze = 0;
-plotting.ej_ec_fit_reanalyze = 0;
-plotting.q_circle_fits_reanalyze = 0;
-plotting.noise_spectrum_reanalyze = 0;
+plotting.reanalyze = 1;
+plotting.ej_ec_fit_reanalyze = 1;
+plotting.q_circle_fits_reanalyze = 1;
+plotting.noise_spectrum_reanalyze = 1;
 %% plotting and saving location definitions
 while plotting.reanalyze && (plotting.q_circle_fits_reanalyze || plotting.noise_spectrum_reanalyze) && ~exist('data', 'var')
     clearvars -except plotting
@@ -44,7 +44,7 @@ if ~isfield(input_params, 'file_name_time_stamp') && (plotting.save_figures_png 
     disp('select directory where plots and data should be saved')
     plotting.save_folder = uigetdir;
 elseif (plotting.save_figures_png || plotting.save_figures_fig || plotting.save_analyzed_data)
-    plotting.save_folder = ['d' input_params.file_name_time_stamp '_q_cirlces/'];
+    plotting.save_folder = ['d' input_params.file_name_time_stamp '_q_circles/'];
 end
 
 if plotting.save_figures_png || plotting.save_figures_fig
@@ -125,7 +125,7 @@ if plotting.ej_ec_fit_reanalyze == 1 && plotting.reanalyze == 1
     analysis.ej_ec_ben_values.theory_freqs = analysis.ej_ec_ben_values.theory_freqs + guess.center_freq;
     analysis.ej_ec_ben_values.kerr = 1/2*analysis.ej_ec_fit.dE1fourth.*0.176^4;
 end
-
+%%
 if plotting.save_analyzed_data && plotting.reanalyze && (plotting.q_circle_fits_reanalyze || plotting.ej_ec_fit_reanalyze)
     save([plotting.mat_file_dir 'only_analysis.mat'],'-regexp', '^(?!(bias_point|data|gain_prof|plotting|guess)$).');
 end
