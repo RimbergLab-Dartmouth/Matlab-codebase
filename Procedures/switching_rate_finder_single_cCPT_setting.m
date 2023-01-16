@@ -1101,9 +1101,9 @@ drawData = false;
 
 if input_level <= .19
     input_range = .2;
-elseif input_level > .19 && input_level <= .39
+elseif input_level > .19 && input_level <= .38
     input_range = .4;
-elseif input_level > .39 && input_level <= .79
+elseif input_level > .38 && input_level <= .79
     input_range = .8;
 elseif input_level > .79 && input_level <=2
     input_range = 2;
