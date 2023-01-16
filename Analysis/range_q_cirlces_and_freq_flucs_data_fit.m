@@ -2,13 +2,13 @@
 plotting.figs_visible = 1;
 plotting.save_figures_png = 0;
 plotting.save_figures_fig = 0;
-plotting.save_analyzed_data = 1;
+plotting.save_analyzed_data = 0;
 plotting.f_inverse_start_index = 3; 
 plotting.f_inverse_stop_index = 3; % index from end to which stop fit
-plotting.reanalyze = 1;
-plotting.ej_ec_fit_reanalyze = 1;
-plotting.q_circle_fits_reanalyze = 1;
-plotting.noise_spectrum_reanalyze = 1;
+plotting.reanalyze = 0;
+plotting.ej_ec_fit_reanalyze = 0;
+plotting.q_circle_fits_reanalyze = 0;
+plotting.noise_spectrum_reanalyze = 0;
 %% plotting and saving location definitions
 while plotting.reanalyze && (plotting.q_circle_fits_reanalyze || plotting.noise_spectrum_reanalyze) && ~exist('data', 'var')
     clearvars -except plotting
@@ -395,9 +395,9 @@ if plotting.figs_visible
     y_axis_start_value = 5.7;
     y_axis_end_value = 5.815;
     colors = parula(input_params.flux_number);
-%     figure
+    figure
     hold on
-    for m_flux = 3 : 3%input_params.flux_number
+    for m_flux = 1:input_params.flux_number
         plot(input_params.ng_values,squeeze(analysis.flucs_angle.resonance_fits(m_flux, :, 1))/1e9, '-x', ...
         'markersize', 16, 'color', colors(m_flux, :))
     end
