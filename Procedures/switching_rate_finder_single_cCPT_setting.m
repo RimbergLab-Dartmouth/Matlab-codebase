@@ -336,7 +336,8 @@ if res_freq_recorder == 1
     res_freq = analysis.vna.single_photon.fits_flucs_and_angle.res_freq(m_power, m_flux, m_gate);
 %     res_freq = analysis.vna.single_photon.fits_flucs_no_angle.res_freq(m_power, m_flux, m_gate);
     data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate) = res_freq - data.peripheral.expected_freq_from_Ej_Ec(m_power, m_flux, m_gate);
-    disp(['res freq set to ' num2str(res_freq/1e9) ' GHz, error compared to theory = ' num2str(round(squeeze(data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate))/1e6, 2))])
+    disp(['res freq set to ' num2str(res_freq/1e9) ' GHz, error compared to theory = ' num2str(round(squeeze(data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate))/1e6, 2)) ...
+        ' MHz'])
 end
 %% Acquire VNA data at desired power
 if vna_data_acquisition == 1
