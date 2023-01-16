@@ -22,7 +22,7 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 run_params.m_flux = 3;
-run_params.m_gate = 1;
+run_params.m_gate = 4;
 run_params.number_repetitions = 5;
 for m_power = 1 : 1
 %%%% uncomment this for a long run sweeping bias points automatically
@@ -50,7 +50,7 @@ for m_power = 1 : 1
             %%%%% load gain profile and bias point
             if ~exist('gain_prof', 'var')
                 disp('enter directory where gain_prof_struct.mat is saved')
-                load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\gain_profile_files\d230115_164335_gain_profile';
+                load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\gain_profile_files\d221230_093009_gain_profile';
 %                load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
                load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
                clear load_directory
@@ -933,11 +933,13 @@ for m_power = 1 : 1
               m_record ...
               m_save_data_counter ...
               m_save_data_index ...
-              systemId
+              systemId ...
               size_required
         %% save run data
         if run_params.save_data_and_png_param == 1
+            disp('saving comprehensive run data')
             save([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|raw_data_matrix)$).')   
+            disp('comprehensive run data saved')
         end
         end
     end
