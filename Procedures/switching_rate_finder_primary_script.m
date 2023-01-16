@@ -5,10 +5,10 @@
 %%%% flux_center_freq_mean, gate_values_gate and res_freqs_gate
 %%%% and a 'gain_profile_struct' that contains :
 %%%% freq, amp, phase
-run_params.concatenate_runs = 0; % 0/1 - decides whether this run is going to concatenate data to an existing file
-run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
+run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
+run_params.initialize_or_load  = 10; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
-run_params.analysis_during_acquisition = 1; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
+run_params.analysis_during_acquisition = 0; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
 run_params.analysis.save_RTS_PSD_extended_data = 0; % to save PSD and RTS data for a short period of time set later. This is only if analyzed during acquisition
 if run_params.concatenate_runs
     run_params.data_directory = [cd '\data'];
@@ -22,14 +22,14 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 run_params.m_flux = 1;
-run_params.m_gate = 1;
+run_params.m_gate = 7;
 run_params.number_repetitions = 5;
-for m_power = 4 : 4
+for m_power = 1 : 1
 %%%% uncomment this for a long run sweeping bias points automatically
 %     for m_flux = 1: length(input_params.flux_1_value_list)
 %         for m_gate = 1: length(input_params.ng_1_value_list)
 %%%% uncomment this for a single bias  point at a time.
-    for m_flux = run_params.m_flux : run_params.m_gate
+    for m_flux = run_params.m_flux : run_params.m_flux
         for m_gate = run_params.m_gate : run_params.m_gate
             m_bias_point = (m_flux - 1)*length(input_params.ng_1_value_list) + m_gate;
             run_params.ng_1_value = input_params.ng_1_value_list(m_gate);
@@ -50,7 +50,8 @@ for m_power = 4 : 4
             %%%%% load gain profile and bias point
             if ~exist('gain_prof', 'var')
                 disp('enter directory where gain_prof_struct.mat is saved')
-               load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
+                load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\gain_profile_files\d230115_164335_gain_profile';
+%                load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
                load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
                clear load_directory
             end
@@ -64,7 +65,8 @@ for m_power = 4 : 4
 
             if run_params.set_with_pre_recorded && ~isfield(run_params, 'pre_recorded_struct')
                 disp('enter directory where pre_recorded_values.mat is saved')
-               load_directory = uigetdir;
+%                load_directory = uigetdir;
+               load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\q_circle_freq_flucs_scan\twpa_pump_setting_1\d221231_004136_q_circles';
                load([load_directory '\pre_recorded_values.mat'], 'pre_recorded')
                run_params.pre_recorded_struct = pre_recorded;
                clear load_directory ...
@@ -751,7 +753,6 @@ for m_power = 4 : 4
             end
             data.done_parameter(m_power, m_flux, m_gate) = 1;
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%        
-            clear res_freq 
             %% capture final res freq
             connect_instruments
             disp('capturing VNA data at single photon power')
@@ -776,8 +777,11 @@ for m_power = 4 : 4
             data.vna.single_photon.final.res_freq_shift_during_run (m_power, m_flux, m_gate)= data.vna.single_photon.final.rough_resonance (m_power, m_flux, m_gate) - ...
                 analysis.vna.single_photon.fits_flucs_and_angle.res_freq(m_power, m_flux, m_gate);
             vna_set_center_span(vna,rough_resonance,input_params.vna.zoom_scan_span,1);
+            disp(['start freq = ' num2str(res_freq/1e9) 'GHz, final freq = ' num2str(rough_resonance/1e9) 'GHz. ' 13 10 ...
+                'freq shift during run = ' num2str((res_freq - rough_resonance)/1e6) 'MHz'])
             clear manual_index ...
-                  rough_resonance
+                  rough_resonance ...
+                  res_freq 
             vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
             vna_set_average(vna, input_params.vna.average_number, 1, 1);
             vna_set_sweep_points(vna, input_params.vna.number_points, 1);
