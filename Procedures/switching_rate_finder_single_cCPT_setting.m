@@ -40,6 +40,7 @@ if bias_set_param == 1
     data.peripheral.flux_voltage_output (m_power, m_flux, m_gate) = output_bias_point_struct.desired_flux_voltage;
     data.peripheral.gate_voltage_output (m_power, m_flux, m_gate) = output_bias_point_struct.desired_gate_voltage;
     data.peripheral.expected_freq (m_power, m_flux, m_gate) = output_bias_point_struct.expected_freq;
+    data.peripheral.expected_freq_from_Ej_Ec(m_power, m_flux, m_gate) = res_freq_expected_for_Jules_sample(run_params.ng_1_value, run_params.flux_1_value);
     data.peripheral.freq_error (m_power, m_flux, m_gate) = output_bias_point_struct.freq_error;
     daq_handle=daq.createSession('ni');
     addAnalogOutputChannel(daq_handle,'Dev1','ao0','Voltage');
@@ -333,6 +334,9 @@ end
 %% Set resonance freq
 if res_freq_recorder == 1
     res_freq = analysis.vna.single_photon.fits_flucs_and_angle.res_freq(m_power, m_flux, m_gate);
+%     res_freq = analysis.vna.single_photon.fits_flucs_no_angle.res_freq(m_power, m_flux, m_gate);
+    data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate) = res_freq - data.peripheral.expected_freq_from_Ej_Ec(m_power, m_flux, m_gate);
+    disp(['res freq set to ' num2str(res_freq/1e9) ' GHz, error compared to theory = ' num2str(round(squeeze(data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate))/1e6, 2))])
 end
 %% Acquire VNA data at desired power
 if vna_data_acquisition == 1
