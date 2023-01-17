@@ -72,7 +72,8 @@ if vna_data_acquisition == 1
             vna_get_data(vna, 1, 2);
     [~,manual_index] = min(squeeze(data.vna.single_photon.rough.amp(m_power, m_flux, m_gate,:)) ...
             - gain_prof.amp');
-    rough_resonance = squeeze(data.vna.single_photon.rough.freq(m_power, m_flux, m_gate, manual_index));
+    rough_resonance = 5.813e9;
+%     rough_resonance = squeeze(data.vna.single_photon.rough.freq(m_power, m_flux, m_gate, manual_index));
     vna_set_center_span(vna,rough_resonance,input_params.vna.zoom_scan_span,1);
     clear manual_index rough_resonance
     vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
@@ -335,6 +336,7 @@ end
 if res_freq_recorder == 1
     res_freq = analysis.vna.single_photon.fits_flucs_and_angle.res_freq(m_power, m_flux, m_gate);
 %     res_freq = analysis.vna.single_photon.fits_flucs_no_angle.res_freq(m_power, m_flux, m_gate);
+%     res_freq = analysis.vna.single_photon.fits_no_flucs.res_freq(m_power, m_flux, m_gate);
     data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate) = res_freq - data.peripheral.expected_freq_from_Ej_Ec(m_power, m_flux, m_gate);
     disp(['res freq set to ' num2str(res_freq/1e9) ' GHz, error compared to theory = ' num2str(round(squeeze(data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate))/1e6, 2)) ...
         ' MHz'])
