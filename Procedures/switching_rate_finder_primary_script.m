@@ -7,7 +7,7 @@
 %%%% freq, amp, phase
 run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
 run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
-run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
+run_params.redo_previously_saved_run = 1; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 run_params.analysis_during_acquisition = 0; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
 run_params.analysis.save_RTS_PSD_extended_data = 0; % to save PSD and RTS data for a short period of time set later. This is only if analyzed during acquisition
 if run_params.concatenate_runs
@@ -21,8 +21,8 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
-run_params.m_flux = 4;
-run_params.m_gate = 8;
+run_params.m_flux = 5;
+run_params.m_gate = 1;
 run_params.number_repetitions = 5;
 for m_power = 1 : 1
 %%%% uncomment this for a long run sweeping bias points automatically
