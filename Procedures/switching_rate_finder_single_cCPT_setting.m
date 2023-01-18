@@ -72,8 +72,8 @@ if vna_data_acquisition == 1
             vna_get_data(vna, 1, 2);
     [~,manual_index] = min(squeeze(data.vna.single_photon.rough.amp(m_power, m_flux, m_gate,:)) ...
             - gain_prof.amp');
-    rough_resonance = 5.813e9;
-%     rough_resonance = squeeze(data.vna.single_photon.rough.freq(m_power, m_flux, m_gate, manual_index));
+%     rough_resonance = 5.813e9;
+    rough_resonance = squeeze(data.vna.single_photon.rough.freq(m_power, m_flux, m_gate, manual_index));
     vna_set_center_span(vna,rough_resonance,input_params.vna.zoom_scan_span,1);
     clear manual_index rough_resonance
     vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
