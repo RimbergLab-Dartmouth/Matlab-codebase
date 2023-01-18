@@ -2,7 +2,7 @@ plotting.plot_visible = 1;
 plotting.save_data_and_png_param = 0;
 plotting.cutoff_error = 400; % in us, is the error above which a datapoint is not plotted
 plotting.poissonian_lifetime_repetitions_mode = 'separate_and_together'; % separate, or averaged. analysis with histogrammed together boils down to separate too
-plotting.detunings_or_drive_freq = 'detunings'; % 'detunings' or 'drive_freq'
+plotting.detunings_or_drive_freq = 'drive_freq'; % 'detunings' or 'drive_freq'
 plotting.power_start_index = 1;
 plotting.power_step_index = 1;
 plotting.power_stop_index = 1;
@@ -123,14 +123,14 @@ for m_power = plotting.power_start_index : plotting.power_step_index : plotting.
             elseif strcmp(plotting.poissonian_lifetime_repetitions_mode, 'averaged') || ...
                     (strcmp(squeeze(post_run_analysis.poissonian_lifetime_repetitions_mode(m_power, m_flux, m_gate, 95)), 'separate_and_together') && user == 1)
                 if strcmp(plotting.detunings_or_drive_freq, 'detunings')
-                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e6;
                 elseif strcmp(plotting.detunings_or_drive_freq, 'drive_freq')
-                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e9;
                 end
-                temp.y_array = mean(squeeze(post_run_analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, :, :)), 2);
-                temp.y_error = mean(squeeze(post_run_analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, :, :)), 2);
+                temp.y_array = mean(squeeze(post_run_analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
+                temp.y_error = mean(squeeze(post_run_analysis.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                 last_non_zero_detuning = find(temp.x_array ~=0);
                 last_non_zero_detuning = last_non_zero_detuning(end);
                 temp.x_array(last_non_zero_detuning + 1:end) = [];
@@ -156,14 +156,14 @@ for m_power = plotting.power_start_index : plotting.power_step_index : plotting.
                 hold on
 
                 if strcmp(plotting.detunings_or_drive_freq, 'detunings')
-                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e6;
                 elseif strcmp(plotting.detunings_or_drive_freq, 'drive_freq')
-                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e9;
                 end
-                temp.y_array = mean(squeeze(post_run_analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, :, :)), 2);
-                temp.y_error = mean(squeeze(post_run_analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, :, :)), 2);
+                temp.y_array = mean(squeeze(post_run_analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
+                temp.y_error = mean(squeeze(post_run_analysis.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                 last_non_zero_detuning = find(temp.x_array ~=0);
                 last_non_zero_detuning = last_non_zero_detuning(end);
                 temp.x_array(last_non_zero_detuning + 1:end) = [];
@@ -188,10 +188,10 @@ for m_power = plotting.power_start_index : plotting.power_step_index : plotting.
 %                 'n_g = ' num2str(input_params.ng_1_value_list(m_gate))])     )
             elseif strcmp(plotting.poissonian_lifetime_repetitions_mode, 'histogrammed_together') 
                 if strcmp(plotting.detunings_or_drive_freq, 'detunings')
-                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e6;
                 elseif strcmp(plotting.detunings_or_drive_freq, 'drive_freq')
-                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e9;
                 end
                 temp.y_array = squeeze(post_run_analysis.Poissonian.lifetime_1(m_power, m_flux, m_gate, :, end));
@@ -221,10 +221,10 @@ for m_power = plotting.power_start_index : plotting.power_step_index : plotting.
 
                 hold on
                 if strcmp(plotting.detunings_or_drive_freq, 'detunings')
-                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e6;
                 elseif strcmp(plotting.detunings_or_drive_freq, 'drive_freq')
-                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e9;
                 end
                 temp.y_array = squeeze(post_run_analysis.Poissonian.lifetime_2(m_power, m_flux, m_gate, :, end));
@@ -255,10 +255,10 @@ for m_power = plotting.power_start_index : plotting.power_step_index : plotting.
                 
             elseif (strcmp(plotting.poissonian_lifetime_repetitions_mode, 'separate_and_together') && user == 2)    
                 if strcmp(plotting.detunings_or_drive_freq, 'detunings')
-                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e6;
                 elseif strcmp(plotting.detunings_or_drive_freq, 'drive_freq')
-                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2);
+                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e9;
                 end
                 temp.y_array = squeeze(post_run_analysis.hist_together.Poissonian.poisson_lifetime_1_us(m_power, m_flux, m_gate, :, end));
@@ -280,41 +280,41 @@ for m_power = plotting.power_start_index : plotting.power_step_index : plotting.
                 temp.y_error(isnan(temp.y_array)) = [];
                 temp.x_array(isnan(temp.y_array)) = [];
                 temp.y_array(isnan(temp.y_array)) = [];
+                length(temp.y_array)
                 
-
                 errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
                 'x-', 'color', color_setter, 'Linewidth', 3, 'DisplayName', ['State 1, flux = ' num2str(input_params.flux_1_value_list(m_flux)) '\Phi_0, ' ...
                 'n_g = ' num2str(input_params.ng_1_value_list(m_gate))])     
 
                 hold on
-                if strcmp(plotting.detunings_or_drive_freq, 'detunings')
-                    temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2);
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e6;
-                elseif strcmp(plotting.detunings_or_drive_freq, 'drive_freq')
-                    temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2);
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e9;
-                end
-                temp.y_array = squeeze(post_run_analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, :, end));
-                temp.y_error = squeeze(post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, :, end));
-                last_non_zero_detuning = find(temp.x_array ~=0);
-                last_non_zero_detuning = last_non_zero_detuning(end);
-                temp.x_array(last_non_zero_detuning + 1:end) = [];
-                temp.x_error(last_non_zero_detuning + 1:end) = [];
-                temp.y_error(temp.y_array == 0) = [];
-                temp.x_error(temp.y_array == 0) = [];
-                temp.x_array(temp.y_array == 0) = [];
-                temp.y_array(temp.y_array == 0) = [];
-                %%% weed out lifetime fits with large errors
-                temp.x_error(temp.y_error >plotting.cutoff_error) = [];
-                temp.x_array(temp.y_error >plotting.cutoff_error) = [];
-                temp.y_array(temp.y_error >plotting.cutoff_error) = [];
-                temp.y_error(temp.y_error >plotting.cutoff_error) = [];
+%                 if strcmp(plotting.detunings_or_drive_freq, 'detunings')
+%                     temp.x_array = mean(squeeze(data.detunings(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
+%                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e6;
+%                 elseif strcmp(plotting.detunings_or_drive_freq, 'drive_freq')
+%                     temp.x_array = mean(squeeze(data.drive_freq_GHz(m_power, m_flux, m_gate, :, :)), 2, 'omitnan');
+%                     temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_power, m_flux, m_gate)*ones(input_params.detuning_array_number, 1)/1e9;
+%                 end
+%                 temp.y_array = squeeze(post_run_analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, :, end));
+%                 temp.y_error = squeeze(post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, :, end));
+%                 last_non_zero_detuning = find(temp.x_array ~=0);
+%                 last_non_zero_detuning = last_non_zero_detuning(end);
+%                 temp.x_array(last_non_zero_detuning + 1:end) = [];
+%                 temp.x_error(last_non_zero_detuning + 1:end) = [];
+%                 temp.y_error(temp.y_array == 0) = [];
+%                 temp.x_error(temp.y_array == 0) = [];
+%                 temp.x_array(temp.y_array == 0) = [];
+%                 temp.y_array(temp.y_array == 0) = [];
+%                 %%% weed out lifetime fits with large errors
+%                 temp.x_error(temp.y_error >plotting.cutoff_error) = [];
+%                 temp.x_array(temp.y_error >plotting.cutoff_error) = [];
+%                 temp.y_array(temp.y_error >plotting.cutoff_error) = [];
+%                 temp.y_error(temp.y_error >plotting.cutoff_error) = [];
 %                 errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
 %                 'x--', 'color', color_setter, 'Linewidth', 3, 'DisplayName', ['State 2, flux = ' num2str(input_params.flux_1_value_list(m_flux)) '\Phi_0, ' ...
 %                 'n_g = ' num2str(input_params.ng_1_value_list(m_gate))])     
 
             end
-            
+            number_plotting_points = number_plotting_points + length(temp.y_array);
             if strcmp(plotting.detunings_or_drive_freq, 'detunings')
                 xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
                 axis([-45 0 0 60])
@@ -335,6 +335,7 @@ for m_power = plotting.power_start_index : plotting.power_step_index : plotting.
             end
             clear Lifetime_detuning_plots ...
                   save_file_name ...
+                  last_non_zero_detuning ...
                   temp
         end
     end
