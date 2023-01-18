@@ -680,14 +680,17 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
     end
     if post_run_params.save_data_param
         save_file_name = strtrim(temp_filelist.file_name);
+        disp(['saving ' save_file_name])
         movefile([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name],[post_run_params.directory_to_be_analyzed '\' ...
             save_file_name(1 : end -4) '_analyzed.mat'])
         clear save_file_name
     end
     %% save post run analysis to switching finder comprehensive mat file
     if post_run_params.save_data_param
+        disp('saving comprehensive data')
         save(post_run_params.file_to_load_input_params_from,'post_run_params', 'post_run_analysis', '-append')
         save(post_run_params.file_to_save_post_run_analysis_separately,'post_run_params', 'post_run_analysis', '-append')
+        disp(['comprehensive data saved' 13 10 13 10])
     end
 end
 %% Function Clean RTS from noisy data
