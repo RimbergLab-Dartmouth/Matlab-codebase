@@ -527,7 +527,9 @@ for m_power = 1 : 1
                                    analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = 0;
                                 end
                                 if m_repetition == 1 || (m_repetition > 1 && ...
-                                            analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition - 1) == 0)
+                                            analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition - 1) == 0 && ...
+                                            ~contains(analysis.hist_together.Poissonian.fit_flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'fewer than') && ...
+                                            ~contains(analysis.hist_together.Poissonian.fit_flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'at least'))
                                     temp.hist_together.poisson_lifetime_1_us = temp.poisson_lifetime_1_us;
                                     temp.hist_together.poisson_lifetime_2_us = temp.poisson_lifetime_2_us;
                                     temp.hist_together.error_poisson_lifetime_1_us = temp.error_poisson_lifetime_1_us;
@@ -992,21 +994,6 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
 
 %%%%%%%% calculate time points at which state switches
     switching_points = analysis_time_data(diff(states) ~= 0);
-    if length(switching_points) < min_switching_number
-        lifetime_1_us = 0;
-        lifetime_2_us = 0;
-        std_exp_fit_state_1 = 0;
-        std_exp_fit_state_2 = 0;
-        theory_values_state_1 = NaN;
-        theory_values_state_2 = NaN;
-        time_bin_centers_state_1 = NaN;
-        time_bin_centers_state_2 = NaN;
-        lifetime_state_1_hist_data = NaN;
-        lifetime_state_2_hist_data = NaN;
-        fit_success = 0;
-        flag = ['fewer than ' num2str(min_switching_number) ' switches in run'];
-        return
-    end
 %%%% calculate time since the last switch, assign as the time in corresponding state     
     lifetime_both_states = diff(switching_points);
     if states(1) == 1
@@ -1027,6 +1014,17 @@ function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2
     else
         [lifetime_state_1_hist_data, time_bin_centers_state_1] = hist(lifetime_state_1_array, bin_number);
         [lifetime_state_2_hist_data, time_bin_centers_state_2] = hist(lifetime_state_2_array, bin_number);
+    end
+    if length(switching_points) < min_switching_number
+        lifetime_1_us = 0;
+        lifetime_2_us = 0;
+        std_exp_fit_state_1 = 0;
+        std_exp_fit_state_2 = 0;
+        theory_values_state_1 = NaN;
+        theory_values_state_2 = NaN;
+        fit_success = 0;
+        flag = ['fewer than ' num2str(min_switching_number) ' switches in run'];
+        return
     end
 %     
 %     time_bin_centers_state_1(lifetime_state_1_hist_data < 5) = NaN;
