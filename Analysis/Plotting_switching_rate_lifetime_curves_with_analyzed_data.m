@@ -1,6 +1,6 @@
 plotting.plot_visible = 1;
 plotting.save_data_and_png_param = 0;
-plotting.cutoff_error = 400; % in us, is the error above which a datapoint is not plotted
+plotting.cutoff_error = 40; % in us, is the error above which a datapoint is not plotted
 plotting.poissonian_lifetime_repetitions_mode = 'separate_and_together'; % separate, or averaged. analysis with histogrammed together boils down to separate too
 plotting.detunings_or_drive_freq = 'detunings'; % 'detunings' or 'drive_freq'
 plotting.power_start_index = 1;

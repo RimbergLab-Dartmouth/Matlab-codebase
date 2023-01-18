@@ -575,6 +575,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.fit_success;
                 post_run_analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.fit_flag;
             end
+            post_run_analysis.poissonian_lifetime_repetitions_mode(m_power, m_flux, m_gate, m_detuning) = post_run_params.poissonian_lifetime_repetitions_mod;
             %% Plot Poissonian
             if post_run_params.analysis.current_run_bistability_existence && post_run_params.Poisson_fig_plot_param 
                 if post_run_params.plot_visible == 1 
