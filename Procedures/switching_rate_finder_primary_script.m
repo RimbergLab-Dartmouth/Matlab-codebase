@@ -720,7 +720,7 @@ for m_power = 1 : 1
                             end
                         end
                     end
-                    analysis.poissonian_lifetime_repetitions_mode(m_power, m_flux, m_gate, m_detuning) = run_params.poissonian_lifetime_repetitions_mod;
+                    analysis.poissonian_lifetime_repetitions_mode{m_power, m_flux, m_gate, m_detuning} = run_params.poissonian_lifetime_repetitions_mod;
                 end
                 %% finish plot and fit
                 clear bias_point_struct ...
