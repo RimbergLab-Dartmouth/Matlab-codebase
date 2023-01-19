@@ -4,7 +4,7 @@ post_run_params.file_to_load_input_params_from = ['C:\Users\Sisira\Desktop\data\
         'switching_finder_comprehensive_data.mat'];
 post_run_params.file_to_save_post_run_analysis_separately  = ['C:\Users\Sisira\Desktop\data\' ...
         'switching_finder_only_analysis.mat'];
-post_run_params.plot_visible = 0;    
+post_run_params.plot_visible = 1;    
 post_run_params.analysis.moving_mean_average_time = 3e-6; % in seconds
 post_run_params.analysis.min_gaussian_center_to_center_phase = 15;
 post_run_params.analysis.max_gaussian_center_to_center_phase = 60;
@@ -21,8 +21,8 @@ post_run_params.poissonian_lifetime_repetitions_mode = 'separate_and_together'; 
 post_run_params.analysis.save_RTS_PSD_extended_data = 0; % decides whether to save RTS PSD extracted or not, and also, RTS data for above storage time
 post_run_params.rts_fig_directory = [cd '\plots\rts\'];
 post_run_params.fig_directory = [cd '\plots\'];
-post_run_params.save_png_param = 1;
-post_run_params.save_data_param = 1;
+post_run_params.save_png_param = 0;
+post_run_params.save_data_param = 0;
 post_run_params.save_fig_file_param = 0;
 
 disp('loading comprehensive file data')
@@ -129,7 +129,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 temp.lifetime_state_2_iteration_array, temp.simple_threshold_clean_RTS_data, temp.simple_threshold_lifetime_state_1, temp.simple_threshold_lifetime_state_2, ...
                 temp.threshold_1_iteration_array, temp.threshold_2_iteration_array, temp.number_switches_both_states_iteration_array, ...
                 temp.number_switches_both_states_final_iteration, temp.gaussian_1_theory_values, temp.gaussian_2_theory_values, temp.hist_RTS_bins, ...
-                temp.hist_count_data, temp.single_gaussian_fit_params, temp.single_gaussian_theory_values, temp.single_gaussian_fit_error] = ...
+                temp.hist_count_data, temp.single_gaussian_fit_params, temp.single_gaussian_theory_values, temp.single_gaussian_fit_error, temp.RTS_fit_exit_flag] = ...
                 clean_noisy_RTS_signal(raw_data.time_corrected, raw_data.phase_corrected, post_run_params.analysis.min_gaussian_center_to_center_phase, post_run_params.analysis.number_iterations, ...
                         post_run_params.analysis.bin_edges, post_run_params.analysis.double_gaussian_fit_sigma_guess);
             temp.gaussian_difference = abs(temp.gaussian_1_mean - temp.gaussian_2_mean)  ; 
@@ -359,7 +359,8 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                                                                         temp.single_gaussian_theory_values;
             post_run_analysis.single_gaussian_fit_error(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.single_gaussian_fit_error;
             post_run_analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.double_gaussian_existence;
-
+            post_run_analysis.RTS_cleaning_exit_flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.RTS_fit_exit_flag;
+            
             if temp.double_gaussian_existence == 1
                 if post_run_params.analysis.save_RTS_PSD_extended_data
                     post_run_analysis.RTS_PSD.freqs(m_power, m_flux, m_gate, m_detuning, m_repetition, 1:length(temp.freqs)) = temp.freqs;
@@ -508,8 +509,9 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                     temp.hist_together.switch_time_bin_centers_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                     temp.hist_together.hist_count_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                     temp.hist_together.fit_success = 0;
-                    temp.hist_together.fit_flag = 'lack of bistability from Gaussians';
-                elseif (m_repetition > 1 && sum(squeeze(post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) ~= 0)
+                    temp.hist_together.fit_flag = 'lack of bistability from Gaussians in all repetitions processed so far at this detuning';
+                elseif (strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && m_repetition > 1 && ...
+                        sum(squeeze(post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) ~= 0)
                     temp.hist_together.poisson_lifetime_1_us = post_run_analysis.hist_together.Poissonian.poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition - 1);
                     temp.hist_together.poisson_lifetime_2_us = post_run_analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition - 1);
                     temp.hist_together.error_poisson_lifetime_1_us = post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition - 1);
@@ -521,7 +523,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                     temp.hist_together.switch_time_bin_centers_2 = post_run_analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
                     temp.hist_together.hist_count_2 = post_run_analysis.hist_together.Poissonian.hist_count_2(m_power, m_flux, m_gate, m_detuning, m_repetition - 1, :);
                     temp.hist_together.fit_success = post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition - 1);
-                    temp.hist_together.fit_flag = 'lack of bistability from Gaussians';
+                    temp.hist_together.fit_flag = 'lack of bistability from Gaussians, but previous bistable repetition used';
                 end
             end
             post_run_params.Poisson_fig_plot_param = temp.fit_success || (contains(temp.fit_flag, 'fewer than') || ...
@@ -590,7 +592,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 annotation('textbox', [0.67, 0.33, 0.55, 0.3], 'String', ['Lifetime state 1 = ' 13 10 num2str(round(temp.poisson_lifetime_1_us, 2)) ...
                     '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
                 annotation('textbox', [0.67, 0.23, 0.55, 0.3], 'String', ['Lifetime state 2 = ' 13 10 num2str(round(temp.poisson_lifetime_2_us, 2)) ...
-                    '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
+                    '$\pm$' num2str(round(temp.error_poisson_lifetime_2_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
                 annotation('textbox', [0.35, 0.45, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_1))], ...
                     'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
                 annotation('textbox', [0.35, 0.5, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_2))], ...
@@ -616,7 +618,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             post_run_analysis.analyzed_parameter(m_power, m_flux, m_gate, m_detuning, m_repetition) = 1;
             close all
             %% Plot Poissonian of together if histogrammed together and separately
-            if post_run_params.analysis.current_run_bistability_existence && ...
+            if squeeze(post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition)) == 1 && ...
                     strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && ...
                     m_repetition == squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))
                 if post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))) 
@@ -640,7 +642,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                     annotation('textbox', [0.55, 0.45, 0.5, 0.3], 'String', ['Lifetime state 1 = ' num2str(round(temp.hist_together.poisson_lifetime_1_us, 2)) ...
                         '$\pm$' num2str(round(temp.hist_together.error_poisson_lifetime_1_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
                     annotation('textbox', [0.55, 0.35, 0.5, 0.3], 'String', ['Lifetime state 2 = ' num2str(round(temp.hist_together.poisson_lifetime_2_us, 2)) ...
-                        '$\pm$' num2str(round(temp.hist_together.error_poisson_lifetime_1_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
+                        '$\pm$' num2str(round(temp.hist_together.error_poisson_lifetime_2_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
                     annotation('textbox', [0.35, 0.2, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_together.hist_count_1))], ...
                         'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
                     annotation('textbox', [0.35, 0.25, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_together.hist_count_2))], ...
@@ -703,7 +705,7 @@ end
             lifetime_state_1_final_iteration, lifetime_state_2_final_iteration, lifetime_state_1_iteration_array, lifetime_state_2_iteration_array, simple_threshold_clean_RTS_data, ...
             simple_threshold_lifetime_state_1, simple_threshold_lifetime_state_2, threshold_1_iteration_array, threshold_2_iteration_array, number_switches_both_states_iteration_array, ...
             number_switches_both_states_final_iteration, gaussian_1_theory_values, gaussian_2_theory_values, ...
-            hist_RTS_bins, hist_count_data, single_gaussian_fit_params, single_gaussian_theory_values, single_gaussian_fit_error] = ...
+            hist_RTS_bins, hist_count_data, single_gaussian_fit_params, single_gaussian_theory_values, single_gaussian_fit_error, exit_flag] = ...
             clean_noisy_RTS_signal(time_data, RTS_data, min_phase_diff_between_2_gaussian_centers, number_iterations, hist_bin_edges, gaussian_sigma_guess)
         %%%% this code is based on Yuzhelevski Rev Sci instru 2000. Iteratively find lifetime values for state 1 and 2 and clean up the time series data at each iteration until the 
         %%%% areas of the histogram at a given iteration matches the area of the histogram of the raw data. 
@@ -783,7 +785,8 @@ end
             [single_gaussian_fit_params, single_gaussian_theory_values, single_gaussian_fit_error] = fit_gaussian(wrapTo180(hist_bin_middles_wrapped_180), hist_count_data);
 
             % breaks execution of cleaning script if there are no signs of bistability
-            if single_gaussian_fit_error < min(fit_error_360, fit_error_180) || single_gaussian_fit_params(3) == 0 || ...
+            if single_gaussian_fit_error < min(fit_error_360, fit_error_180) || (double_gaussian_fit_360(3) == 0 && fit_error_360 < fit_error_180)|| ...
+                        (double_gaussian_fit_180(3) == 0 && fit_error_180 < fit_error_360) || ...
                         (double_gaussian_fit_360(2) == double_gaussian_fit_360(5) && fit_error_360 < fit_error_180) || ...
                         (double_gaussian_fit_180(2) == double_gaussian_fit_180(5) && fit_error_180 < fit_error_360) 
                 clean_time_data = time_data;
@@ -810,7 +813,11 @@ end
                 gaussian_2_theory_values = 0;
                 hist_RTS_bins = hist_bin_middles;
                 double_gaussian_existence = 0;  % decides if there are any signs of bistability. if not, no point analysing further
+                disp('no sign of bistability detected. not cleaning RTS data')
+                exit_flag = 'poor double gaussian fit';
                 return
+            else
+                disp('bistability detected. cleaning RTS data')
             end
 
             if fit_error_180 < fit_error_360 || fit_error_180 == fit_error_360
@@ -1009,6 +1016,7 @@ end
                 clean_time_data = time_data;
                 clean_RTS_data = RTS_data;
                 hist_RTS_bins = hist_bin_middles;
+                exit_flag = 'could not find first sure state. RTS not cleaned';
             else
                 %%%% shift back to original undo the processing to find peaks earlier.
                 if fit_error_180 < fit_error_360 || fit_error_180 == fit_error_360
@@ -1033,7 +1041,8 @@ end
                     hist_RTS_bins = wrapTo360(hist_bin_middles + peak_angle) - 180;
                     number_switches_both_states_final_iteration = number_switches;
                     double_gaussian_existence = 1;
-                end            
+                end    
+                exit_flag = 'successfully cleaned RTS';
             end
         end
 %% Function extract Poissonian lifetimes
