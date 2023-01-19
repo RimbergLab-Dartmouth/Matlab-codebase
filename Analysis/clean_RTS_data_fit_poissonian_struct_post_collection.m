@@ -25,8 +25,9 @@ post_run_params.save_png_param = 1;
 post_run_params.save_data_param = 1;
 post_run_params.save_fig_file_param = 0;
 
+disp('loading comprehensive file data')
 load(post_run_params.file_to_load_input_params_from, 'input_params', 'post_run_analysis', 'data')
-
+disp('comprehensive file data loaded')
 
 %%%% temp testing code
 % input_params.analyzed_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
@@ -61,7 +62,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
 %         return
 %         disp('skip')
 %     end
-    
+    disp(['loading file ' temp_filelist.file_name])    
     load([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name])
     disp(['loaded file ' temp_filelist.file_name])
     
@@ -452,8 +453,8 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                     end
                     if m_repetition == 1 || (m_repetition > 1 && ...
                                 post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition - 1) == 0&& ...
-                                            ~contains(analysis.hist_together.Poissonian.fit_flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'fewer than') && ...
-                                            ~contains(analysis.hist_together.Poissonian.fit_flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'at least'))
+                                            ~contains(post_run_analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'fewer than') && ...
+                                            ~contains(post_run_analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'at least'))
                         temp.hist_together.poisson_lifetime_1_us = temp.poisson_lifetime_1_us;
                         temp.hist_together.poisson_lifetime_2_us = temp.poisson_lifetime_2_us;
                         temp.hist_together.error_poisson_lifetime_1_us = temp.error_poisson_lifetime_1_us;
@@ -480,6 +481,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 end
                 %%%% if not enough switching events to fit poissonian, allocate 0s                
             else
+                disp(['no bistability detected' 13 10])
                 temp.poisson_lifetime_1_us = NaN;
                 temp.poisson_lifetime_2_us = NaN;
                 temp.error_poisson_lifetime_1_us = NaN;
@@ -550,8 +552,8 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 post_run_analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.poisson_lifetime_2_us;
                 post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_1_us;
                 post_run_analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_2_us;
-                post_run_analysis.hist_together.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_1;
-                post_run_analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_2;
+                post_run_analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_1;
+                post_run_analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_2;
                 
                 post_run_analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_1 (:);
                 

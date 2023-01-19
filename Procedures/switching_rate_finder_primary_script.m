@@ -528,8 +528,8 @@ for m_power = 1 : 1
                                 end
                                 if m_repetition == 1 || (m_repetition > 1 && ...
                                             analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition - 1) == 0 && ...
-                                            ~contains(analysis.hist_together.Poissonian.fit_flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'fewer than') && ...
-                                            ~contains(analysis.hist_together.Poissonian.fit_flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'at least'))
+                                            ~contains(analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'fewer than') && ...
+                                            ~contains(analysis.hist_together.Poissonian.flag{m_power, m_flux, m_gate, m_detuning, m_repetition - 1}, 'at least'))
                                     temp.hist_together.poisson_lifetime_1_us = temp.poisson_lifetime_1_us;
                                     temp.hist_together.poisson_lifetime_2_us = temp.poisson_lifetime_2_us;
                                     temp.hist_together.error_poisson_lifetime_1_us = temp.error_poisson_lifetime_1_us;
@@ -569,7 +569,7 @@ for m_power = 1 : 1
                             temp.fit_flag = 'lack of bistability from Gaussians';
                             
                             if (strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && m_repetition == 1) || ...
-                                    (m_repetition > 1 && sum(squeeze(post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) == 0)
+                                    (m_repetition > 1 && sum(squeeze(analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) == 0)
                                 temp.hist_together.poisson_lifetime_1_us = NaN;
                                 temp.hist_together.poisson_lifetime_2_us = NaN;
                                 temp.hist_together.error_poisson_lifetime_1_us = NaN;
@@ -624,7 +624,7 @@ for m_power = 1 : 1
                             analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_1_us;
                             analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_2_us;
                             analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_1;
-                            analysis.hist_together.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_2;
+                            analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_2;
                             
                             analysis.hist_together.Poissonian.hist_count_1(m_power, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_1(:);
 
