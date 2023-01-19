@@ -568,8 +568,8 @@ for m_power = 1 : 1
                             temp.fit_success = 0;
                             temp.fit_flag = 'lack of bistability from Gaussians';
                             
-                            if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && (m_repetition == 1 || ...
-                                    (m_repetition > 1 && sum(squeeze(analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) == 0))
+                            if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && (m_repetition == 1) || ...
+                                    (m_repetition > 1 && sum(squeeze(analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) == 0)
                                 temp.hist_together.poisson_lifetime_1_us = NaN;
                                 temp.hist_together.poisson_lifetime_2_us = NaN;
                                 temp.hist_together.error_poisson_lifetime_1_us = NaN;

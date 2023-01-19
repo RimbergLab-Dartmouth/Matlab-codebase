@@ -4,7 +4,7 @@ post_run_params.file_to_load_input_params_from = ['C:\Users\Sisira\Desktop\data\
         'switching_finder_comprehensive_data.mat'];
 post_run_params.file_to_save_post_run_analysis_separately  = ['C:\Users\Sisira\Desktop\data\' ...
         'switching_finder_only_analysis.mat'];
-post_run_params.plot_visible = 1;    
+post_run_params.plot_visible = 0;    
 post_run_params.analysis.moving_mean_average_time = 3e-6; % in seconds
 post_run_params.analysis.min_gaussian_center_to_center_phase = 15;
 post_run_params.analysis.max_gaussian_center_to_center_phase = 60;
@@ -21,8 +21,8 @@ post_run_params.poissonian_lifetime_repetitions_mode = 'separate_and_together'; 
 post_run_params.analysis.save_RTS_PSD_extended_data = 0; % decides whether to save RTS PSD extracted or not, and also, RTS data for above storage time
 post_run_params.rts_fig_directory = [cd '\plots\rts\'];
 post_run_params.fig_directory = [cd '\plots\'];
-post_run_params.save_png_param = 0;
-post_run_params.save_data_param = 0;
+post_run_params.save_png_param = 1;
+post_run_params.save_data_param = 1;
 post_run_params.save_fig_file_param = 0;
 
 disp('loading comprehensive file data')
@@ -496,8 +496,8 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 temp.hist_count_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
                 temp.fit_success = 0;
                 temp.fit_flag = 'lack of bistability from Gaussians';
-                if (strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && m_repetition == 1) || ...
-                        (m_repetition > 1 && sum(squeeze(post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) == 0)
+                if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && (m_repetition == 1 || ...
+                        (m_repetition > 1 && sum(squeeze(post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) == 0))
                     temp.hist_together.poisson_lifetime_1_us = NaN;
                     temp.hist_together.poisson_lifetime_2_us = NaN;
                     temp.hist_together.error_poisson_lifetime_1_us = NaN;
