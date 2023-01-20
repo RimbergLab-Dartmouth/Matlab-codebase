@@ -50,14 +50,14 @@ for m_power = 1 : 1
             %%%%% load gain profile and bias point
             if ~exist('gain_prof', 'var')
                 disp('enter directory where gain_prof_struct.mat is saved')
-                load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\gain_profile_files\d221230_093009_gain_profile';
+                load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\gain_profile_files\d230120_084727_gain_profile';
 %                load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
                load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
                clear load_directory
             end
 
-            if ~exist('bias_point', 'var')
-                disp('enter directory where bias_point_struct.mat is saved')
+            if ~exist('bias_point', 'var') 
+               disp('enter directory where bias_point_struct.mat is saved')
                load_directory = uigetdir;
                load([load_directory '\bias_point_struct.mat'], 'bias_point')
                clear load_directory
@@ -86,7 +86,7 @@ for m_power = 1 : 1
             end
 
             if run_params.concatenate_runs && run_params.initialize_or_load 
-                load([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params)$).')  
+                load([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|bias_point|gain_prof)$).')  
                 if m_bias_point == 1
                     disp(['loaded ' run_params.file_name '. Continue?'])
                     pause
@@ -428,8 +428,9 @@ for m_power = 1 : 1
                 disp(['Elapsed time since start of run : ' num2str(floor(elapsed_time/3600)) 'hrs, ' num2str(floor(mod(elapsed_time, 3600)/60)) 'mins, ' ...
                     num2str(mod(mod(elapsed_time, 3600),60)) 'seconds'])
                 %% record some input variables for this run
-                data.pre_recorded_res_freq_values_struct(m_power, m_flux, m_gate) = run_params.pre_recorded_struct;
-                data.pre_recorded_res_freq_values_struct(m_power, m_flux, m_gate) = run_params.pre_recorded_struct;
+                if run_params.set_with_pre_recorded
+                    data.pre_recorded_res_freq_values_struct(m_power, m_flux, m_gate) = run_params.pre_recorded_struct;
+                end
                 data.time_stamp{m_power, m_flux, m_gate} = datestr(now, 'yymmdd_HHMMSS');
                 data.elapsed_time_since_loop_start(m_power, m_flux, m_gate, m_detuning) = elapsed_time;
                 data.ng_1_value_by_bias_point(m_power, m_bias_point) = run_params.ng_1_value;
@@ -918,7 +919,7 @@ for m_power = 1 : 1
         %% save run data
         if run_params.save_data_and_png_param == 1
             disp('saving comprehensive run data')
-            save([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|raw_data_matrix)$).')   
+            save([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|raw_data_matrix|bias_point|gain_prof)$).')   
             disp('comprehensive run data saved')
         end
         end
