@@ -66,7 +66,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
     load([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name])
     disp(['loaded file ' temp_filelist.file_name])
     
-    for m_data_counter = 1 : size(raw_data_matrix.voltage, 1)        
+    for m_data_counter = 1 : size(raw_data_matrix.voltage, 1) 
         m_power = raw_data_matrix.input_power_number(m_data_counter);
         m_flux = raw_data_matrix.flux_number(m_data_counter);
         m_gate = raw_data_matrix.ng_number(m_data_counter);
@@ -996,9 +996,11 @@ end
                     lifetime_state_1_iteration_array(iteration_number) = lifetime_state_2_current;
                     lifetime_state_2_iteration_array(iteration_number) = lifetime_state_1_current;
                 end
-
-                phase_iteration_array(iteration_number, 1 : first_sure_state - 1) = RTS_data(1 : first_sure_state - 1);
-                phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
+                
+                if first_sure_state > 1
+                    phase_iteration_array(iteration_number, 1 : first_sure_state - 1) = RTS_data(1 : first_sure_state - 1);
+                    phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
+                end
                 iteration_number = iteration_number + 1;
             end
             if single_gaussian_fit_error < double_gaussian_fit_error || run_broken == 1

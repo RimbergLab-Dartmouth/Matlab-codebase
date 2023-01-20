@@ -587,9 +587,10 @@ function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existen
             lifetime_state_1_iteration_array(iteration_number) = lifetime_state_2_current;
             lifetime_state_2_iteration_array(iteration_number) = lifetime_state_1_current;
         end
-        
-        phase_iteration_array(iteration_number, 1 : first_sure_state - 1) = RTS_data(1 : first_sure_state - 1);
-        phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
+        if first_sure_state > 1
+            phase_iteration_array(iteration_number, 1 : first_sure_state - 1) = RTS_data(1 : first_sure_state - 1);
+            phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
+        end
         iteration_number = iteration_number + 1;
     end
     if single_gaussian_fit_error < double_gaussian_fit_error || run_broken == 1
