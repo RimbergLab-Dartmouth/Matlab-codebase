@@ -43,7 +43,7 @@ run_params.analysis.bin_edges = -180:input_params.analysis.clean_RTS_bin_width:1
     temp.lifetime_state_2_iteration_array, temp.simple_threshold_clean_RTS_data, temp.simple_threshold_lifetime_state_1, temp.simple_threshold_lifetime_state_2, ...
     temp.threshold_1_iteration_array, temp.threshold_2_iteration_array, temp.number_switches_both_states_iteration_array, ...
     temp.number_switches_both_states_final_iteration, temp.gaussian_1_theory_values, temp.gaussian_2_theory_values, temp.hist_RTS_bins, ...
-    temp.hist_count_data, temp.single_gaussian_fit_params, temp.single_gaussian_theory_values, temp.single_gaussian_fit_error] = ...
+    temp.hist_count_data, temp.single_gaussian_fit_params, temp.single_gaussian_theory_values, temp.single_gaussian_fit_error, temp.RTS_fit_exit_flag] = ...
     clean_noisy_RTS_signal(raw_data.time_corrected, raw_data.phase_corrected, run_params.analysis.min_gaussian_center_to_center_phase, run_params.analysis.number_iterations, ...
             run_params.analysis.bin_edges, run_params.analysis.double_gaussian_fit_sigma_guess);
 temp.gaussian_difference = abs(temp.gaussian_1_mean - temp.gaussian_2_mean)  ; 
@@ -239,6 +239,7 @@ analysis.single_gaussian_theory_values(m_power, m_flux, m_gate, m_detuning, m_re
                                                             temp.single_gaussian_theory_values;
 analysis.single_gaussian_fit_error(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.single_gaussian_fit_error;
 analysis.sign_of_bistability(m_power, m_flux, m_gate, m_detuning, m_repetition) = temp.double_gaussian_existence;
+analysis.RTS_cleaning_exit_flag{m_power, m_flux, m_gate, m_detuning, m_repetition} = temp.RTS_fit_exit_flag;
 
 if temp.double_gaussian_existence == 1 
     if run_params.analysis.save_RTS_PSD_extended_data
@@ -296,7 +297,7 @@ function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existen
     lifetime_state_1_final_iteration, lifetime_state_2_final_iteration, lifetime_state_1_iteration_array, lifetime_state_2_iteration_array, simple_threshold_clean_RTS_data, ...
     simple_threshold_lifetime_state_1, simple_threshold_lifetime_state_2, threshold_1_iteration_array, threshold_2_iteration_array, number_switches_both_states_iteration_array, ...
     number_switches_both_states_final_iteration, gaussian_1_theory_values, gaussian_2_theory_values, ...
-    hist_RTS_bins, hist_count_data, single_gaussian_fit_params, single_gaussian_theory_values, single_gaussian_fit_error] = ...
+    hist_RTS_bins, hist_count_data, single_gaussian_fit_params, single_gaussian_theory_values, single_gaussian_fit_error, exit_flag] = ...
     clean_noisy_RTS_signal(time_data, RTS_data, min_phase_diff_between_2_gaussian_centers, number_iterations, hist_bin_edges, gaussian_sigma_guess)
 %%%% this code is based on Yuzhelevski Rev Sci instru 2000. Iteratively find lifetime values for state 1 and 2 and clean up the time series data at each iteration until the 
 %%%% areas of the histogram at a given iteration matches the area of the histogram of the raw data. 
@@ -403,7 +404,11 @@ function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existen
         gaussian_2_theory_values = 0;
         hist_RTS_bins = hist_bin_middles;
         double_gaussian_existence = 0;  % decides if there are any signs of bistability. if not, no point analysing further
+        disp('no sign of bistability detected. not cleaning RTS data')
+        exit_flag = 'poor double gaussian fit';
         return
+    else
+        disp('bistability detected. cleaning RTS data')
     end
     
     if fit_error_180 < fit_error_360 || fit_error_180 == fit_error_360
@@ -582,9 +587,10 @@ function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existen
             lifetime_state_1_iteration_array(iteration_number) = lifetime_state_2_current;
             lifetime_state_2_iteration_array(iteration_number) = lifetime_state_1_current;
         end
-        
-        phase_iteration_array(iteration_number, 1 : first_sure_state - 1) = RTS_data(1 : first_sure_state - 1);
-        phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
+        if first_sure_state > 1
+            phase_iteration_array(iteration_number, 1 : first_sure_state - 1) = RTS_data(1 : first_sure_state - 1);
+            phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
+        end
         iteration_number = iteration_number + 1;
     end
     if single_gaussian_fit_error < double_gaussian_fit_error || run_broken == 1
@@ -602,6 +608,7 @@ function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existen
         clean_time_data = time_data;
         clean_RTS_data = RTS_data;
         hist_RTS_bins = hist_bin_middles;
+        exit_flag = 'could not find first sure state. RTS not cleaned';
     else
         %%%% shift back to original undo the processing to find peaks earlier.
         if fit_error_180 < fit_error_360 || fit_error_180 == fit_error_360
@@ -626,6 +633,7 @@ function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existen
             hist_RTS_bins = wrapTo360(hist_bin_middles + peak_angle) - 180;
             number_switches_both_states_final_iteration = number_switches;
             double_gaussian_existence = 1;
-        end            
+        end   
+        exit_flag = 'successfully cleaned RTS';
     end
 end
