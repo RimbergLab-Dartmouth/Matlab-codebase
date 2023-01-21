@@ -44,8 +44,9 @@ temp_filelist.files = ls(post_run_params.directory_to_be_analyzed);
 temp_filelist.files = string(temp_filelist.files);
 
 temp_filelist.unanalyzed_files_finder = contains(temp_filelist.files, 'analyzed');
-
-temp_filelist.raw_data_files_list = temp_filelist.files(~temp_filelist.unanalyzed_files_finder && contains(temp_filelist.files, 'record'));
+temp_filelist.record_files = contains(temp_filelist.files, 'record');
+temp_filelist.files_to_be_analyzed = ~temp_filelist.unanalyzed_files_finder & temp_filelist.record_files;
+temp_filelist.raw_data_files_list = temp_filelist.files(temp_filelist.files_to_be_analyzed);
 
 temp_filelist.raw_data_files_list_finder = contains(temp_filelist.raw_data_files_list, 'comprehensive_data');
 
