@@ -21,10 +21,10 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
-run_params.m_flux = 6;
-run_params.m_gate = 5;
+run_params.m_flux = 1;
+run_params.m_gate = 1;
 run_params.number_repetitions = 5;
-for m_power = 1 : 1
+for m_power = 3 : 3
 %%%% uncomment this for a long run sweeping bias points automatically
 %     for m_flux = 1: length(input_params.flux_1_value_list)
 %         for m_gate = 1: length(input_params.ng_1_value_list)
@@ -158,7 +158,7 @@ for m_power = 1 : 1
             input_params.vna.rough_center = 5.76e9;
             input_params.vna.rough_span = 250e6;
             input_params.vna.rough_IF_BW = 10e3;
-            input_params.vna.zoom_scan_span = 30e6;
+            input_params.vna.zoom_scan_span = 15e6;
             input_params.vna.rough_number_points = 1601;
             input_params.vna.electrical_delay = 62.6e-9; 
 

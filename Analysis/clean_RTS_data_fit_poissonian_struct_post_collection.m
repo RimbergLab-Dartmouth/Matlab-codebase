@@ -45,7 +45,7 @@ temp_filelist.files = string(temp_filelist.files);
 
 temp_filelist.unanalyzed_files_finder = contains(temp_filelist.files, 'analyzed');
 
-temp_filelist.raw_data_files_list = temp_filelist.files(~temp_filelist.unanalyzed_files_finder);
+temp_filelist.raw_data_files_list = temp_filelist.files(~temp_filelist.unanalyzed_files_finder && contains(temp_filelist.files, 'record'));
 
 temp_filelist.raw_data_files_list_finder = contains(temp_filelist.raw_data_files_list, 'comprehensive_data');
 
