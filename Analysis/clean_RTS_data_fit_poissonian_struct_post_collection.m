@@ -621,7 +621,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             %% Plot Poissonian of together if histogrammed together and separately
             if squeeze(post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition)) == 1 && ...
                     strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && ...
-                    m_repetition == 5)%squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))
+                    m_repetition == 5%squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))
                 if post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) 
                     if post_run_params.plot_visible == 1 
                         Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
