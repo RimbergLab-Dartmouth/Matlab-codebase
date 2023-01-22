@@ -74,7 +74,7 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
         m_detuning = raw_data_matrix.detuning_point_number(m_data_counter);
         m_bias_point = raw_data_matrix.bias_point_number(m_data_counter);
         detuning_point = raw_data_matrix.detuning_point(m_data_counter);
-        for m_repetition = 1 : squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))
+        for m_repetition = 1 : 5%squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))
     %         %%%% temp testing code
     %         temp_filelist.bias_extractor = temp_filelist.file_name(1:9);
     %         raw_data_matrix.input_power_number(m_data_counter) = str2double(temp_filelist.file_name(1));
@@ -621,8 +621,8 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
             %% Plot Poissonian of together if histogrammed together and separately
             if squeeze(post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition)) == 1 && ...
                     strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && ...
-                    m_repetition == squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))
-                if post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))) 
+                    m_repetition == 5)%squeeze(data.repetition_number(m_power, m_flux, m_gate, m_detuning))
+                if post_run_analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, m_repetition) 
                     if post_run_params.plot_visible == 1 
                         Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
                     elseif post_run_params.plot_visible == 0 
