@@ -21,8 +21,8 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
-run_params.m_flux = 1;
-run_params.m_gate = 1;
+run_params.m_flux = 6;
+run_params.m_gate = 3;
 run_params.number_repetitions = 5;
 for m_power = 3 : 3
 %%%% uncomment this for a long run sweeping bias points automatically
@@ -36,7 +36,7 @@ for m_power = 3 : 3
             run_params.flux_1_value = input_params.flux_1_value_list(m_flux);
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
 
-            run_params.detuning_point_start = -15; % in MHz % do not exceed +/- 50MHz
+            run_params.detuning_point_start = -25; % in MHz % do not exceed +/- 50MHz
             run_params.detuning_point_end = -2; % in MHz. 
             run_params.detuning_point_step = 0.5; % in MHz. % typically set to 0.5MHz 
             m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
@@ -50,7 +50,7 @@ for m_power = 3 : 3
             %%%%% load gain profile and bias point
             if ~exist('gain_prof', 'var')
                 disp('enter directory where gain_prof_struct.mat is saved')
-                load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\gain_profile_files\d230120_084727_gain_profile';
+                load_directory = 'K:\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\gain_profile_files\d230122_083936_gain_profile';
 %                load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
                load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
                clear load_directory

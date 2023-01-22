@@ -340,6 +340,9 @@ if res_freq_recorder == 1
     data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate) = res_freq - data.peripheral.expected_freq_from_Ej_Ec(m_power, m_flux, m_gate);
     disp(['res freq set to ' num2str(res_freq/1e9) ' GHz, error compared to theory = ' num2str(round(squeeze(data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate))/1e6, 2)) ...
         ' MHz'])
+    disp('previous powers res freqs were ')
+    squeeze(data.recorded_res_freq_GHz(:, m_flux, m_gate))
+    clear ans
 end
 %% Acquire VNA data at desired power
 if vna_data_acquisition == 1
