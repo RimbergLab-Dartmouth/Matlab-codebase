@@ -59,14 +59,14 @@ temp_filelist.raw_data_files_list = temp_filelist.raw_data_files_list(~temp_file
 for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
     temp_filelist.file_name = temp_filelist.raw_data_files_list(m_record_count);
     temp_filelist.file_name = convertStringsToChars(temp_filelist.file_name);
-%     if contains(temp_filelist.files, [temp_filelist.file_name '_analyzed'])
-%         return
-%         disp('skip')
-%     end
+    if contains(temp_filelist.files, [temp_filelist.file_name '_analyzed'])
+        disp('skip')
+        return
+    end
     disp(['loading file ' temp_filelist.file_name])    
     load([post_run_params.directory_to_be_analyzed '\' temp_filelist.file_name])
     disp(['loaded file ' temp_filelist.file_name])
-    
+%     
     for m_data_counter = 1 : size(raw_data_matrix.voltage, 1) 
         m_power = raw_data_matrix.input_power_number(m_data_counter);
         m_flux = raw_data_matrix.flux_number(m_data_counter);
@@ -162,6 +162,10 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 'single gaussian $\sigma$ = ' num2str(round(temp.single_gaussian_fit_params(3), 2)) '$^\circ$'], 'interpreter', 'latex')
             legend show
 
+            if post_run_params.plot_visible
+                pause
+            end
+            
             if post_run_params.save_png_param == 1
                     save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
                         num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
@@ -209,6 +213,10 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                         '$\Delta$ = ' num2str(raw_data_matrix.detuning_point(m_data_counter)) 'MHz, ' ...
                 'Repetition number= ' num2str(m_repetition)], 'interpreter', 'latex')
             legend show
+
+            if post_run_params.plot_visible
+                pause
+            end
 
             if post_run_params.save_png_param == 1
                     save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
@@ -296,6 +304,10 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                     'lifetime 1 from PSD fit = ' num2str(round(temp.lifetime_state_1_lorentz_fit*1e6, 2)) '$\mu$s, ' ...
                     'lifetime 2 from PSD fit = ' num2str(round(temp.lifetime_state_2_lorentz_fit*1e6, 2)) '$\mu$s'], 'interpreter', 'latex')
                 legend show
+
+                if post_run_params.plot_visible
+                    pause
+                end
 
                 if post_run_params.save_png_param == 1
                     save_file_name = [post_run_params.rts_fig_directory num2str(m_power) '_' ...
@@ -599,6 +611,10 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                 annotation('textbox', [0.35, 0.5, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_2))], ...
                     'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
 
+                if post_run_params.plot_visible
+                    pause
+                end
+
                 if post_run_params.save_png_param == 1
                         save_file_name = [post_run_params.rts_fig_directory  num2str(m_power) '_' num2str(m_flux) '_' num2str(m_gate) '_' ...
                             num2str(m_detuning) '_' num2str(m_repetition)...
@@ -648,6 +664,10 @@ for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
                         'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
                     annotation('textbox', [0.35, 0.25, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_together.hist_count_2))], ...
                         'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
+
+                    if post_run_params.plot_visible
+                        pause
+                    end
     
                     if post_run_params.save_png_param == 1
                         save_file_name = [post_run_params.rts_fig_directory  num2str(m_power) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning)...
@@ -846,7 +866,7 @@ end
                 area_gaussian_2 = area_gaussian_right_360; 
                 double_gaussian_fit_error = fit_error_360;
             end
-
+        
             area_ratio_gaussian_1_to_2 = area_gaussian_1/ area_gaussian_2;
             raw_data_out = RTS_data;
             %%%% ensure left gaussian is always to the left of right gaussian. the
@@ -1000,8 +1020,8 @@ end
                 
                 if first_sure_state > 1
                     phase_iteration_array(iteration_number, 1 : first_sure_state - 1) = RTS_data(1 : first_sure_state - 1);
-                    phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
                 end
+                    phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
                 iteration_number = iteration_number + 1;
             end
             if single_gaussian_fit_error < double_gaussian_fit_error || run_broken == 1
