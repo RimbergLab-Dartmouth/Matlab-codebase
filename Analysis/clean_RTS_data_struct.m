@@ -589,8 +589,8 @@ function [clean_time_data, raw_data_out, clean_RTS_data, double_gaussian_existen
         end
         if first_sure_state > 1
             phase_iteration_array(iteration_number, 1 : first_sure_state - 1) = RTS_data(1 : first_sure_state - 1);
-            phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
         end
+            phase_iteration_array(iteration_number, first_sure_state : end) = phase_iteration_array_temp;
         iteration_number = iteration_number + 1;
     end
     if single_gaussian_fit_error < double_gaussian_fit_error || run_broken == 1
