@@ -1109,18 +1109,19 @@ saveData = false;
 % TODO: Select if you wish to plot the data to a chart
 drawData = false;
 
-if input_level <= .19
+if input_level <= .1
     input_range = .2;
-elseif input_level > .19 && input_level <= .38
+elseif input_level > .1 && input_level <= .2
     input_range = .4;
-elseif input_level > .38 && input_level <= .79
+elseif input_level > .2 && input_level <= .4
     input_range = .8;
-elseif input_level > .79 && input_level <=2
+elseif input_level > .4 && input_level <=2
     input_range = 2;
 else
     disp('input level too high')
     return
 end
+
 disp(['Digitizer input level set at ' num2str(input_range) 'V'])
 % Calculate the number of enabled channels from the channel mask
 channelCount = 0;
