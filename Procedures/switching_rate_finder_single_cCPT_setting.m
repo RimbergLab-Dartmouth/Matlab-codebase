@@ -628,39 +628,39 @@ if run_params.awg.files_generation_param == 1
     disp('generating awg waveforms and sequences')
     %%%%%% generate a do nothing pulse 1us long and send to AWG
     file_list = awg_list_files(awg);
-    if contains(file_list, 'do_nothing_1us.wfm')
-        awg_delete_file(awg, 'do_nothing_1us.wfm')
+    if contains(file_list, 'do_nothing_1us')
+        awg_delete_file(awg, 'do_nothing_1us')
     end
     [do_nothing_time, do_nothing_waveform, do_nothing_marker] = ...
             generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
                     -1000, 1, 0); %%% -1000 is the amplitude for this code, and that value generates a 0 amp waveform
-    [~] = send_waveform_awg520(awg,do_nothing_time,do_nothing_waveform,do_nothing_marker,'do_nothing_1us.wfm');    
+    [~] = send_waveform_awg520(awg,do_nothing_time,do_nothing_waveform,do_nothing_marker,'do_nothing_1us');    
     clear do_nothing_time ...
           do_nothing_waveform ...
           do_nothing_marker
     %%%% generate stabilization time waveform, where the marker is at 0,
     %%%% doesn't trigger
-    if contains(file_list, [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off.wfm'])
-        awg_delete_file(awg, [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off.wfm'])
+    if contains(file_list, [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off'])
+        awg_delete_file(awg, [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off'])
     end
     [stabilization_time_axis, stabilization_waveform, stabilization_marker] = ...
             generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
                     run_params.awg.output_power, 1, 0);
     [~] = send_waveform_awg520(awg, stabilization_time_axis, stabilization_waveform, stabilization_marker, ...
-            [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off.wfm']);
+            [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off']);
     clear stabilization_time_axis ...
           stabilization_waveform ...
           stabilization_marker
     %%%% generate stabilization time waveform, where the marker is at 0,
     %%%% triggers
-    if contains(file_list, [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on.wfm'])
-        awg_delete_file(awg, [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on.wfm'])
+    if contains(file_list, [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on'])
+        awg_delete_file(awg, [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on'])
     end
     [steady_on_time_axis, steady_on_waveform, steady_on_marker] = ...
             generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
                     run_params.awg.output_power, 10, 1);
     [~] = send_waveform_awg520(awg, steady_on_time_axis, steady_on_waveform, steady_on_marker, ...
-            [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on.wfm']);
+            [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on']);
     clear steady_on_time_axis ...
           steady_on_waveform ...
           steady_on_marker
@@ -673,10 +673,10 @@ if run_params.awg.files_generation_param == 1
     number_to_repeat_stabilization_waveform = input_params.awg.stabilization_buffer_time * 1e6;
     number_to_repeat_steady_on_waveform = ceil(input_params.digitizer.data_collection_time/10e-6);
     sequence_repeat_array = [number_to_repeat_do_nothing_waveform; number_to_repeat_stabilization_waveform; number_to_repeat_steady_on_waveform; number_to_repeat_do_nothing_waveform];
-    waveform_file_array{1,1} = 'do_nothing_1us.wfm';
-    waveform_file_array{1,2} = [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off.wfm'];
-    waveform_file_array{1,3} = [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on.wfm'];
-    waveform_file_array{1,4} = 'do_nothing_1us.wfm';
+    waveform_file_array{1,1} = 'do_nothing_1us';
+    waveform_file_array{1,2} = [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off'];
+    waveform_file_array{1,3} = [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on'];
+    waveform_file_array{1,4} = 'do_nothing_1us';
     awg_send_sequence(awg, 4, 1, waveform_file_array, sequence_repeat_array, run_params.awg.sequence(1:end-4), 1);
     clear number_to_repeat_do_nothing_waveform ...
           number_to_repeat_stabilization_waveform ...

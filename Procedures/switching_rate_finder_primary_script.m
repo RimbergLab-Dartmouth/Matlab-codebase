@@ -7,7 +7,7 @@
 %%%% freq, amp, phase
 run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
 run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
-run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
+run_params.redo_previously_saved_run = 1; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 run_params.analysis_during_acquisition = 0; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
 run_params.analysis.save_RTS_PSD_extended_data = 0; % to save PSD and RTS data for a short period of time set later. This is only if analyzed during acquisition
 if run_params.concatenate_runs
@@ -21,10 +21,10 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
-run_params.m_flux = 1;
-run_params.m_gate = 1;
+run_params.m_flux = 6;
+run_params.m_gate = 5;
 run_params.number_repetitions = 5;
-for m_power = 5 : 5
+for m_power = 3 : 3
 %%%% uncomment this for a long run sweeping bias points automatically
 %     for m_flux = 1: length(input_params.flux_1_value_list)
 %         for m_gate = 1: length(input_params.ng_1_value_list)
@@ -36,7 +36,7 @@ for m_power = 5 : 5
             run_params.flux_1_value = input_params.flux_1_value_list(m_flux);
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
 
-            run_params.detuning_point_start = -30; % in MHz % do not exceed +/- 50MHz
+            run_params.detuning_point_start = -25; % in MHz % do not exceed +/- 50MHz
             run_params.detuning_point_end = -2; % in MHz. 
             run_params.detuning_point_step = 0.5; % in MHz. % typically set to 0.5MHz 
             m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
@@ -569,18 +569,18 @@ for m_power = 5 : 5
                             temp.fit_success = 0;
                             temp.fit_flag = 'lack of bistability from Gaussians';
                             
-                            if strcmp(post_run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && (m_repetition == 1 || ...
+                            if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && (m_repetition == 1 || ...
                                     (m_repetition > 1 && sum(squeeze(analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) == 0))
                                 temp.hist_together.poisson_lifetime_1_us = NaN;
                                 temp.hist_together.poisson_lifetime_2_us = NaN;
                                 temp.hist_together.error_poisson_lifetime_1_us = NaN;
                                 temp.hist_together.error_poisson_lifetime_2_us = NaN;
-                                temp.hist_together.poisson_theory_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
-                                temp.hist_together.poisson_theory_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
-                                temp.hist_together.switch_time_bin_centers_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
-                                temp.hist_together.hist_count_1 = zeros(1, post_run_params.poissonian_fit_bin_number);
-                                temp.hist_together.switch_time_bin_centers_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
-                                temp.hist_together.hist_count_2 = zeros(1, post_run_params.poissonian_fit_bin_number);
+                                temp.hist_together.poisson_theory_1 = zeros(1, run_params.poissonian_fit_bin_number);
+                                temp.hist_together.poisson_theory_2 = zeros(1, run_params.poissonian_fit_bin_number);
+                                temp.hist_together.switch_time_bin_centers_1 = zeros(1, run_params.poissonian_fit_bin_number);
+                                temp.hist_together.hist_count_1 = zeros(1, run_params.poissonian_fit_bin_number);
+                                temp.hist_together.switch_time_bin_centers_2 = zeros(1, run_params.poissonian_fit_bin_number);
+                                temp.hist_together.hist_count_2 = zeros(1, run_params.poissonian_fit_bin_number);
                                 temp.hist_together.fit_success = 0;
                                 temp.hist_together.fit_flag = 'lack of bistability from Gaussians';
                             elseif (m_repetition > 1 && sum(squeeze(analysis.hist_together.Poissonian.fit_success(m_power, m_flux, m_gate, m_detuning, :))) ~= 0)
