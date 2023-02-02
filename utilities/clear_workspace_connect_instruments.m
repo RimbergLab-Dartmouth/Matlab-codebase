@@ -46,3 +46,4 @@ novatech.Timeout = 2.5;
 %%% for maximum interface speed (see manual)
 novatech_disable_echo(novatech)
 novatech_phase_sync_all_outputs_mode(novatech)
+novatech_set_io_mode_to_auto(novatech)
