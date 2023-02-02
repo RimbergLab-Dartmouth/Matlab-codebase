@@ -40,3 +40,9 @@ awg.InputBufferSize = 100000001;
 fopen(awg)
 scope = visa('ni','GPIB0::14::INSTR');
 fopen(scope)
+
+novatech = serialport("COM7", 19200);
+novatech.Timeout = 2.5;
+%%% for maximum interface speed (see manual)
+novatech_disable_echo(novatech)
+novatech_phase_sync_all_outputs_mode(novatech)
