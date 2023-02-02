@@ -40,6 +40,8 @@ awg.InputBufferSize = 100000001;
 fopen(awg)
 scope = visa('ni','GPIB0::14::INSTR');
 fopen(scope)
+lockin_sr844 = visa('ni','GPIB0::8::INSTR');
+fopen(lockin_sr844)
 
 novatech = serialport("COM7", 19200);
 novatech.Timeout = 2.5;
