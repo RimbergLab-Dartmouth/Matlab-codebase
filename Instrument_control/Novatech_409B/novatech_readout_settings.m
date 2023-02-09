@@ -1,14 +1,14 @@
 function [freq_reqd_in_MHz, phase_reqd_in_degs, amp_reqd_in_VPP] = novatech_readout_settings(novatech_handle, channel_number)
-% channel number = 1 to 4
+% channel number = 0 to 3
     %%% get rid of any previous read commands
     while novatech_handle.NumBytesAvailable ~=0
         readline(novatech_handle);
     end
     
     writeline(novatech_handle, 'QUE')
-    for m_channel = 1 : 5
+    for m_channel = 0 : 4
         readout_string = readline(novatech_handle);
-        if m_channel < 5
+        if m_channel < 4
             text = strsplit(readout_string);
             freq(m_channel) = hex2dec(text(1))/1e7;
             phase(m_channel) = round(hex2dec(text(2))/16383 *360, 4);

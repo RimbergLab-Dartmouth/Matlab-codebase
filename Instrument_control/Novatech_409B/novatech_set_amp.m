@@ -1,5 +1,5 @@
 function[message] = novatech_set_amp(novatech_handle, amplitude, channel_number, units)
-% amplitude from 0V to +1Vpp, channel number : 1 to 4
+% amplitude from 0V to +1Vpp, channel number : 0 to 3
     if exist('units', 'var') && strcmp(units, 'dBm')
         amplitude_in_Vpp = 2*convert_dBm_to_Vp(amplitude);
     elseif exist('units', 'var') && strcmp(units, 'Vp')
@@ -18,6 +18,6 @@ function[message] = novatech_set_amp(novatech_handle, amplitude, channel_number,
         disp('setting amplitude to max of 1Vpp')
         amplitude_in_10_bit = 1023;
     end
-    message = ['V' num2str(channel_number - 1) ' ' num2str(amplitude_in_10_bit)];
+    message = ['V' num2str(channel_number) ' ' num2str(amplitude_in_10_bit)];
     writeline(novatech_handle, message)
 end
