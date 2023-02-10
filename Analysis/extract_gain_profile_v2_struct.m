@@ -69,7 +69,7 @@ function [freq,gain_prof_amp,gain_prof_phase]=extract_gain_profile_v2_struct(dat
         disp('plotting')
         figure
         subplot(2,1,1)
-        plot(freq,gain_prof_amp,'DisplayName','gain profile')
+        plot(freq,gain_prof_amp,'DisplayName','gain profile', 'linewidth', 5)
         hold on
         plot_index = randperm(number_traces);
         min(num_to_plot, size(log_mag_data, 1))
@@ -78,7 +78,7 @@ function [freq,gain_prof_amp,gain_prof_phase]=extract_gain_profile_v2_struct(dat
         end
         legend show
         subplot(2,1,2)
-        plot(freq,gain_prof_phase,'DisplayName','gain profile')
+        plot(freq,gain_prof_phase,'DisplayName','gain profile', 'linewidth', 5)
         hold on
         for i = 1: min(num_to_plot, size(log_mag_data, 1))
             plot(freq,phase_data(plot_index(i),:))
