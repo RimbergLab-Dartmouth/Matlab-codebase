@@ -22,6 +22,8 @@ input_params.save_plots = 1;
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 input_params.file_directory = [cd '/d' input_params.file_name_time_stamp '_AWG_additional_attenuation_calibration'];
 mkdir(input_params.file_directory);
+%% switch to phase measurement line
+switch_phase_measurement
 %% set SA 
 fclose(sa)
 sa.InputBufferSize = 100000001;
