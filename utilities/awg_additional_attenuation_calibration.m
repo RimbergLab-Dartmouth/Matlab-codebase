@@ -1,4 +1,6 @@
 % Assumes using N5183B as the LO, and the FG mode of the AWG520
+% having correctly setup the input to the phase measurement lines, feed the
+% input cable going into fridge to the spectrum analyzer instead
 %% input params
 input_params.start_amp = -25;
 input_params.number_points = 10;
@@ -65,6 +67,7 @@ input_params.amp_test_points = linspace(input_params.start_amp, input_params.sto
 awg_toggle_output(awg, 'on', 1)
 n5183b_toggle_output(keysight_sg, 'on')
 for m_loop = 1 : length(input_params.amp_test_points)
+    disp(['running power number ' num2str(m_loop) ' of ' num2str(length(input_params.amp_test_points))])
     if strcmp(input_params.awg_mode, 'FG')
         awg_FG_set_amp(awg, input_params.amp_test_points(m_loop), 1, 'dBm')
     elseif strcmp(input_params.awg_mode, 'AWG')
@@ -102,6 +105,7 @@ clear marker_freq ...
 %% turn off all sources
 awg_toggle_output(awg, 'off', 1)
 awg_toggle_output(awg, 'off', 2)
+awg_run_output_channel_off(awg, 'stop')
 n5183b_toggle_output(keysight_sg, 'off')
 %% fit linear
 analysis.fit_coeffs = polyfit(input_params.amp_test_points, data.output_power, 1);
