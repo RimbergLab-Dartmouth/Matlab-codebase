@@ -11,21 +11,23 @@ function[expected_bias_point_params_struct] = ...
     
 %     load (bias_finder_file, 'flux_zero_voltage', 'flux_period', 'gate_offset', 'gate_period', 'flux_center_freq_mean', 'gate_values_gate', 'res_freqs_gate')
     
-    flux_dummies = 2*pi*linspace(desired_flux_point - 0.5, desired_flux_point + 0.5, 31);
-    gate_dummies = linspace(desired_gate_point - 2, desired_gate_point + 2, 31);
-    [theory_freq_shift]=eigenvalues_v1_2_struct(15.2e9,63e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
 % 	[theory_freq_shift]=eigenvalues_v1_2(14.8e9,54.1e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
 % 	[theory_freq_shift]=eigenvalues_v1_2(14.8e9,61e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
     
     desired_flux_voltage = bias_finder_struct.flux_zero_voltage + (desired_flux_point * bias_finder_struct.flux_period);
     desired_gate_voltage = (bias_finder_struct.gate_offset + desired_gate_point * bias_finder_struct.gate_period/2);
-    expected_freq = theory_freq_shift(16,16) + bias_finder_struct.flux_center_freq_mean
     
-    daq_handle=daq.createSession('ni');
-    addAnalogOutputChannel(daq_handle,'Dev1','ao0','Voltage');
-    addAnalogOutputChannel(daq_handle,'Dev1','ao1','Voltage');
-    outputSingleScan(daq_handle,[desired_gate_voltage desired_flux_voltage]);
-    pause(3);
+    if set_vna 
+        flux_dummies = 2*pi*linspace(desired_flux_point - 0.5, desired_flux_point + 0.5, 31);
+        gate_dummies = linspace(desired_gate_point - 2, desired_gate_point + 2, 31);
+        [theory_freq_shift]=eigenvalues_v1_2_struct(15.2e9,63e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
+        expected_freq = theory_freq_shift(16,16) + bias_finder_struct.flux_center_freq_mean
+        daq_handle=daq.createSession('ni');
+        addAnalogOutputChannel(daq_handle,'Dev1','ao0','Voltage');
+        addAnalogOutputChannel(daq_handle,'Dev1','ao1','Voltage');
+        outputSingleScan(daq_handle,[desired_gate_voltage desired_flux_voltage]);
+        pause(3);
+    end
 
     if plot_display == 1
         figure
@@ -63,9 +65,11 @@ function[expected_bias_point_params_struct] = ...
     end
     expected_bias_point_params_struct.desired_flux_voltage = desired_flux_voltage;
     expected_bias_point_params_struct.desired_gate_voltage = desired_gate_voltage; 
-    expected_bias_point_params_struct.flux_dummies = flux_dummies;
-    expected_bias_point_params_struct.gate_dummies = gate_dummies; 
-    expected_bias_point_params_struct.theory_freq_shift = theory_freq_shift;
-    expected_bias_point_params_struct.expected_freq = expected_freq;
-    expected_bias_point_params_struct.freq_error = freq_error;
+    if set_vna
+        expected_bias_point_params_struct.flux_dummies = flux_dummies;
+        expected_bias_point_params_struct.gate_dummies = gate_dummies; 
+        expected_bias_point_params_struct.theory_freq_shift = theory_freq_shift;
+        expected_bias_point_params_struct.expected_freq = expected_freq;
+        expected_bias_point_params_struct.freq_error = freq_error;
+    end
 end

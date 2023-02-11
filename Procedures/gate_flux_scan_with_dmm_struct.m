@@ -73,7 +73,7 @@ vna_turn_output_on(vna_handle);
 
 gate=gate_start;
 m_gate=1;
-while gate<gate_stop%+gate_step
+while gate<gate_stop+gate_step
     flux=flux_start;
     m_flux=1;
     tic
