@@ -640,27 +640,27 @@ if run_params.awg.files_generation_param == 1
           do_nothing_marker
     %%%% generate stabilization time waveform, where the marker is at 0,
     %%%% doesn't trigger
-    if contains(file_list, [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off'])
-        awg_delete_file(awg, [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off'])
+    if contains(file_list, [num2str(round(run_params.awg.output_power, 2)) 'dBm_1us_steady_marker_off'])
+        awg_delete_file(awg, [num2str(round(run_params.awg.output_power, 2)) 'dBm_1us_steady_marker_off'])
     end
     [stabilization_time_axis, stabilization_waveform, stabilization_marker] = ...
             generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
                     run_params.awg.output_power, 1, 0);
     [~] = send_waveform_awg520(awg, stabilization_time_axis, stabilization_waveform, stabilization_marker, ...
-            [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off']);
+            [num2str(round(run_params.awg.output_power, 2)) 'dBm_1us_steady_marker_off']);
     clear stabilization_time_axis ...
           stabilization_waveform ...
           stabilization_marker
-    %%%% generate stabilization time waveform, where the marker is at 0,
+    %%%% generate collection time waveform, where the marker is at 1,
     %%%% triggers
-    if contains(file_list, [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on'])
-        awg_delete_file(awg, [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on'])
+    if contains(file_list, [num2str(round(run_params.awg.output_power, 2)) 'dBm_10us_steady_marker_on'])
+        awg_delete_file(awg, [num2str(round(run_params.awg.output_power, 2)) 'dBm_10us_steady_marker_on'])
     end
     [steady_on_time_axis, steady_on_waveform, steady_on_marker] = ...
             generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
                     run_params.awg.output_power, 10, 1);
     [~] = send_waveform_awg520(awg, steady_on_time_axis, steady_on_waveform, steady_on_marker, ...
-            [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on']);
+            [num2str(round(run_params.awg.output_power, 2)) 'dBm_10us_steady_marker_on']);
     clear steady_on_time_axis ...
           steady_on_waveform ...
           steady_on_marker
