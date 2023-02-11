@@ -1,3 +1,4 @@
+clear_instruments
 instrreset
 vna=visa('ni','GPIB0::15::INSTR');
 fopen(vna)

@@ -4,8 +4,8 @@ run_params.save_fig_param = 1;
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 
 %% bias point and power sweep settings
-input_params.ng_value = 0.55;
-input_params.flux_value = 0.05;
+input_params.ng_value = 0;
+input_params.flux_value = 0.5;
 run_params.file_name = ['_fridge_attenuation_ng_0p' num2str(input_params.ng_value*100) '_flux_0p' num2str(input_params.flux_value*100)];
 input_params.constants.planck = 6.626e-34;
 
@@ -430,7 +430,13 @@ analysis.confint_intercept_with_exclusion = abs(mean(confints_95_temp(:,2)) - an
 clear confints_95_temp
 
 %% find attenuation
-analysis.kerr_MHz = find_kerr_MHz_ng_flux(input_params.ng_value, input_params.flux_value);
+flux_dummies = 2*pi*linspace(input_params.flux_value - 0.5, input_params.flux_value + 0.5, 31);
+gate_dummies = linspace(input_params.ng_value - 2, input_params.ng_value + 2, 31);
+[~,~,~,~,~,analysis.kerr_MHz ]=eigenvalues_v1_2_struct(14.8e9,52.1e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
+clear flux_dummies ...
+      gate_dummies
+analysis.kerr_MHz = analysis.kerr_MHz(16, 16)/1e6;
+% analysis.kerr_MHz = find_kerr_MHz_ng_flux(input_params.ng_value, input_params.flux_value);
 
 %%%% see eq. (3.17) of Bhar thesis
 analysis.attenuation = (gamma_int_angle_temp + gamma_ext_angle_temp)^2*slope_temp*input_params.constants.planck*res_freq_angle_temp/ ...
