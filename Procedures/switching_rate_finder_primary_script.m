@@ -21,8 +21,8 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
-run_params.m_flux = 1;
-run_params.m_gate = 6;
+run_params.m_flux = 7;
+run_params.m_gate = 1;
 run_params.number_repetitions = 5;
 for m_power = 1 : 1
 %%%% uncomment this for a long run sweeping bias points automatically
