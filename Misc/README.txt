@@ -1,0 +1,1 @@
+This folder contains miscellaneous simulation, analysis and fitting code that needs sorting

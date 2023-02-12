@@ -1,0 +1,3 @@
+Run first 4 sections of 'D:\Academics\E-Books\Dartmouth\Rimberg Lab\Data\Sample Design\
+Wustmann_parametric_noise_output_simulation\parametric_drive_noise_output_simulation_sample_params_range.mlx'
+to generate data. Not saved. 6GB .mat file
