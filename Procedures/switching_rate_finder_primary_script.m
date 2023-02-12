@@ -5,7 +5,7 @@
 %%%% flux_center_freq_mean, gate_values_gate and res_freqs_gate
 %%%% and a 'gain_profile_struct' that contains :
 %%%% freq, amp, phase
-run_params.concatenate_runs = 0; % 0/1 - decides whether this run is going to concatenate data to an existing file
+run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
 run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 run_params.analysis_during_acquisition = 0; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
@@ -22,7 +22,7 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 run_params.m_flux = 1;
-run_params.m_gate = 1;
+run_params.m_gate = 5;
 run_params.number_repetitions = 5;
 for m_power = 1 : 1
 %%%% uncomment this for a long run sweeping bias points automatically
@@ -37,7 +37,7 @@ for m_power = 1 : 1
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
 
             run_params.detuning_point_start = -15; % in MHz % do not exceed +/- 50MHz
-            run_params.detuning_point_end = -2; % in MHz. 
+            run_params.detuning_point_end = -1; % in MHz. 
             run_params.detuning_point_step = 0.5; % in MHz. % typically set to 0.5MHz 
             m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
             %%% deliberately make expected detuning number large so dont have to worry

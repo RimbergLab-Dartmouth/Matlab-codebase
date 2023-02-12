@@ -340,7 +340,7 @@ if res_freq_recorder == 1
     data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate) = res_freq - data.peripheral.expected_freq_from_Ej_Ec(m_power, m_flux, m_gate);
     disp(['res freq set to ' num2str(res_freq/1e9) ' GHz, error compared to theory = ' num2str(round(squeeze(data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate))/1e6, 2)) ...
         ' MHz'])
-    if run_params.concatenate_runs
+    if run_params.initialize_or_load && size(data.recorded_res_freq_GHz, 1) > 1
         disp('previous powers res freqs were ')
         squeeze(data.recorded_res_freq_GHz(:, m_flux, m_gate))
     end

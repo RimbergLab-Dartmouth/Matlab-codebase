@@ -430,12 +430,7 @@ analysis.confint_intercept_with_exclusion = abs(mean(confints_95_temp(:,2)) - an
 clear confints_95_temp
 
 %% find attenuation
-flux_dummies = 2*pi*linspace(input_params.flux_value - 0.5, input_params.flux_value + 0.5, 31);
-gate_dummies = linspace(input_params.ng_value - 2, input_params.ng_value + 2, 31);
-[~,~,~,~,~,analysis.kerr_MHz ]=eigenvalues_v1_2_struct(14.8e9,52.1e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
-clear flux_dummies ...
-      gate_dummies
-analysis.kerr_MHz = analysis.kerr_MHz(16, 16)/1e6;
+[analysis.kerr_MHz] = kerr_MHz_expected_for_Jules_sample(input_params.ng_value, input_params.flux_value);
 % analysis.kerr_MHz = find_kerr_MHz_ng_flux(input_params.ng_value, input_params.flux_value);
 
 %%%% see eq. (3.17) of Bhar thesis
