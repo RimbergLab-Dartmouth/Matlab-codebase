@@ -22,7 +22,7 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 run_params.m_flux = 1;
-run_params.m_gate = 5;
+run_params.m_gate = 6;
 run_params.number_repetitions = 5;
 for m_power = 1 : 1
 %%%% uncomment this for a long run sweeping bias points automatically
@@ -475,6 +475,7 @@ for m_power = 1 : 1
                 %% record some other data variables
                 data.drive_freq_GHz(m_power, m_flux, m_gate, m_detuning) = detuning_point/1e3 + res_freq/1e9;
                 data.recorded_res_freq_GHz(m_power, m_flux, m_gate) = res_freq/1e9;
+                data.kerr_MHz(m_power, m_flux, m_gate) = kerr_MHz_expected_for_Jules_sample(run_params.ng_1_value, run_params.flux_1_value);
                 %% clean the RTS data %%%%%%%%
                 if run_params.analysis_during_acquisition
                     data.poissonian_lifetime_repetitions_mode{m_power, m_flux, m_gate, m_detuning} = run_params.poissonian_lifetime_repetitions_mode;
