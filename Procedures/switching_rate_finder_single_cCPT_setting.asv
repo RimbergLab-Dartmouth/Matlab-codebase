@@ -776,7 +776,7 @@ raw_data_array.voltage = raw_data_array.voltage(:, 1:size(raw_data_array.voltage
 if ~run_params.analysis_during_acquisition
     if run_params.save_data_and_png_param == 1
         if ~exist('m_save_data_counter', 'var')
-            disp('m_save_data_counter doesnt exist. setting to 0 now.')
+            disp('m_save_data_counter doesnt exist. setting to 0 ')
             m_save_data_counter = 0;
             m_save_data_index = 1;
             m_record = 1;
@@ -997,7 +997,7 @@ retCode = ...
         boardHandle,        ... % HANDLE -- board handle
         TRIG_ENGINE_OP_J,   ... % U32 -- trigger operation
         TRIG_ENGINE_J,      ... % U32 -- trigger engine id
-        TRIG_EXTERNAL, ...% TRIG_CHAN_A,        ... % U32 -- trigger source id
+        TRIG_EXTERNAL,        ... % U32 -- trigger source id
         TRIGGER_SLOPE_POSITIVE, ... % U32 -- trigger slope id
         trigger_level,                ... % U32 -- trigger level from 0 (-range) to 255 (+range)   %225 is ~0.75V for 2Vpp trigger such as marker from AWG
         TRIG_ENGINE_K,      ... % U32 -- trigger engine id

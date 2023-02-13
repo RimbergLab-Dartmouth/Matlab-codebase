@@ -7,7 +7,7 @@
 %%%% freq, amp, phase
 run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
 run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
-run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
+run_params.redo_previously_saved_run = 1; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 run_params.analysis_during_acquisition = 0; % to analyse RTS and Poissonian hist during acquisition, or analyse separately.
 run_params.analysis.save_RTS_PSD_extended_data = 0; % to save PSD and RTS data for a short period of time set later. This is only if analyzed during acquisition
 if run_params.concatenate_runs
@@ -126,7 +126,8 @@ for m_power = 1 : 1
             if ~isfield(input_params, 'run_number')
                 input_params.run_number = 0;
             elseif run_params.redo_previously_saved_run 
-                input_params.run_number = input_params.run_number - 1;
+                input_params.run_number = input('what is the desired run number - 1?');
+%                 input_params.run_number = input_params.run_number - 1;
             end 
             input_params.run_number = input_params.run_number + 1;
             %% Attenuation values
@@ -899,9 +900,9 @@ for m_power = 1 : 1
         connect_instruments
         switch_vna_measurement
         vna_set_power(vna, -65, 1)
-        vna_turn_output_on(vna)
-        vna_set_center_span(vna, 5.76e9, 250e6, 1)
-        vna_set_trigger_source(vna, 'int')
+%         vna_turn_output_on(vna)
+%         vna_set_center_span(vna, 5.76e9, 250e6, 1)
+%         vna_set_trigger_source(vna, 'int')
         clear_instruments
         clear m_power ...
               m_flux ...
