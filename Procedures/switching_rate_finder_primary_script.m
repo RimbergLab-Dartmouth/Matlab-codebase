@@ -461,7 +461,7 @@ for m_power = 1 : 1
                 end
                 %% decide whether to collect res freq, generate sequence, set bias and so on
                 if detuning_point == run_params.detuning_point_start
-                    vna_data_acquisition = 1;
+                    vna_data_acquisition = 0;
                     res_freq_recorder = 1;
                     bias_set_param = 0;
                     % redefine (and generate) AWG sequence to load only if running
