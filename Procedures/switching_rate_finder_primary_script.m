@@ -132,8 +132,10 @@ for m_power = 1 : 1
             input_params.run_number = input_params.run_number + 1;
             %% Attenuation values
             input_params.fridge_attenuation = 85.8;
-            input_params.additional_attenuation = 30.88; % dB. big fridge setup as of 2/11/2023. see notes_feb_11th_2023.txt in folder below
+            input_params.additional_attenuation = 31.97; % dB. big fridge setup as of 2/11/2023. see notes_feb_11th_2023.txt in folder below
             %%%%\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\AWG_input_attenuation_calibration
+            data.fridge_attenuation_used(m_power, m_flux, m_gate) = input_params.fridge_attenuation;
+            data.awg_additional_attenuation_used(m_power, m_flux, m_gate) = input_params.additional_attenuation;
             %% Analysis params - if analysis being done 
             input_params.if_freq = 21e6; % freq to which output signal is mixed down
             if run_params.analysis_during_acquisition  % only if analyzing during run. if not, these params set in post run analysis clean RTS file

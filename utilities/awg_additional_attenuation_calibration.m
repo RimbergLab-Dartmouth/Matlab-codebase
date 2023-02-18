@@ -17,7 +17,7 @@ input_params.LO.power = 17; % dBm
 input_params.sa.span = 1e3; % Hz
 input_params.sa.RBW = 1; % Hz
 input_params.sa.number_points = 1001;
-input_params.sa.average_number = 5;
+input_params.sa.average_number = 15;
 input_params.sa.average_type = 'RMS';
 input_params.sa.trace_type = 'average';
 
@@ -114,7 +114,7 @@ analysis.additional_attenuation = analysis.fit_coeffs(2);
 %% save data
 if input_params.save_data
     clear_instruments
-    save([input_params.file_directory '/gain_added_noise_data.mat'])
+    save([input_params.file_directory '/awg_calibration.mat'])
 end
 %% plot data
 if input_params.figures_visible == 1 

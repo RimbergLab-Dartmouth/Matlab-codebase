@@ -919,7 +919,7 @@ result = false;
 retCode = ...
     AlazarSetCaptureClock(  ...
         boardHandle,        ... % HANDLE -- board handle
-        FAST_EXTERNAL_CLOCK,     ... % U32 -- clock source id
+        INTERNAL_CLOCK ,     ... % FAST_EXTERNAL_CLOCK U32 -- clock source id
         sample_rate, ... % U32 -- sample rate id
         CLOCK_EDGE_RISING,  ... % U32 -- clock edge id
         0                   ... % U32 -- clock decimation
@@ -948,7 +948,7 @@ retCode = ...
         boardHandle,                  ... % HANDLE -- board handle
         CHANNEL_A,     ... % U32 -- input channel
         DC_COUPLING,    ... % U32 -- input coupling id
-        input_range, ... % U32 -- input range id
+        input_range, ...%INPUT_RANGE_PM_400_MV, ... % U32 -- input range id
         IMPEDANCE_50_OHM    ... % U32 -- input impedance id
         );
 if retCode ~= ApiSuccess
@@ -997,7 +997,7 @@ retCode = ...
         boardHandle,        ... % HANDLE -- board handle
         TRIG_ENGINE_OP_J,   ... % U32 -- trigger operation
         TRIG_ENGINE_J,      ... % U32 -- trigger engine id
-        TRIG_EXTERNAL, ...% TRIG_CHAN_A,        ... % U32 -- trigger source id
+        TRIG_EXTERNAL, ...%TRIG_CHAN_A ,        ... % U32 -- trigger source id
         TRIGGER_SLOPE_POSITIVE, ... % U32 -- trigger slope id
         trigger_level,                ... % U32 -- trigger level from 0 (-range) to 255 (+range)   %225 is ~0.75V for 2Vpp trigger such as marker from AWG
         TRIG_ENGINE_K,      ... % U32 -- trigger engine id

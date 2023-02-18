@@ -13,7 +13,7 @@ function[expected_bias_point_params_struct] = ...
     
 % 	[theory_freq_shift]=eigenvalues_v1_2(14.8e9,54.1e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
 % 	[theory_freq_shift]=eigenvalues_v1_2(14.8e9,61e9,9,flux_dummies,gate_dummies,1,1,0,0,6);
-    
+   
     desired_flux_voltage = bias_finder_struct.flux_zero_voltage + (desired_flux_point * bias_finder_struct.flux_period);
     desired_gate_voltage = (bias_finder_struct.gate_offset + desired_gate_point * bias_finder_struct.gate_period/2);
     
