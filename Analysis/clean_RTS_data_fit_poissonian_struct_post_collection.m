@@ -1,8 +1,8 @@
 %% post run analysis params
-post_run_params.directory_to_be_analyzed = 'C:\Users\Sisira\Desktop\data';
-post_run_params.file_to_load_input_params_from = ['C:\Users\Sisira\Desktop\data\' ...
+post_run_params.directory_to_be_analyzed = 'C:\Users\Sisira\Desktop\feb_16th_2022\data';
+post_run_params.file_to_load_input_params_from = ['C:\Users\Sisira\Desktop\feb_16th_2022\data\' ...
         'switching_finder_comprehensive_data.mat'];
-post_run_params.file_to_save_post_run_analysis_separately  = ['C:\Users\Sisira\Desktop\data\' ...
+post_run_params.file_to_save_post_run_analysis_separately  = ['C:\Users\Sisira\Desktop\feb_16th_2022\data\' ...
         'switching_finder_only_analysis.mat'];
 post_run_params.plot_visible = 0;    
 post_run_params.analysis.moving_mean_average_time = 3e-6; % in seconds
@@ -56,7 +56,7 @@ temp_filelist.raw_data_files_list_finder = contains(temp_filelist.raw_data_files
 
 temp_filelist.raw_data_files_list = temp_filelist.raw_data_files_list(~temp_filelist.raw_data_files_list_finder);
 %%%%%%%
-for m_record_count = 3 : length(temp_filelist.raw_data_files_list)
+for m_record_count = 1 : length(temp_filelist.raw_data_files_list)
     temp_filelist.file_name = temp_filelist.raw_data_files_list(m_record_count);
     temp_filelist.file_name = convertStringsToChars(temp_filelist.file_name);
     if contains(temp_filelist.files, [temp_filelist.file_name '_analyzed'])

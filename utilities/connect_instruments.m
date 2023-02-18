@@ -43,7 +43,8 @@ fopen(scope)
 lockin_sr844 = visa('ni','GPIB0::8::INSTR');
 fopen(lockin_sr844)
 
-novatech = serialport("COM7", 19200);
+% novatech = serialport("COM7", 19200);
+novatech = serialport("COM4", 19200);
 novatech.Timeout = 2.5;
 %%% for maximum interface speed (see manual)
 novatech_disable_echo(novatech)
