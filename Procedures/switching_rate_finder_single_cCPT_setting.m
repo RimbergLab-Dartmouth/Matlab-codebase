@@ -919,7 +919,7 @@ result = false;
 retCode = ...
     AlazarSetCaptureClock(  ...
         boardHandle,        ... % HANDLE -- board handle
-        INTERNAL_CLOCK ,     ... % FAST_EXTERNAL_CLOCK U32 -- clock source id
+        FAST_EXTERNAL_CLOCK,     ... % INTERNAL_CLOCK U32 -- clock source id
         sample_rate, ... % U32 -- sample rate id
         CLOCK_EDGE_RISING,  ... % U32 -- clock edge id
         0                   ... % U32 -- clock decimation
