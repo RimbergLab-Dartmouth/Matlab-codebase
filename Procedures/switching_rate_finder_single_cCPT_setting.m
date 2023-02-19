@@ -736,13 +736,15 @@ if boardHandle.Value == 0
   fprintf('Error: Unable to open board system ID %u board ID %u\n', systemId, boardId);
   return
 end
-if m_bias_point == 1
+if detuning_point == run_params.detuning_point_start
     [result] = configureBoard(boardHandle, input_params.digitizer.sample_rate, ...
         input_params.digitizer.trigger_level, convert_dBm_to_Vp(run_params.input_power_value + input_params.fridge_attenuation));
         % expect ~ 0dB gain from fridge. so the power going to fridge is probably commensurate with the power at insert top
     if ~result
-      fprintf('Error: Board configuration failed\n');
-      return
+        fprintf('Error: Board configuration failed\n');
+        return
+    else
+        disp('Alazar board configure')
     end
 end
 clear result

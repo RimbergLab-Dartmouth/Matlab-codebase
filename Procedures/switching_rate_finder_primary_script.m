@@ -50,7 +50,8 @@ for m_power = 1 : 1
             %%%%% load gain profile and bias point
             if ~exist('gain_prof', 'var')
                 disp('enter directory where gain_prof_struct.mat is saved')
-                load_directory = 'C:\Users\Sisira\Desktop\feb_16th_2022';
+                load_directory = 'C:\Users\rimberg-lab\Desktop';
+%                 load_directory = 'C:\Users\Sisira\Desktop\feb_16th_2022';
 %                load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
                load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
                clear load_directory
@@ -58,8 +59,8 @@ for m_power = 1 : 1
 
             if ~exist('bias_point', 'var') 
                disp('enter directory where bias_point_struct.mat is saved')
-%                load_directory = 'C:\Users\rimberg-lab\Desktop\feb_16th_2022';
-                load_directory = 'C:\Users\Sisira\Desktop\feb_16th_2022';
+               load_directory = 'C:\Users\rimberg-lab\Desktop';
+%                 load_directory = 'C:\Users\Sisira\Desktop\feb_16th_2022';
 %                load_directory = uigetdir;
                load([load_directory '\bias_point_struct.mat'], 'bias_point')
                clear load_directory
@@ -461,9 +462,9 @@ for m_power = 1 : 1
                 end
                 %% decide whether to collect res freq, generate sequence, set bias and so on
                 if detuning_point == run_params.detuning_point_start
-                    vna_data_acquisition = 0;
+                    vna_data_acquisition = 1;
                     res_freq_recorder = 1;
-                    bias_set_param = 0;
+                    bias_set_param = 1;
                     % redefine (and generate) AWG sequence to load only if running
                     % first detuning for this bias point and this power
                     run_params.awg.files_generation_param = 1;
