@@ -23,7 +23,7 @@ input_params.twpa_pump.powers = linspace(input_params.twpa_pump.power_start, inp
 % input_params.center_freq = [5.7e9; 5.75e9; 5.775e9; 5.8e9];
 input_params.center_freq = [5.7e9; 5.72e9; 5.74e9; 5.76e9; 5.78e9; 5.8e9];
 input_params.center_freq_number = length(input_params.center_freq);
-input_params.input_attenuation = 85.8; % includes input cable attenuation. see notes_feb_11th_2023.txt in folder below
+input_params.input_attenuation = 89; % includes input cable attenuation. see notes_feb_11th_2023.txt in folder below
             %%%%\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\AWG_input_attenuation_calibration
 input_params.constants.planck = 6.626e-34;
 input_params.constants.boltzmann = 1.38e-23;

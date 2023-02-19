@@ -49,7 +49,7 @@ end
 %%% do flux scan %%%%%%%%%
 number_flux = input_params.number_flux;
 number_gate = 1;
-gate_start = input_params.gate_start;
+gate_start = input_params.gate_start + 2;
 gate_stop = gate_start + 1;
 disp('running flux period calculator')
 [flux_scan.freq, flux_scan.amp, flux_scan.phase, flux_scan.freq_zoom, flux_scan.amp_zoom, flux_scan.phase_zoom, flux_scan.dc_bias]=...
