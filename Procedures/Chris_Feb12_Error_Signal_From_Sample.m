@@ -4,6 +4,9 @@ switch_PDH_measurement(keysight_sg, ps_2)
 n5183b_toggle_output(keysight_sg,'on')
 n5183b_set_amplitude(keysight_sg,-25)
 n5183b_set_frequency(keysight_sg, 5.7845e9)
+
+% [a, b, c] = novatech_readout_settings(novatech, 0)
+
 novatech_set_phase(novatech,0,0);
 novatech_set_freq(novatech,30,0);
 novatech_set_phase(novatech,0,1);
