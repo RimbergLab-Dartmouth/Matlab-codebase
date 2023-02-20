@@ -88,6 +88,7 @@ if vna_data_acquisition == 1
     pause(3);
     vna_turn_output_off(vna)
     %% fit VNA data at single photon powers
+    disp('fitting q-circle to single photon power')
     analysis.vna.single_photon.interp_gain_amp(m_power, m_flux, m_gate, :) = ...
             interp1(gain_prof.freq, gain_prof.amp, ...
             data.vna.single_photon.fine.freq(m_power, m_flux, m_gate,:), 'pchip');
@@ -381,6 +382,7 @@ if vna_data_acquisition == 1
     vna_set_power(vna, run_params.vna.power, 1)
     vna_turn_output_off(vna)
     %% fit VNA data at desired power
+    disp('fitting q-circle at desired power')
     analysis.vna.actual_power.interp_gain_amp(m_power, m_flux, m_gate, :) = ...
             interp1(gain_prof.freq, gain_prof.amp, ...
             data.vna.actual_power.fine.freq(m_power, m_flux, m_gate,:), 'pchip');
@@ -813,7 +815,6 @@ if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquis
     
     m_save_data_counter = m_save_data_counter + run_params.number_repetitions;
     m_save_data_index = m_save_data_index + 1;
-    
     
     if m_save_data_counter >= run_params.save_raw_data_frequency ||(detuning_point > run_params.detuning_point_end + run_params.detuning_point_step ...
             || detuning_point == run_params.detuning_point_end)   
