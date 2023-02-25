@@ -13,11 +13,11 @@ novatech_set_phase(novatech,0,1);
 novatech_set_freq(novatech,30,1);
 
 centerFreq = 5.7845e9;
-range = 5;
+range = 10;
 resolution = 0.1;%MHz
 freq = -range:resolution:range;
 record = zeros(1,length(freq));
-rep = 100;
+rep = 10;
 
 disp('rough estimate:')
 disp(2*range/resolution*(1.5+rep*0.5)/60)
@@ -35,9 +35,9 @@ for i = 1:length(freq)
     end
     record(i) = temp;
 end
-
-freq
-record
+% 
+% freq
+% record
 plot(freq,record)
 
 n5183b_toggle_output(keysight_sg,'off')
