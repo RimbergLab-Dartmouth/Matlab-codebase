@@ -45,6 +45,7 @@ input_params.sa.number_points = 1001;
 input_params.sa.average_number = 10;
 input_params.sa.average_type = 'RMS';
 input_params.sa.trace_type = 'average';
+input_params.sa.detector_type = 'samp';
 input_params.sa.RBW = 1;
 
 %% set VNA 
@@ -69,6 +70,7 @@ set(sa,'Timeout',1000)
 n9000_set_sweep_points(sa, input_params.sa.number_points)
 n9000_set_RBW(sa,input_params.sa.RBW)
 n9000_set_trace_type(sa,input_params.sa.trace_type)
+n9000_set_detector_type(sa, input_params.sa.detector_type)
 n9000_set_average_type(sa, input_params.sa.average_type)
 n9000_set_average_number(sa, input_params.sa.average_number)
 %% ensure other sig gens are all off
