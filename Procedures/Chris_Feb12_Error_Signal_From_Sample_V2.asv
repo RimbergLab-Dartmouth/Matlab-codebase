@@ -1,0 +1,68 @@
+clc
+clear_workspace_connect_instruments
+
+input_params.sig_gen_amp = -25; % dBm
+input_params.center_freq = 5.7845e9; % Hz
+input_params.span = 20; % MHz
+input_params.freq_step = 0.1: % MHz
+input_params.repetition_number = 10; % number repetitions
+input_params.phase_mod_freq = 30; % MHz, modulation freq
+input_params.phase_mod_amp = .1; % Vpp
+input_params.phase_mod_phase = 0; % degs
+
+%%%% lockin params
+input_params.lockin.time_constant = 300e-3; % s,
+input_params.lockin.sensitivity = 3; % in mV
+input_params.lockin.ref_mode = 'ext';
+%%%% Novatech params
+input_params.novatech.phase_modulation_channel = 0; % channel number - 0 - 3
+input_params.novatech.lockin_ref_channel = 1; % channel number - 0 - 3
+input_params.novatech.lockin_ref_amp = 1; % Vpp
+input_params.novatech.lockin_ref_phase = 0 ; % degs
+
+switch_PDH_measurement(keysight_sg, ps_2)
+
+%% set instruments
+sr844_lockin_set_time_constant(lockin_sr844, input_params.lockin.time_constant)
+sr844_lockin_set_sensitivity(lockin_sr844, input_params.lockin.sensitivity)
+sr844_lockin_set_ref_mode(lockin_sr844, input_params.lockin.ref_mode)
+novatech_set_phase(novatech,input_params.phase_mod_phase,input_params.novatech.phase_modulation_channel);
+novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.phase_modulation_channel);
+novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.novatech.lockin_ref_channel);
+novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.lockin_ref_channel);
+n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
+n5183b_toggle_output(keysight_sg, 'on')
+
+%initialize arrays 
+data.probe_freq = -input_params.span/2 : input_params.freq_step : input_params.span/2;
+data.lockin_x_quadrature = zeros(length(data.probe_freq), input_params.repetition_number);
+data.lockin_y_quadrature = data.lockin_x_quadrature;
+
+for m_freq = 1 : length(data.probe_freq)
+	for m_rep = 1 : input_praams.repetition_number
+		n5183b_set_frequency(keysight_sg, input_params.center_freq+data.probe_freq(m_freq)*1e6)
+        pause(5 * input_params.lockin.time_constant);
+        data.lockin_x_quadrature(m_freq, m_rep) = sr844_lockin_query_measured_value(lockin_sr844,'X');
+        data.lockin_y_quadrature(m_freq, m_rep) = sr844_lockin_query_measured_value(lockin_sr844,'Y');
+    end
+end
+
+%%%% mean of repetitions
+analysis.lockin_x_mean = mean(data.lockin_x_quadrature, 2);
+analysis.lockin_y_mean = mean(data.lockin_y_quadrature, 2);
+
+figure
+plot(data.probe_freq, analysis.lockin_x_mean/1e3)
+xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
+ylabel('X (mV)', 'interpreter', 'latex')
+
+
+figure
+plot(data.probe_freq, analysis.lockin_y_mean/1e3)
+xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
+ylabel('Y (mV)', 'interpreter', 'latex')
+
+figure
+scatter(analysis.lockin_x_mean/1e3, analysis.lockin_y_mean/1e3)
+xlabel('X (mV)', 'interpreter', 'latex')
+ylabel('Y (mV)', 'interpreter', 'latex')
