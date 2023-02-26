@@ -4,6 +4,7 @@ post_run_params.file_to_load_input_params_from = ['C:\Users\Sisira\Desktop\feb_1
         'switching_finder_comprehensive_data.mat'];
 post_run_params.file_to_save_post_run_analysis_separately  = ['C:\Users\Sisira\Desktop\feb_16th_2022\data\' ...
         'switching_finder_only_analysis.mat'];
+post_run_params.append_to_existing = 1;
 post_run_params.plot_visible = 0;    
 post_run_params.analysis.moving_mean_average_time = 3e-6; % in seconds
 post_run_params.analysis.min_gaussian_center_to_center_phase = 15;
@@ -28,6 +29,11 @@ post_run_params.save_fig_file_param = 0;
 disp('loading comprehensive file data')
 load(post_run_params.file_to_load_input_params_from, 'input_params', 'post_run_analysis', 'data')
 disp('comprehensive file data loaded')
+
+%%% load post run analysis only if already exists
+if post_run_params.append_to_existing 
+    load(post_run_params.file_to_save_post_run_analysis_separately, 'post_run_analysis')
+end
 
 %%%% temp testing code
 % input_params.analyzed_parameter = zeros(length(input_params.input_power_value_list), length(input_params.flux_1_value_list), ...
