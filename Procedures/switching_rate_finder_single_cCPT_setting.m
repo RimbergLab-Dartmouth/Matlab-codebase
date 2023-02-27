@@ -64,6 +64,14 @@ if vna_data_acquisition == 1
     vna_set_IF_BW(vna, input_params.vna.rough_IF_BW, 1)
     vna_set_sweep_points(vna, input_params.vna.rough_number_points, 1)
     vna_set_center_span(vna, input_params.vna.rough_center, input_params.vna.rough_span, 1)
+    if isfield(input_params.vna, 'rough_smoothing_aperture_amp')
+        vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.rough_smoothing_aperture_amp)
+        vna_turn_smoothing_on_off(vna, 1, 1, 'on')
+    end
+    if isfield(input_params.vna, 'rough_smoothing_aperture_phase')
+        vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.rough_smoothing_aperture_phase)
+        vna_turn_smoothing_on_off(vna, 1, 2, 'on')
+    end
     vna_send_average_trigger(vna);
     [data.vna.single_photon.rough.freq(m_power, m_flux, m_gate, :), ...
             data.vna.single_photon.rough.amp(m_power, m_flux, m_gate,:)] = ...
@@ -79,6 +87,14 @@ if vna_data_acquisition == 1
     vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
     vna_set_average(vna, input_params.vna.average_number, 1, 1);
     vna_set_sweep_points(vna, input_params.vna.number_points, 1);
+    if isfield(input_params.vna, 'zoom_smoothing_aperture_amp')
+        vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.zoom_smoothing_aperture_amp)
+        vna_turn_smoothing_on_off(vna, 1, 1, 'on')
+    end
+    if isfield(input_params.vna, 'zoom_smoothing_aperture_phase')
+        vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.zoom_smoothing_aperture_phase)
+        vna_turn_smoothing_on_off(vna, 1, 2, 'on')
+    end
     vna_send_average_trigger(vna);
     [data.vna.single_photon.fine.freq(m_power, m_flux, m_gate, :), ...
             data.vna.single_photon.fine.amp(m_power, m_flux, m_gate,:)] = ...
@@ -358,6 +374,14 @@ if vna_data_acquisition == 1
     vna_set_IF_BW(vna, input_params.vna.rough_IF_BW, 1)
     vna_set_sweep_points(vna, input_params.vna.rough_number_points, 1)
     vna_set_center_span(vna, input_params.vna.rough_center, input_params.vna.rough_span, 1)
+    if isfield(input_params.vna, 'rough_smoothing_aperture_amp')
+        vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.rough_smoothing_aperture_amp)
+        vna_turn_smoothing_on_off(vna, 1, 1, 'on')
+    end
+    if isfield(input_params.vna, 'rough_smoothing_aperture_phase')
+        vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.rough_smoothing_aperture_phase)
+        vna_turn_smoothing_on_off(vna, 1, 2, 'on')
+    end
     vna_send_average_trigger(vna);
     [data.vna.actual_power.rough.freq(m_power, m_flux, m_gate, :), ...
             data.vna.actual_power.rough.amp(m_power, m_flux, m_gate,:)] = ...
@@ -372,6 +396,14 @@ if vna_data_acquisition == 1
     vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
     vna_set_average(vna, input_params.vna.average_number, 1, 1);
     vna_set_sweep_points(vna, input_params.vna.number_points, 1);
+    if isfield(input_params.vna, 'zoom_smoothing_aperture_amp')
+        vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.zoom_smoothing_aperture_amp)
+        vna_turn_smoothing_on_off(vna, 1, 1, 'on')
+    end
+    if isfield(input_params.vna, 'zoom_smoothing_aperture_phase')
+        vna_set_smoothing_aperture(vna, 1, 1, input_params.vna.zoom_smoothing_aperture_phase)
+        vna_turn_smoothing_on_off(vna, 1, 2, 'on')
+    end
     vna_send_average_trigger(vna);
     [data.vna.actual_power.fine.freq(m_power, m_flux, m_gate, :), ...
             data.vna.actual_power.fine.amp(m_power, m_flux, m_gate,:)] = ...

@@ -37,6 +37,12 @@ input_params.detuning_array_number = 2 * 50 / 0.5 + 1;
 run_params.detunings_expected_number = abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;  
 run_params.save_raw_data_frequency = 10; %%% saves raw data for every so many detunings.
 
+
+if run_params.concatenate_runs
+    run_params.fig_directory = [cd '\plots\'];
+    run_params.rts_fig_directory = [cd '\plots\rts\'];
+end
+
 %%%%% load gain profile and bias point
 if ~exist('gain_prof', 'var')
     disp('enter directory where gain_prof_struct.mat is saved')
@@ -70,8 +76,6 @@ end
 input_params.fridge_attenuation = 85.8;
 input_params.additional_attenuation = 31.97; % dB. big fridge setup as of 2/11/2023. see notes_feb_11th_2023.txt in folder below
 %%%%\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\AWG_input_attenuation_calibration
-data.fridge_attenuation_used(m_power, m_flux, m_gate) = input_params.fridge_attenuation;
-data.awg_additional_attenuation_used(m_power, m_flux, m_gate) = input_params.additional_attenuation;
 %% Input params - Analysis params - if analysis being done 
 input_params.if_freq = 21e6; % freq to which output signal is mixed down
 if run_params.analysis_during_acquisition  % only if analyzing during run. if not, these params set in post run analysis clean RTS file
@@ -94,13 +98,16 @@ end
 input_params.vna.average_number = 50;
 input_params.vna.IF_BW = 1e3;
 input_params.vna.number_points = 201;
-run_params.vna.power = run_params.input_power_value + input_params.fridge_attenuation;
 input_params.vna.rough_center = 5.76e9;
 input_params.vna.rough_span = 250e6;
 input_params.vna.rough_IF_BW = 10e3;
 input_params.vna.zoom_scan_span = 15e6;
 input_params.vna.rough_number_points = 1601;
 input_params.vna.electrical_delay = 62.6e-9; 
+input_params.vna.rough_smoothing_aperture_amp = 1; % percent
+input_params.vna.rough_smoothing_aperture_phase = 1.5; % percent
+input_params.vna.zoom_smoothing_aperture_amp = 1; % percent
+input_params.vna.zoom_smoothing_aperture_phase = 1.5; % percent
 
 input_params.q_circle_fit.gamma_int_guess = .2e6;
 input_params.q_circle_fit.gamma_ext_guess = 1.2e6;
@@ -112,18 +119,8 @@ input_params.digitizer.trigger_level = 225; %225 is ~+0.75V for 2Vpp trigger suc
 %% Input params - AWG and pulse params params
 input_params.awg.clock = 840e6; % the code is designed for this to be at 840MS/s
 input_params.awg.input_IF_waveform_freq = 84e6; % the IF to IQ4509 is at 84MHz, defined in the AWG waveforms
-run_params.awg.output_power = run_params.input_power_value + input_params.fridge_attenuation + input_params.additional_attenuation;
 input_params.awg.stabilization_buffer_time = 10e-6; % time to stabilize cavity amplitude before recording phase - has to be multiple of 1us
 input_params.awg.continuous_amplitude_down_time = 100e-6; % down time between repeating pulses. (though only one is usually recorded)
-run_params.awg.sequence = [num2str(round(run_params.awg.output_power, 1)) 'dBm_' num2str(round(input_params.digitizer.data_collection_time*1e3),1) 'ms_data_collect.seq'];
-%% create folders
-if run_params.save_data_and_png_param == 1
-    mkdir(run_params.data_directory)
-    mkdir(run_params.fig_directory)
-    mkdir([run_params.fig_directory 'fig_files'])
-    mkdir(run_params.rts_fig_directory)
-    mkdir([run_params.rts_fig_directory 'fig_files'])
-end
 % end
 %% input params end  
 
@@ -139,6 +136,9 @@ for m_power = run_params.m_power : run_params.m_power
             run_params.ng_1_value = input_params.ng_1_value_list(m_gate);
             run_params.flux_1_value = input_params.flux_1_value_list(m_flux);
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
+            run_params.vna.power = run_params.input_power_value + input_params.fridge_attenuation;
+            run_params.awg.output_power = run_params.input_power_value + input_params.fridge_attenuation + input_params.additional_attenuation;
+            run_params.awg.sequence = [num2str(round(run_params.awg.output_power, 1)) 'dBm_' num2str(round(input_params.digitizer.data_collection_time*1e3),1) 'ms_data_collect.seq'];
 
             %%% generate some file names
             date = datetime('now','format', 'yyyy-MM-dd HH:mm:ss Z');
@@ -146,15 +146,17 @@ for m_power = run_params.m_power : run_params.m_power
             run_params.awg_switching_directory_name = 'sw';
             run_params.awg_directory = ['/' run_params.awg_switching_directory_name '/' date(1:7)];
             clear date;
-            if run_params.concatenate_runs
-                run_params.fig_directory = [cd '\plots\'];
-                run_params.rts_fig_directory = [cd '\plots\rts\'];
-            end
-
+            
             if run_params.concatenate_runs && run_params.initialize_or_load 
                 load([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|bias_point|gain_prof)$).')  
                 disp(['loaded ' run_params.file_name '. Continue?'])
                 pause
+                
+                input_params.vna.rough_smoothing_aperture_amp = 1; % percent
+                input_params.vna.rough_smoothing_aperture_phase = 1.5; % percent
+                input_params.vna.zoom_smoothing_aperture_amp = 1; % percent
+                input_params.vna.zoom_smoothing_aperture_phase = 1.5; % percent
+
             elseif ~run_params.concatenate_runs
                 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
                 sign_of_ng = num2str(sign(run_params.ng_1_value));
@@ -193,6 +195,14 @@ for m_power = run_params.m_power : run_params.m_power
 %                 input_params.run_number = input_params.run_number - 1;
             end 
             input_params.run_number = input_params.run_number + 1;          
+            %% create folders
+            if run_params.save_data_and_png_param == 1
+                mkdir(run_params.data_directory)
+                mkdir(run_params.fig_directory)
+                mkdir([run_params.fig_directory 'fig_files'])
+                mkdir(run_params.rts_fig_directory)
+                mkdir([run_params.rts_fig_directory 'fig_files'])
+            end
             %% prepare run start
             tic;
             %%%%%%%%%%
@@ -436,6 +446,8 @@ for m_power = run_params.m_power : run_params.m_power
                 if run_params.set_with_pre_recorded
                     data.pre_recorded_res_freq_values_struct(m_power, m_flux, m_gate) = run_params.pre_recorded_struct;
                 end
+                data.fridge_attenuation_used(m_power, m_flux, m_gate) = input_params.fridge_attenuation;
+                data.awg_additional_attenuation_used(m_power, m_flux, m_gate) = input_params.additional_attenuation;
                 data.time_stamp{m_power, m_flux, m_gate} = datestr(now, 'yymmdd_HHMMSS');
                 data.elapsed_time_since_loop_start(m_power, m_flux, m_gate, m_detuning) = elapsed_time;
                 data.ng_1_value_by_bias_point(m_power, m_bias_point) = run_params.ng_1_value;
