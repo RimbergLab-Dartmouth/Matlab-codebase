@@ -340,8 +340,10 @@ if res_freq_recorder == 1
     data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate) = res_freq - data.peripheral.expected_freq_from_Ej_Ec(m_power, m_flux, m_gate);
     disp(['res freq set to ' num2str(res_freq/1e9) ' GHz, error compared to theory = ' num2str(round(squeeze(data.peripheral.freq_error_from_Ej_Ec (m_power, m_flux, m_gate))/1e6, 2)) ...
         ' MHz'])
-    disp('previous powers res freqs were ')
-    squeeze(data.recorded_res_freq_GHz(:, m_flux, m_gate))
+    if run_params.initialize_or_load && size(data.recorded_res_freq_GHz, 1) > 1
+        disp('previous powers res freqs were ')
+        squeeze(data.recorded_res_freq_GHz(:, m_flux, m_gate))
+    end
     clear ans
 end
 %% Acquire VNA data at desired power
@@ -628,39 +630,39 @@ if run_params.awg.files_generation_param == 1
     disp('generating awg waveforms and sequences')
     %%%%%% generate a do nothing pulse 1us long and send to AWG
     file_list = awg_list_files(awg);
-    if contains(file_list, 'do_nothing_1us.wfm')
-        awg_delete_file(awg, 'do_nothing_1us.wfm')
+    if contains(file_list, 'do_nothing_1us')
+        awg_delete_file(awg, 'do_nothing_1us')
     end
     [do_nothing_time, do_nothing_waveform, do_nothing_marker] = ...
             generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
                     -1000, 1, 0); %%% -1000 is the amplitude for this code, and that value generates a 0 amp waveform
-    [~] = send_waveform_awg520(awg,do_nothing_time,do_nothing_waveform,do_nothing_marker,'do_nothing_1us.wfm');    
+    [~] = send_waveform_awg520(awg,do_nothing_time,do_nothing_waveform,do_nothing_marker,'do_nothing_1us');    
     clear do_nothing_time ...
           do_nothing_waveform ...
           do_nothing_marker
     %%%% generate stabilization time waveform, where the marker is at 0,
     %%%% doesn't trigger
-    if contains(file_list, [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off.wfm'])
-        awg_delete_file(awg, [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off.wfm'])
+    if contains(file_list, [num2str(round(run_params.awg.output_power, 2)) 'dBm_1us_steady_marker_off'])
+        awg_delete_file(awg, [num2str(round(run_params.awg.output_power, 2)) 'dBm_1us_steady_marker_off'])
     end
     [stabilization_time_axis, stabilization_waveform, stabilization_marker] = ...
             generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
                     run_params.awg.output_power, 1, 0);
     [~] = send_waveform_awg520(awg, stabilization_time_axis, stabilization_waveform, stabilization_marker, ...
-            [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off.wfm']);
+            [num2str(round(run_params.awg.output_power, 2)) 'dBm_1us_steady_marker_off']);
     clear stabilization_time_axis ...
           stabilization_waveform ...
           stabilization_marker
-    %%%% generate stabilization time waveform, where the marker is at 0,
+    %%%% generate collection time waveform, where the marker is at 1,
     %%%% triggers
-    if contains(file_list, [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on.wfm'])
-        awg_delete_file(awg, [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on.wfm'])
+    if contains(file_list, [num2str(round(run_params.awg.output_power, 2)) 'dBm_10us_steady_marker_on'])
+        awg_delete_file(awg, [num2str(round(run_params.awg.output_power, 2)) 'dBm_10us_steady_marker_on'])
     end
     [steady_on_time_axis, steady_on_waveform, steady_on_marker] = ...
             generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
                     run_params.awg.output_power, 10, 1);
     [~] = send_waveform_awg520(awg, steady_on_time_axis, steady_on_waveform, steady_on_marker, ...
-            [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on.wfm']);
+            [num2str(round(run_params.awg.output_power, 2)) 'dBm_10us_steady_marker_on']);
     clear steady_on_time_axis ...
           steady_on_waveform ...
           steady_on_marker
@@ -673,10 +675,10 @@ if run_params.awg.files_generation_param == 1
     number_to_repeat_stabilization_waveform = input_params.awg.stabilization_buffer_time * 1e6;
     number_to_repeat_steady_on_waveform = ceil(input_params.digitizer.data_collection_time/10e-6);
     sequence_repeat_array = [number_to_repeat_do_nothing_waveform; number_to_repeat_stabilization_waveform; number_to_repeat_steady_on_waveform; number_to_repeat_do_nothing_waveform];
-    waveform_file_array{1,1} = 'do_nothing_1us.wfm';
-    waveform_file_array{1,2} = [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off.wfm'];
-    waveform_file_array{1,3} = [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on.wfm'];
-    waveform_file_array{1,4} = 'do_nothing_1us.wfm';
+    waveform_file_array{1,1} = 'do_nothing_1us';
+    waveform_file_array{1,2} = [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off'];
+    waveform_file_array{1,3} = [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on'];
+    waveform_file_array{1,4} = 'do_nothing_1us';
     awg_send_sequence(awg, 4, 1, waveform_file_array, sequence_repeat_array, run_params.awg.sequence(1:end-4), 1);
     clear number_to_repeat_do_nothing_waveform ...
           number_to_repeat_stabilization_waveform ...
@@ -1109,18 +1111,19 @@ saveData = false;
 % TODO: Select if you wish to plot the data to a chart
 drawData = false;
 
-if input_level <= .19
+if input_level <= .1
     input_range = .2;
-elseif input_level > .19 && input_level <= .38
+elseif input_level > .1 && input_level <= .2
     input_range = .4;
-elseif input_level > .38 && input_level <= .79
+elseif input_level > .2 && input_level <= .4
     input_range = .8;
-elseif input_level > .79 && input_level <=2
+elseif input_level > .4 && input_level <=2
     input_range = 2;
 else
     disp('input level too high')
     return
 end
+
 disp(['Digitizer input level set at ' num2str(input_range) 'V'])
 % Calculate the number of enabled channels from the channel mask
 channelCount = 0;

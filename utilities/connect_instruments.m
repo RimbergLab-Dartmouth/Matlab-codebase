@@ -1,3 +1,4 @@
+clear_instruments
 instrreset
 vna=visa('ni','GPIB0::15::INSTR');
 fopen(vna)
@@ -37,5 +38,14 @@ set(awg,'Timeout',1000)
 fclose(awg)
 awg.InputBufferSize = 100000001;
 fopen(awg)
-% scope = visa('ni','GPIB0::14::INSTR');
-% fopen(scope)
+scope = visa('ni','GPIB0::14::INSTR');
+fopen(scope)
+lockin_sr844 = visa('ni','GPIB0::8::INSTR');
+fopen(lockin_sr844)
+
+novatech = serialport("COM7", 19200);
+novatech.Timeout = 2.5;
+%%% for maximum interface speed (see manual)
+novatech_disable_echo(novatech)
+novatech_phase_sync_all_outputs_mode(novatech)
+novatech_set_io_mode_to_auto(novatech)

@@ -1,4 +1,4 @@
-function[freq_shift,dE1,dE1squared,dE1cubed,dE1fourth,E1,E2]=eigenvalues_v1_2_struct(Ej,Ec,charge_states,flux_values_1,gate_values_1,flux_period,gate_period,plot_display,center_freq,number_points)
+function[freq_shift,dE1,dE1squared,dE1cubed,dE1fourth,kerr_MHz, E1,E2]=eigenvalues_v1_2_struct(Ej,Ec,charge_states,flux_values_1,gate_values_1,flux_period,gate_period,plot_display,center_freq,number_points)
  %%%%%  decides whether to plot eigenenergies or not %%%%%%%%%%%
     if ~exist('plot_display','var')
         plot_display=1;
@@ -183,6 +183,7 @@ function[freq_shift,dE1,dE1squared,dE1cubed,dE1fourth,E1,E2]=eigenvalues_v1_2_st
     dE1fourth=dE1fourth(number_points+1:2*number_points+1:end,:);
     freq_shift=dE1squared.*delta_0^2;%+1/2*dE1fourth.*delta_0^4;
     shifted_freqs = center_freq + freq_shift;
+    kerr_MHz = 1/2*dE1fourth.*delta_0^4;
 %     freq_shift=freq_shift(b+1:end-a+1,d+1:end-c+1);
 %     dE1=dE1(b+1:end-a+1,d+1:end-c+1);
 %     dE1squared=dE1squared(b+1:end-a+1,d+1:end-c+1);
