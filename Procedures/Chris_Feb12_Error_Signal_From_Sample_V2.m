@@ -38,6 +38,23 @@ novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.loc
 n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
 n5183b_toggle_output(keysight_sg, 'on')
 
+%% notes on the tunable band pass filter
+% voltage supply (pin 4) set to -15V
+% voltage supply (pin 5) set to +15V
+% drive control voltage (pin 1) will be initialized, range 0-10V
+% heater supply (pin 6) set to 28V
+% Imperial data for the tunable band pass filter obtained on 02/27/23,
+% voltage and the center frequency of the passing band is as the following:
+% v = [2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 3.1] in volts
+% f_center = [5.6 5.629 5.661 5.685 5.716 5.745 5.774 5.796 5.83 5.857 5.884] in GHz
+% based on this: 
+
+% Converts a frequency in GHz to the best control voltage in V for the band
+% pass filter, assuming other voltages are set to the values specified above
+function [cont] = best_control_freq(freq):
+    cont = 3.5251*freq - 17.6458;
+end
+
 %initialize arrays 
 data.probe_freq = -input_params.span/2 : input_params.freq_step : input_params.span/2;
 data.lockin_x_quadrature = zeros(length(data.probe_freq), input_params.repetition_number);
