@@ -23,59 +23,122 @@ input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
 run_params.m_flux = 6;
 run_params.m_gate = 6;
+run_params.m_power = 3;
 run_params.number_repetitions = 5;
-for m_power = 3 : 3
-%%%% uncomment this for a long run sweeping bias points automatically
+
+run_params.detuning_point_start = -25; % in MHz % do not exceed +/- 50MHz
+run_params.detuning_point_end = -1; % in MHz. 
+run_params.detuning_point_step = 0.5; % in MHz. % typically set to 0.5MHz 
+m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
+%%% deliberately make expected detuning number large so dont have to worry
+%%% about variation in array size. each array point corresponds to -50MHz to
+%%% +50, steps of 0.5
+input_params.detuning_array_number = 2 * 50 / 0.5 + 1;
+run_params.detunings_expected_number = abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;  
+run_params.save_raw_data_frequency = 10; %%% saves raw data for every so many detunings.
+
+%%%%% load gain profile and bias point
+if ~exist('gain_prof', 'var')
+    disp('enter directory where gain_prof_struct.mat is saved')
+    load_directory = 'C:\Users\rimberg-lab\Desktop';
+%                 load_directory = 'C:\Users\Sisira\Desktop\feb_16th_2022';
+%                load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
+   load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
+   clear load_directory
+end
+
+if ~exist('bias_point', 'var') 
+   disp('enter directory where bias_point_struct.mat is saved')
+   load_directory = 'C:\Users\rimberg-lab\Desktop';
+%                 load_directory = 'C:\Users\Sisira\Desktop\feb_16th_2022';
+%                load_directory = uigetdir;
+   load([load_directory '\bias_point_struct.mat'], 'bias_point')
+   clear load_directory
+end
+
+if run_params.set_with_pre_recorded && ~isfield(run_params, 'pre_recorded_struct')
+    disp('enter directory where pre_recorded_values.mat is saved')
+%                load_directory = uigetdir;
+   load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\q_circle_freq_flucs_scan\twpa_pump_setting_1\d221231_004136_q_circles';
+   load([load_directory '\pre_recorded_values.mat'], 'pre_recorded')
+   run_params.pre_recorded_struct = pre_recorded;
+   clear load_directory ...
+         pre_recorded
+end
+%%%%%%%%%%
+%% Input params - Attenuation values
+input_params.fridge_attenuation = 85.8;
+input_params.additional_attenuation = 31.97; % dB. big fridge setup as of 2/11/2023. see notes_feb_11th_2023.txt in folder below
+%%%%\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\AWG_input_attenuation_calibration
+data.fridge_attenuation_used(m_power, m_flux, m_gate) = input_params.fridge_attenuation;
+data.awg_additional_attenuation_used(m_power, m_flux, m_gate) = input_params.additional_attenuation;
+%% Input params - Analysis params - if analysis being done 
+input_params.if_freq = 21e6; % freq to which output signal is mixed down
+if run_params.analysis_during_acquisition  % only if analyzing during run. if not, these params set in post run analysis clean RTS file
+    input_params.analysis.clean_RTS_bin_width = 6; % degs - phase histogramming bin size
+    run_params.analysis.moving_mean_average_time = 3; % in us
+    run_params.analysis.number_iterations = 5; % number of iterations for the clean RTS algorithm
+    input_params.analysis.phase_outlier_cutoff = 70; % in degs, this is the phase above and below the mean phase, over which the phase is classified as an outlier (after moving mean)
+    run_params.analysis.min_gaussian_center_to_center_phase = 15; % in degs, this is the minimum distance between gaussian centers that the double gaussian fit accepts
+    run_params.analysis.max_gaussian_center_to_center_phase = 60; % in degs
+    input_params.analysis.min_gaussian_count = 1500;
+    input_params.minimum_number_switches = 100;
+    run_params.analysis.double_gaussian_fit_sigma_guess = 15; % degs
+    run_params.analysis.plotting_time_for_RTS = 150e-6;
+    input_params.time_length_of_RTS_raw_data_to_store = 50e-6; % in s
+    input_params.start_time_of_RTS_raw_data_to_store = 5.1e-3; % in s
+    run_params.poissonian_fit_bin_number = 25;
+    run_params.poissonian_lifetime_repetitions_mode = 'separate_and_together'; % 'separate' or 'averaged', 'histogrammed_together', 'separate_and_together'
+end
+%% Input params - VNA parameter settings
+input_params.vna.average_number = 50;
+input_params.vna.IF_BW = 1e3;
+input_params.vna.number_points = 201;
+run_params.vna.power = run_params.input_power_value + input_params.fridge_attenuation;
+input_params.vna.rough_center = 5.76e9;
+input_params.vna.rough_span = 250e6;
+input_params.vna.rough_IF_BW = 10e3;
+input_params.vna.zoom_scan_span = 15e6;
+input_params.vna.rough_number_points = 1601;
+input_params.vna.electrical_delay = 62.6e-9; 
+
+input_params.q_circle_fit.gamma_int_guess = .2e6;
+input_params.q_circle_fit.gamma_ext_guess = 1.2e6;
+input_params.q_circle_fit.sigma_guess = .5e6;
+%% Input params - Digitizer params
+input_params.digitizer.data_collection_time = 5e-2; % in seconds. the time to monitor phase and look for switching events
+input_params.digitizer.sample_rate = 168e6;
+input_params.digitizer.trigger_level = 225; %225 is ~+0.75V for 2Vpp trigger such as marker from AWG
+%% Input params - AWG and pulse params params
+input_params.awg.clock = 840e6; % the code is designed for this to be at 840MS/s
+input_params.awg.input_IF_waveform_freq = 84e6; % the IF to IQ4509 is at 84MHz, defined in the AWG waveforms
+run_params.awg.output_power = run_params.input_power_value + input_params.fridge_attenuation + input_params.additional_attenuation;
+input_params.awg.stabilization_buffer_time = 10e-6; % time to stabilize cavity amplitude before recording phase - has to be multiple of 1us
+input_params.awg.continuous_amplitude_down_time = 100e-6; % down time between repeating pulses. (though only one is usually recorded)
+run_params.awg.sequence = [num2str(round(run_params.awg.output_power, 1)) 'dBm_' num2str(round(input_params.digitizer.data_collection_time*1e3),1) 'ms_data_collect.seq'];
+%% create folders
+if run_params.save_data_and_png_param == 1
+    mkdir(run_params.data_directory)
+    mkdir(run_params.fig_directory)
+    mkdir([run_params.fig_directory 'fig_files'])
+    mkdir(run_params.rts_fig_directory)
+    mkdir([run_params.rts_fig_directory 'fig_files'])
+end
+% end
+%% input params end  
+
+%%%% uncomment this for a long run sweeping bias points  and power automatically
+% for m_power = 1: length(input_params.input_power_value_list)
 %     for m_flux = 1: length(input_params.flux_1_value_list)
 %         for m_gate = 1: length(input_params.ng_1_value_list)
 %%%% uncomment this for a single bias  point at a time.
+for m_power = run_params.m_power : run_params.m_power
     for m_flux = run_params.m_flux : run_params.m_flux
         for m_gate = run_params.m_gate : run_params.m_gate
             m_bias_point = (m_flux - 1)*length(input_params.ng_1_value_list) + m_gate;
             run_params.ng_1_value = input_params.ng_1_value_list(m_gate);
             run_params.flux_1_value = input_params.flux_1_value_list(m_flux);
             run_params.input_power_value = input_params.input_power_value_list(m_power); % power at the sample, adjusted using fridge attenuation and additional attenuation params.
-
-            run_params.detuning_point_start = -25; % in MHz % do not exceed +/- 50MHz
-            run_params.detuning_point_end = -1; % in MHz. 
-            run_params.detuning_point_step = 0.5; % in MHz. % typically set to 0.5MHz 
-            m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
-            %%% deliberately make expected detuning number large so dont have to worry
-            %%% about variation in array size. each array point corresponds to -50MHz to
-            %%% +50, steps of 0.5
-            input_params.detuning_array_number = 2 * 50 / 0.5 + 1;
-            run_params.detunings_expected_number = abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;  
-            run_params.save_raw_data_frequency = 10; %%% saves raw data for every so many detunings.
-
-            %%%%% load gain profile and bias point
-            if ~exist('gain_prof', 'var')
-                disp('enter directory where gain_prof_struct.mat is saved')
-                load_directory = 'C:\Users\rimberg-lab\Desktop';
-%                 load_directory = 'C:\Users\Sisira\Desktop\feb_16th_2022';
-%                load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
-               load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
-               clear load_directory
-            end
-
-            if ~exist('bias_point', 'var') 
-               disp('enter directory where bias_point_struct.mat is saved')
-               load_directory = 'C:\Users\rimberg-lab\Desktop';
-%                 load_directory = 'C:\Users\Sisira\Desktop\feb_16th_2022';
-%                load_directory = uigetdir;
-               load([load_directory '\bias_point_struct.mat'], 'bias_point')
-               clear load_directory
-            end
-
-            if run_params.set_with_pre_recorded && ~isfield(run_params, 'pre_recorded_struct')
-                disp('enter directory where pre_recorded_values.mat is saved')
-%                load_directory = uigetdir;
-               load_directory = '\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\q_circle_freq_flucs_scan\twpa_pump_setting_1\d221231_004136_q_circles';
-               load([load_directory '\pre_recorded_values.mat'], 'pre_recorded')
-               run_params.pre_recorded_struct = pre_recorded;
-               clear load_directory ...
-                     pre_recorded
-            end
-            %%%%%%%%%%
 
             %%% generate some file names
             date = datetime('now','format', 'yyyy-MM-dd HH:mm:ss Z');
@@ -90,10 +153,8 @@ for m_power = 3 : 3
 
             if run_params.concatenate_runs && run_params.initialize_or_load 
                 load([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|bias_point|gain_prof)$).')  
-                if m_bias_point == 1
-                    disp(['loaded ' run_params.file_name '. Continue?'])
-                    pause
-                end
+                disp(['loaded ' run_params.file_name '. Continue?'])
+                pause
             elseif ~run_params.concatenate_runs
                 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
                 sign_of_ng = num2str(sign(run_params.ng_1_value));
@@ -131,67 +192,7 @@ for m_power = 3 : 3
                 input_params.run_number = input('what is the desired run number - 1?');
 %                 input_params.run_number = input_params.run_number - 1;
             end 
-            input_params.run_number = input_params.run_number + 1;
-            %% Attenuation values
-            input_params.fridge_attenuation = 85.8;
-            input_params.additional_attenuation = 31.97; % dB. big fridge setup as of 2/11/2023. see notes_feb_11th_2023.txt in folder below
-            %%%%\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\AWG_input_attenuation_calibration
-            data.fridge_attenuation_used(m_power, m_flux, m_gate) = input_params.fridge_attenuation;
-            data.awg_additional_attenuation_used(m_power, m_flux, m_gate) = input_params.additional_attenuation;
-            %% Analysis params - if analysis being done 
-            input_params.if_freq = 21e6; % freq to which output signal is mixed down
-            if run_params.analysis_during_acquisition  % only if analyzing during run. if not, these params set in post run analysis clean RTS file
-                input_params.analysis.clean_RTS_bin_width = 6; % degs - phase histogramming bin size
-                run_params.analysis.moving_mean_average_time = 3; % in us
-                run_params.analysis.number_iterations = 5; % number of iterations for the clean RTS algorithm
-                input_params.analysis.phase_outlier_cutoff = 70; % in degs, this is the phase above and below the mean phase, over which the phase is classified as an outlier (after moving mean)
-                run_params.analysis.min_gaussian_center_to_center_phase = 15; % in degs, this is the minimum distance between gaussian centers that the double gaussian fit accepts
-                run_params.analysis.max_gaussian_center_to_center_phase = 60; % in degs
-                input_params.analysis.min_gaussian_count = 1500;
-                input_params.minimum_number_switches = 100;
-                run_params.analysis.double_gaussian_fit_sigma_guess = 15; % degs
-                run_params.analysis.plotting_time_for_RTS = 150e-6;
-                input_params.time_length_of_RTS_raw_data_to_store = 50e-6; % in s
-                input_params.start_time_of_RTS_raw_data_to_store = 5.1e-3; % in s
-                run_params.poissonian_fit_bin_number = 25;
-                run_params.poissonian_lifetime_repetitions_mode = 'separate_and_together'; % 'separate' or 'averaged', 'histogrammed_together', 'separate_and_together'
-            end
-            %% VNA parameter settings
-            input_params.vna.average_number = 50;
-            input_params.vna.IF_BW = 1e3;
-            input_params.vna.number_points = 201;
-            run_params.vna.power = run_params.input_power_value + input_params.fridge_attenuation;
-            input_params.vna.rough_center = 5.76e9;
-            input_params.vna.rough_span = 250e6;
-            input_params.vna.rough_IF_BW = 10e3;
-            input_params.vna.zoom_scan_span = 15e6;
-            input_params.vna.rough_number_points = 1601;
-            input_params.vna.electrical_delay = 62.6e-9; 
-
-            input_params.q_circle_fit.gamma_int_guess = .2e6;
-            input_params.q_circle_fit.gamma_ext_guess = 1.2e6;
-            input_params.q_circle_fit.sigma_guess = .5e6;
-            %% Digitizer params
-            input_params.digitizer.data_collection_time = 5e-2; % in seconds. the time to monitor phase and look for switching events
-            input_params.digitizer.sample_rate = 168e6;
-            input_params.digitizer.trigger_level = 225; %225 is ~+0.75V for 2Vpp trigger such as marker from AWG
-            %% AWG and pulse params params
-            input_params.awg.clock = 840e6; % the code is designed for this to be at 840MS/s
-            input_params.awg.input_IF_waveform_freq = 84e6; % the IF to IQ4509 is at 84MHz, defined in the AWG waveforms
-            run_params.awg.output_power = run_params.input_power_value + input_params.fridge_attenuation + input_params.additional_attenuation;
-            input_params.awg.stabilization_buffer_time = 10e-6; % time to stabilize cavity amplitude before recording phase - has to be multiple of 1us
-            input_params.awg.continuous_amplitude_down_time = 100e-6; % down time between repeating pulses. (though only one is usually recorded)
-            run_params.awg.sequence = [num2str(round(run_params.awg.output_power, 1)) 'dBm_' num2str(round(input_params.digitizer.data_collection_time*1e3),1) 'ms_data_collect.seq'];
-            %% create folders
-            if run_params.save_data_and_png_param == 1
-                mkdir(run_params.data_directory)
-                mkdir(run_params.fig_directory)
-                mkdir([run_params.fig_directory 'fig_files'])
-                mkdir(run_params.rts_fig_directory)
-                mkdir([run_params.rts_fig_directory 'fig_files'])
-            end
-            % end
-            %%% input params end            
+            input_params.run_number = input_params.run_number + 1;          
             %% prepare run start
             tic;
             %%%%%%%%%%
