@@ -30,9 +30,11 @@ disp('loading comprehensive file data')
 load(post_run_params.file_to_load_input_params_from, 'input_params', 'post_run_analysis', 'data')
 disp('comprehensive file data loaded')
 
-%%% load post run analysis only if already exists
+%%% load post run analysis data
 if post_run_params.append_to_existing 
+    disp('loading post run analysis file data')
     load(post_run_params.file_to_save_post_run_analysis_separately, 'post_run_analysis')
+    disp('post run analysis file data loaded')
 end
 
 %%%% temp testing code
