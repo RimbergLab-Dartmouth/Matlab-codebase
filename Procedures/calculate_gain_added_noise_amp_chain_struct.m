@@ -191,7 +191,7 @@ switch_vna_measurement
 %% plotting
 if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-else
+elseif input_params.figures_visible ~= 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
 surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.added_noise_photons_average')
@@ -208,7 +208,7 @@ end
 
 if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     gain_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-else
+elseif input_params.figures_visible ~= 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     gain_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
 surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.gain_average')
