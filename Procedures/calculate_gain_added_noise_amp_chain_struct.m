@@ -194,16 +194,18 @@ if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 
 elseif input_params.figures_visible ~= 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
-surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.added_noise_photons_average')
-colorbar
-view(0,90)
-caxis([1 5])
-xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
-ylabel('Pump power (dBm)', 'interpreter', 'latex')
-title('Average added noise photons')
-if input_params.save_figures == 1
-    saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.fig'])
-    saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.png'])
+if input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
+    surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.added_noise_photons_average')
+    colorbar
+    view(0,90)
+    caxis([1 5])
+    xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
+    ylabel('Pump power (dBm)', 'interpreter', 'latex')
+    title('Average added noise photons')
+    if input_params.save_figures == 1
+        saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.fig'])
+        saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.png'])
+    end
 end
 
 if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
@@ -211,14 +213,16 @@ if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 
 elseif input_params.figures_visible ~= 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     gain_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
-surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.gain_average')
-colorbar
-view(0,90)
-caxis([75 95])
-xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
-ylabel('Pump power (dBm)', 'interpreter', 'latex')
-title('Average gain')
-if input_params.save_figures == 1
-    saveas(gain_figure, [input_params.file_directory '/gain_vs_twpa_pump.fig'])
-    saveas(gain_figure, [input_params.file_directory '/gain_vs_twpa_pump.png'])
+if input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
+    surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.gain_average')
+    colorbar
+    view(0,90)
+    caxis([75 95])
+    xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
+    ylabel('Pump power (dBm)', 'interpreter', 'latex')
+    title('Average gain')
+    if input_params.save_figures == 1
+        saveas(gain_figure, [input_params.file_directory '/gain_vs_twpa_pump.fig'])
+        saveas(gain_figure, [input_params.file_directory '/gain_vs_twpa_pump.png'])
+    end
 end
