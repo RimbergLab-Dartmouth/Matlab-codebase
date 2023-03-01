@@ -22,7 +22,7 @@ input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
 run_params.m_gate = 1;
 run_params.dim_1_placeholder_number = 1;
-run_params.dim_5_placeholder_number = 1;
+run_params.number_ramps_to_average = 20000;
 
 run_params.detuning_point_start = -25; % in MHz % do not exceed +/- 50MHz
 run_params.detuning_point_end = -1; % in MHz. 
@@ -69,6 +69,7 @@ input_params.additional_attenuation = 31.97; % dB. big fridge setup as of 2/11/2
 %%%%\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\AWG_input_attenuation_calibration
 %% Input params -  Analysis params - if analysis being done 
 input_params.if_freq = 21e6; % freq to which output signal is mixed down
+input_params.number_readout_IF_waveforms_averaged_into_single_point = 0; % the number of power points in the ramp to be averaged into a single point.
 if run_params.analysis_during_acquisition  % only if analyzing during run. if not, these params set in post run analysis clean RTS file
     input_params.analysis.clean_RTS_bin_width = 6; % degs - phase histogramming bin size
     run_params.analysis.moving_mean_average_time = 3; % in us
@@ -108,12 +109,16 @@ input_params.q_circle_fit.sigma_guess = .5e6;
 run_params.input_power_start = -140; % dBm at sample
 run_params.input_power_stop = -115; % dBm at sample
 run_params.one_way_ramp_time = 8e-6; % in s
+run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
+run_params.trigger_lag = 240e-9;
+% run_params.trigger_lag = 0;
+% this needs to be appropriately set so the switch in direction of
+% acquisition falls right in the middle of the acquisition window
 
 input_params.awg.clock = 840e6; % the code is designed for this to be at 840MS/s
 input_params.awg.input_IF_waveform_freq = 84e6; % the IF to IQ4509 is at 84MHz, defined in the AWG waveforms
 run_params.awg.output_power_start = run_params.input_power_start + input_params.fridge_attenuation + input_params.additional_attenuation;
 run_params.awg.output_power_stop = run_params.input_power_stop + input_params.fridge_attenuation + input_params.additional_attenuation; 
-input_params.awg.down_time = 10e-6; % down time between repeating ramped pulses
 run_params.awg.waveform_name = [num2str(round(run_params.input_power_start, 1)) 'dBm_to_' num2str(round(run_params.input_power_stop, 1)) 'dBm_' ...
     num2str(round(run_params.one_way_ramp_time *1e6, 1)) '_ramp_hyst.wfm'];
 %% Input params -  Digitizer params
@@ -325,11 +330,11 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
                         length(input_params.ng_1_value_list)); 
                     %% other data arrays
                 data.detunings = zeros(run_params.dim_1_placeholder_number, length(input_params.flux_1_value_list), ...
-                        length(input_params.ng_1_value_list), input_params.detuning_array_number, run_params.dim_5_placeholder_number);
+                        length(input_params.ng_1_value_list), input_params.detuning_array_number);
                 data.recorded_res_freq_GHz = zeros(run_params.dim_1_placeholder_number, length(input_params.flux_1_value_list), ...
-                        length(input_params.ng_1_value_list), input_params.detuning_array_number, run_params.dim_5_placeholder_number);
+                        length(input_params.ng_1_value_list), input_params.detuning_array_number);
                 data.peripheral.awg_output_power = zeros(run_params.dim_1_placeholder_number, length(input_params.flux_1_value_list), ...
-                        length(input_params.ng_1_value_list), input_params.detuning_array_number, run_params.dim_5_placeholder_number);
+                        length(input_params.ng_1_value_list), input_params.detuning_array_number);
             end
             %% detuning and repetition loop initialization
             detuning_point = run_params.detuning_point_start;
@@ -367,11 +372,11 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
                 data.run_number(m_dim_1, m_flux, m_gate, m_detuning) = input_params.run_number;
                 input_params.run_order(m_dim_1, m_flux, m_gate, m_detuning) = input_params.run_number;
                 data.run_order(m_dim_1, m_flux, m_gate, m_detuning) = input_params.run_number;
-                data.detunings(m_dim_1, m_flux, m_gate, m_detuning, 1:run_params.dim_5_placeholder_number) = detuning_point;
+                data.detunings(m_dim_1, m_flux, m_gate, m_detuning) = detuning_point;
                 data.peripheral.bias_point_offset_and_periods(m_dim_1, m_flux, m_gate) = bias_point;
                 data.peripheral.gain_profile(m_dim_1, m_flux, m_gate) = gain_prof;
                 data.peripheral.awg_output_power(m_dim_1, m_flux, m_gate) = run_params.awg.output_power;
-                data.repetition_number(m_dim_1, m_flux, m_gate, m_detuning) = run_params.dim_5_placeholder_number;
+                data.number_ramps_to_average(m_dim_1, m_flux, m_gate, m_detuning) = run_params.number_ramps_to_average;
                 input_params.vna.input_power(m_dim_1, m_flux, m_gate) = run_params.input_power_value;
                 if run_params.analysis_during_acquisition
                     input_params.analysis.moving_mean_average_time(m_dim_1, m_flux, m_gate, m_detuning) = run_params.analysis.moving_mean_average_time;
@@ -398,255 +403,6 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
                 data.drive_freq_GHz(m_dim_1, m_flux, m_gate, m_detuning) = detuning_point/1e3 + res_freq/1e9;
                 data.recorded_res_freq_GHz(m_dim_1, m_flux, m_gate) = res_freq/1e9;
                 data.kerr_MHz(m_dim_1, m_flux, m_gate) = kerr_MHz_expected_for_Jules_sample(run_params.ng_1_value, run_params.flux_1_value);
-                %% clean the RTS data %%%%%%%%
-                if run_params.analysis_during_acquisition
-                    data.poissonian_lifetime_repetitions_mode{m_dim_1, m_flux, m_gate, m_detuning} = run_params.poissonian_lifetime_repetitions_mode;
-                    input_params.analysis.moving_mean_average_time(m_dim_1, m_flux, m_gate, m_detuning) = run_params.analysis.moving_mean_average_time;
-                    for m_repetition = 1 : run_params.dim_5_placeholder_number
-                        clean_RTS_data_struct
-                        input_params.analysis.bin_edges(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = run_params.analysis.bin_edges;
-                        %% Fit Poissonian
-                        analysis.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = 0; %%% initiate fit success at 0.
-
-                        %%%%% if conditions to only fit poissonian if bistability exists.
-                        if run_params.analysis.current_run_bistability_existence == 1
-                            disp('bistability detected, fitting Poissonian')
-                            %%%% if conditions to analyze according to chosen poisson fitting method. averaged and separate are straight forward. 
-                            %%%% histogrammed together and separate_and_together are a little involved to cover all failure modes
-
-                            if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate') || ...
-                                    strcmp(run_params.poissonian_lifetime_repetitions_mode, 'averaged') || ...
-                                    (strcmp(run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition == 1) || ...
-                                    (strcmp(run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition > 1 && ...
-                                    analysis.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1) == 0)
-                                [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
-                                    temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
-                                    temp.hist_count_2, temp.fit_success, temp.fit_flag] = extract_poissonian_lifetimes(temp.clean_time_data(:), temp.clean_RTS_data(:), temp.gaussian_1_mean, ...
-                                    temp.gaussian_2_mean, run_params.poissonian_fit_bin_number);
-                                if ~temp.fit_success
-                                   analysis.sign_of_bistability(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = 0;
-                                end
-                            elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') && m_repetition > 1
-                                [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
-                                    temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
-                                    temp.hist_count_2, temp.fit_success, temp.fit_flag] = extract_poissonian_lifetimes(temp.clean_time_data(:), temp.clean_RTS_data(:), temp.gaussian_1_mean, ...
-                                    temp.gaussian_2_mean, input_params.minimum_number_switches, [], ...
-                                    squeeze(analysis.Poissonian.hist_count_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
-                                    squeeze(analysis.Poissonian.hist_count_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                                    squeeze(analysis.Poissonian.switch_time_bin_centers_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                                    squeeze(analysis.Poissonian.switch_time_bin_centers_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
-                                if ~temp.fit_success
-                                   analysis.sign_of_bistability(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = 0;
-                                end
-                            end
-
-                            %%%% for separate and together - first part for separate, same as usual, second part for histogramming together
-                            if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
-                                [temp.poisson_lifetime_1_us, temp.poisson_lifetime_2_us, temp.error_poisson_lifetime_1_us, temp.error_poisson_lifetime_2_us, ...
-                                    temp.poisson_theory_1, temp.poisson_theory_2, temp.switch_time_bin_centers_1, temp.hist_count_1, temp.switch_time_bin_centers_2, ...
-                                    temp.hist_count_2, temp.fit_success, temp.fit_flag] = extract_poissonian_lifetimes(temp.clean_time_data, temp.clean_RTS_data, temp.gaussian_1_mean, ...
-                                    temp.gaussian_2_mean, input_params.minimum_number_switches, run_params.poissonian_fit_bin_number);
-                                if ~temp.fit_success
-                                   analysis.sign_of_bistability(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = 0;
-                                end
-                                if m_repetition == 1 || (m_repetition > 1 && ...
-                                            analysis.hist_together.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1) == 0 && ...
-                                            ~contains(analysis.hist_together.Poissonian.flag{m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1}, 'fewer than') && ...
-                                            ~contains(analysis.hist_together.Poissonian.flag{m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1}, 'at least'))
-                                    temp.hist_together.poisson_lifetime_1_us = temp.poisson_lifetime_1_us;
-                                    temp.hist_together.poisson_lifetime_2_us = temp.poisson_lifetime_2_us;
-                                    temp.hist_together.error_poisson_lifetime_1_us = temp.error_poisson_lifetime_1_us;
-                                    temp.hist_together.error_poisson_lifetime_2_us = temp.error_poisson_lifetime_2_us;
-                                    temp.hist_together.poisson_theory_1 = temp.poisson_theory_1;
-                                    temp.hist_together.poisson_theory_2 = temp.poisson_theory_2;
-                                    temp.hist_together.switch_time_bin_centers_1 = temp.switch_time_bin_centers_1;
-                                    temp.hist_together.hist_count_1 = temp.hist_count_1;
-                                    temp.hist_together.switch_time_bin_centers_2 = temp.switch_time_bin_centers_2;
-                                    temp.hist_together.hist_count_2 = temp.hist_count_2;
-                                    temp.hist_together.fit_success = temp.fit_success;
-                                    temp.hist_together.fit_flag = temp.fit_flag;
-                                elseif m_repetition > 1                     
-                                    [temp.hist_together.poisson_lifetime_1_us, temp.hist_together.poisson_lifetime_2_us, temp.hist_together.error_poisson_lifetime_1_us, ...
-                                        temp.hist_together.error_poisson_lifetime_2_us, temp.hist_together.poisson_theory_1, temp.hist_together.poisson_theory_2, ...
-                                        temp.hist_together.switch_time_bin_centers_1, temp.hist_together.hist_count_1, temp.hist_together.switch_time_bin_centers_2, ...
-                                        temp.hist_together.hist_count_2, temp.hist_together.fit_success, temp.hist_together.fit_flag] = extract_poissonian_lifetimes(temp.clean_time_data, ...
-                                        temp.clean_RTS_data, temp.gaussian_1_mean, temp.gaussian_2_mean, input_params.minimum_number_switches, [], ...
-                                        squeeze(analysis.hist_together.Poissonian.hist_count_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :)),  ...
-                                        squeeze(analysis.hist_together.Poissonian.hist_count_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                                        squeeze(analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :)), ...
-                                        squeeze(analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :)));
-                                end
-                            end
-                        else
-                            temp.poisson_lifetime_1_us = NaN;
-                            temp.poisson_lifetime_2_us = NaN;
-                            temp.error_poisson_lifetime_1_us = NaN;
-                            temp.error_poisson_lifetime_2_us = NaN;
-                            temp.poisson_theory_1 = zeros(1, run_params.poissonian_fit_bin_number);
-                            temp.poisson_theory_2 = zeros(1, run_params.poissonian_fit_bin_number);
-                            temp.switch_time_bin_centers_1 = zeros(1, run_params.poissonian_fit_bin_number);
-                            temp.hist_count_1 = zeros(1, run_params.poissonian_fit_bin_number);
-                            temp.switch_time_bin_centers_2 = zeros(1, run_params.poissonian_fit_bin_number);
-                            temp.hist_count_2 = zeros(1, run_params.poissonian_fit_bin_number);
-                            temp.fit_success = 0;
-                            temp.fit_flag = 'lack of bistability from Gaussians';
-
-                            if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && (m_repetition == 1 || ...
-                                    (m_repetition > 1 && sum(squeeze(analysis.hist_together.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, :))) == 0))
-                                temp.hist_together.poisson_lifetime_1_us = NaN;
-                                temp.hist_together.poisson_lifetime_2_us = NaN;
-                                temp.hist_together.error_poisson_lifetime_1_us = NaN;
-                                temp.hist_together.error_poisson_lifetime_2_us = NaN;
-                                temp.hist_together.poisson_theory_1 = zeros(1, run_params.poissonian_fit_bin_number);
-                                temp.hist_together.poisson_theory_2 = zeros(1, run_params.poissonian_fit_bin_number);
-                                temp.hist_together.switch_time_bin_centers_1 = zeros(1, run_params.poissonian_fit_bin_number);
-                                temp.hist_together.hist_count_1 = zeros(1, run_params.poissonian_fit_bin_number);
-                                temp.hist_together.switch_time_bin_centers_2 = zeros(1, run_params.poissonian_fit_bin_number);
-                                temp.hist_together.hist_count_2 = zeros(1, run_params.poissonian_fit_bin_number);
-                                temp.hist_together.fit_success = 0;
-                                temp.hist_together.fit_flag = 'lack of bistability from Gaussians';
-                            elseif (m_repetition > 1 && sum(squeeze(analysis.hist_together.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, :))) ~= 0)
-                                temp.hist_together.poisson_lifetime_1_us = squeeze(analysis.hist_together.Poissonian.poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1));
-                                temp.hist_together.poisson_lifetime_2_us = squeeze(analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1));
-                                temp.hist_together.error_poisson_lifetime_1_us = squeeze(analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1));
-                                temp.hist_together.error_poisson_lifetime_2_us = squeeze(analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1));
-                                temp.hist_together.poisson_theory_1 = squeeze(analysis.hist_together.Poissonian.poisson_theory_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :));
-                                temp.hist_together.poisson_theory_2 =  squeeze(analysis.hist_together.Poissonian.poisson_theory_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :));
-                                temp.hist_together.switch_time_bin_centers_1 = squeeze(analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :));
-                                temp.hist_together.hist_count_1 = squeeze(analysis.hist_together.Poissonian.hist_count_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :));
-                                temp.hist_together.switch_time_bin_centers_2 = squeeze(analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :));
-                                temp.hist_together.hist_count_2 = squeeze(analysis.hist_together.Poissonian.hist_count_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1, :));
-                                temp.hist_together.fit_success = squeeze(analysis.hist_together.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, m_repetition - 1));
-                                temp.hist_together.fit_flag = 'lack of bistability from Gaussians';
-                            end
-                        end
-                        run_params.Poisson_fig_plot_param = temp.fit_success;
-
-                        input_params.analysis.current_run_bistability_existence (m_dim_1, m_flux, m_gate, m_repetition) = run_params.analysis.current_run_bistability_existence;
-                        input_params.analysis.poissonian_fit_bin_number(m_dim_1, m_flux, m_gate, m_detuning) = run_params.poissonian_fit_bin_number;
-                        analysis.Poissonian.lifetime_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_1_us;
-                        analysis.Poissonian.lifetime_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.poisson_lifetime_2_us;
-                        analysis.Poissonian.error_poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_1_us;
-                        analysis.Poissonian.error_poisson_lifetime_2_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.error_poisson_lifetime_2_us;
-                        analysis.Poissonian.switch_time_bin_centers_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_1;
-                        analysis.Poissonian.switch_time_bin_centers_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.switch_time_bin_centers_2;
-                        analysis.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.fit_success;
-                        analysis.Poissonian.flag{m_dim_1, m_flux, m_gate, m_detuning, m_repetition} = temp.fit_flag;
-
-
-                        analysis.Poissonian.hist_count_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_1(:);
-                        analysis.Poissonian.hist_count_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_count_2(:);
-
-                        analysis.Poissonian.poisson_theory_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_1(:);
-                        analysis.Poissonian.poisson_theory_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.poisson_theory_2(:);
-                        analysis.Poissonian.flag{m_dim_1, m_flux, m_gate, m_detuning, m_repetition} = temp.fit_flag;
-
-                        if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') 
-                            analysis.hist_together.Poissonian.poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.poisson_lifetime_1_us;
-                            analysis.hist_together.Poissonian.poisson_lifetime_2_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.poisson_lifetime_2_us;
-                            analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_1_us;
-                            analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.error_poisson_lifetime_2_us;
-                            analysis.hist_together.Poissonian.switch_time_bin_centers_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_1;
-                            analysis.hist_together.Poissonian.switch_time_bin_centers_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.switch_time_bin_centers_2;
-
-                            analysis.hist_together.Poissonian.hist_count_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_1(:);
-
-                            analysis.hist_together.Poissonian.hist_count_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.hist_count_2(:);
-
-                            analysis.hist_together.Poissonian.poisson_theory_1(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_1(:);
-
-                            analysis.hist_together.Poissonian.poisson_theory_2(m_dim_1, m_flux, m_gate, m_detuning, m_repetition, :) = temp.hist_together.poisson_theory_2(:);
-
-                            analysis.hist_together.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, m_repetition) = temp.hist_together.fit_success;
-                            analysis.hist_together.Poissonian.flag{m_dim_1, m_flux, m_gate, m_detuning, m_repetition} = temp.hist_together.fit_flag;              
-                        end
-                        %% Plot Poissonian
-                        if run_params.analysis.current_run_bistability_existence && run_params.Poisson_fig_plot_param 
-                            if run_params.plot_visible == 1 
-                                Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-                            elseif run_params.plot_visible == 0 
-                                Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-                            end
-
-                            bar(temp.switch_time_bin_centers_1*1e6, log(temp.hist_count_1), 'r', 'FaceAlpha', 0.25, 'DisplayName', 'State 1 hist')
-                            hold on
-                            bar(temp.switch_time_bin_centers_2*1e6, log(temp.hist_count_2), 'b', 'FaceAlpha', 0.25, 'DisplayName', 'State 2 hist')
-                            plot(temp.switch_time_bin_centers_1*1e6, temp.poisson_theory_1, 'r', 'linewidth', 2, 'DisplayName', 'State 1 fit')
-                            plot(temp.switch_time_bin_centers_2*1e6, temp.poisson_theory_2, 'b', 'linewidth', 2, 'DisplayName', 'State 2 fit')
-                            xlabel('Switching time ($\mu$s)', 'interpreter', 'latex')
-                            ylabel('log(Count)', 'interpreter', 'latex')
-                            title(['Poisson fit for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
-                                '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
-                                '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
-                            legend show
-                            annotation('textbox', [0.55, 0.45, 0.5, 0.3], 'String', ['Lifetime state 1 = ' num2str(round(temp.poisson_lifetime_1_us, 2)) ...
-                                '$\pm$' num2str(round(temp.error_poisson_lifetime_1_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-                            annotation('textbox', [0.55, 0.35, 0.5, 0.3], 'String', ['Lifetime state 2 = ' num2str(round(temp.poisson_lifetime_2_us, 2)) ...
-                                '$\pm$' num2str(round(temp.error_poisson_lifetime_2_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
-                            annotation('textbox', [0.35, 0.2, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_1))], ...
-                                'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-                            annotation('textbox', [0.35, 0.25, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_count_2))], ...
-                                'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
-
-                            if run_params.save_data_and_png_param == 1
-                                    save_file_name = [run_params.rts_fig_directory  num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning)...
-                                        '_' num2str(m_repetition) '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) ...
-                                        'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.png'];
-                                    saveas(Poissonian_figure, save_file_name)
-                                    save_file_name = [run_params.rts_fig_directory '/fig_files/' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning)...
-                                        '_' num2str(m_repetition) '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_poisson_fit.fig'];
-                                    saveas(Poissonian_figure, save_file_name)
-                            end
-                            clear Poissonian_figure ...
-                                  save_file_name
-                        end
-                        %% Plot Poissonian of together if histogrammed together and separately
-                        if squeeze(analysis.hist_together.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, m_repetition)) == 1 && ...
-                                strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && m_repetition == run_params.dim_5_placeholder_number
-                            if analysis.hist_together.Poissonian.fit_success(m_dim_1, m_flux, m_gate, m_detuning, run_params.dim_5_placeholder_number) 
-                                if run_params.plot_visible == 1 
-                                    Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-                                elseif run_params.plot_visible == 0 
-                                    Poissonian_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-                                end
-
-                                bar(temp.hist_together.switch_time_bin_centers_1*1e6, log(temp.hist_together.hist_count_1), 'r', 'FaceAlpha', 0.25, 'DisplayName', 'State 1 hist')
-                                hold on
-                                bar(temp.hist_together.switch_time_bin_centers_2*1e6, log(temp.hist_together.hist_count_2), 'b', 'FaceAlpha', 0.25, 'DisplayName', 'State 2 hist')
-                                plot(temp.hist_together.switch_time_bin_centers_1*1e6, temp.hist_together.poisson_theory_1, 'r', 'linewidth', 2, 'DisplayName', 'State 1 fit')
-                                plot(temp.hist_together.switch_time_bin_centers_2*1e6, temp.hist_together.poisson_theory_2, 'b', 'linewidth', 2, 'DisplayName', 'State 2 fit')
-                                xlabel('Switching time ($\mu$s)', 'interpreter', 'latex')
-                                ylabel('log(Count)', 'interpreter', 'latex')
-                                title(['Poisson fit histogrammed over repetitions for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
-                                    '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$' 13 10 ...
-                                    '$\Delta$ = ' num2str(detuning_point) 'MHz' ], 'interpreter', 'latex')
-                                legend show
-                                annotation('textbox', [0.55, 0.45, 0.5, 0.3], 'String', ['Lifetime state 1 = ' num2str(round(temp.hist_together.poisson_lifetime_1_us, 2)) ...
-                                    '$\pm$' num2str(round(temp.hist_together.error_poisson_lifetime_1_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-                                annotation('textbox', [0.55, 0.35, 0.5, 0.3], 'String', ['Lifetime state 2 = ' num2str(round(temp.hist_together.poisson_lifetime_2_us, 2)) ...
-                                    '$\pm$' num2str(round(temp.hist_together.error_poisson_lifetime_2_us, 2)) '$ \mu$s'], 'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
-                                annotation('textbox', [0.35, 0.2, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_together.hist_count_1))], ...
-                                    'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'r')
-                                annotation('textbox', [0.35, 0.25, 0.5, 0.3], 'String', ['Total counts = ' num2str(sum(temp.hist_together.hist_count_2))], ...
-                                    'interpreter', 'latex', 'LineStyle', 'none', 'FontSize', 30, 'Color', 'b')
-
-                                if run_params.save_data_and_png_param == 1
-                                        save_file_name = [run_params.rts_fig_directory  num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning)...
-                                            '_' num2str(m_repetition) '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) ...
-                                            'm_detuning_' num2str(detuning_point) 'MHz_poisson_hist_together_fit.png'];
-                                        saveas(Poissonian_figure, save_file_name)
-                                        save_file_name = [run_params.rts_fig_directory '/fig_files/' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning)...
-                                            '_' num2str(m_repetition) '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' ...
-                                            num2str(detuning_point) 'MHz_poisson_hist_together_.fig'];
-                                        saveas(Poissonian_figure, save_file_name)
-                                end
-                                clear Poissonian_figure ...
-                                      save_file_name
-                            end
-                        end
-                    end
-                    analysis.poissonian_lifetime_repetitions_mode{m_dim_1, m_flux, m_gate, m_detuning} = run_params.poissonian_lifetime_repetitions_mod;
-                end
                 %% finish plot and fit
                 clear bias_point_struct ...
                       temp
@@ -694,129 +450,13 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
                     vna_get_data(vna, 1, 1);
             [~, data.vna.single_photon.final.fine.phase(m_dim_1, m_flux, m_gate,:)] = ...
                     vna_get_data(vna, 1, 2);
+            [~,min_index] = min(squeeze(data.vna.single_photon.final.fine.amp(m_dim_1, m_flux, m_gate,:)));
+        %     rough_resonance = 5.813e9;
+            data.vna.single_photon.final.fine.min_amp_freq (m_dim_1, m_flux, m_gate) = squeeze(data.vna.single_photon.final.fine.freq(m_dim_1, m_flux, m_gate, min_index));
+            clear min_index
             pause(3);
             vna_turn_output_off(vna)
             clear_instruments
-        %% Plot lifetime curves
-            if run_params.analysis_during_acquisition
-                if run_params.plot_visible == 1 
-                    Lifetime_detuning_plots = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-                elseif run_params.plot_visible == 0 
-                    Lifetime_detuning_plots = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
-                end
-                if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together')
-                    user = input('both separate and together histogramming done. separate histograms plot separately(0) or averaged(1) or histogrammed together (2)?');
-                end
-                if strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate') ||(strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') ...
-                        && user == 0)% 'separate' or 'averaged', 'histogrammed_together'
-                    hold on
-                    for m_repetition = 1 : run_params.dim_5_placeholder_number
-                        temp.x_array = squeeze(data.detunings(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, m_repetition));
-                        temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, m_repetition));
-                        temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, m_repetition));
-                        temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_dim_1, m_flux, m_gate)*ones(run_params.detunings_expected_number, 1)/1e6;
-                        temp.x_array(temp.y_array == 0) = NaN;
-                        temp.y_error(temp.y_array == 0) = NaN;
-                        temp.x_error(temp.y_array == 0) = NaN;
-                        temp.y_array(temp.y_array == 0) = NaN;
-
-                        errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-                        'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
-                    end
-
-                    for m_repetition = 1 : run_params.dim_5_placeholder_number
-                        temp.x_array = squeeze(data.detunings(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, m_repetition));
-                        temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, m_repetition));
-                        temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, m_repetition));
-                        temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_dim_1, m_flux, m_gate)*ones(run_params.detunings_expected_number, 1)/1e6;
-                        temp.x_array(temp.y_array == 0) = NaN;
-                        temp.y_error(temp.y_array == 0) = NaN;
-                        temp.x_error(temp.y_array == 0) = NaN;
-                        temp.y_array(temp.y_array == 0) = NaN;
-
-                        errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-                        'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)]) 
-                    end
-                elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'averaged') ||(strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') ...
-                        && user == 1)
-                    temp.x_array = mean(squeeze(data.detunings(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, :)), 2);
-                    temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_1(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, :)), 2);
-                    temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, :)), 2);
-                    temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_dim_1, m_flux, m_gate)*ones(run_params.detunings_expected_number, 1))/1e6;
-                    temp.x_array(temp.y_array == 0) = NaN;
-                    temp.y_error(temp.y_array == 0) = NaN;
-                    temp.x_error(temp.y_array == 0) = NaN;
-                    temp.y_array(temp.y_array == 0) = NaN;
-
-                    errorbar(temp.x_array, temp.y_array,temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-                        'rx-', 'Linewidth', 3, 'DisplayName', 'State 1 lifetimes')
-
-                    hold on
-
-                    temp.x_array = mean(squeeze(data.detunings(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, :)), 2);
-                    temp.y_array = mean(squeeze(analysis.Poissonian.lifetime_2(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, :)), 2);
-                    temp.y_error = mean(squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, :)), 2);
-                    temp.x_error = squeeze(analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_dim_1, m_flux, m_gate)*ones(run_params.detunings_expected_number, 1))/1e6;
-                    temp.x_array(temp.y_array == 0) = NaN;
-                    temp.y_error(temp.y_array == 0) = NaN;
-                    temp.x_error(temp.y_array == 0) = NaN;
-                    temp.y_array(temp.y_array == 0) = NaN;
-                    errorbar(temp.x_array, temp.y_array,temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-                        'rx-', 'Linewidth', 3, 'DisplayName', 'State 2 lifetimes')
-
-                elseif strcmp(run_params.poissonian_lifetime_repetitions_mode, 'histogrammed_together') 
-                    temp.x_array = squeeze(data.detunings(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.y_array = squeeze(analysis.Poissonian.lifetime_1(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_dim_1, m_flux, m_gate)*ones(run_params.detunings_expected_number, 1)/1e6;
-
-                    errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-                    'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
-                    hold on
-                    temp.x_array = squeeze(data.detunings(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.y_array = squeeze(analysis.Poissonian.lifetime_2(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.y_error = squeeze(analysis.Poissonian.error_poisson_lifetime_2_us(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_dim_1, m_flux, m_gate)*ones(run_params.detunings_expected_number, 1)/1e6;
-
-                    errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-                    'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)])     
-
-                elseif (strcmp(run_params.poissonian_lifetime_repetitions_mode, 'separate_and_together') && user == 2)    
-                    temp.x_array = squeeze(data.detunings(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.y_array = squeeze(analysis.hist_together.Poissonian.lifetime_1(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.y_error = squeeze(analysis.hist_together.Poissonian.error_poisson_lifetime_1_us(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_dim_1, m_flux, m_gate)*ones(run_params.detunings_expected_number, 1)/1e6;
-
-                    errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-                    'rx-', 'Linewidth', 3, 'DisplayName', ['State 1, rep = ' num2str(m_repetition)]) 
-                    hold on
-                    temp.x_array = squeeze(data.detunings(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.y_array = squeeze(analysis.hist_together.Poissonian.lifetime_2(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.y_error = squeeze(analysis.hist_together.Poissonian.error_poisson_lifetime_2_us(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start + run_params.detunings_expected_number - 1, end));
-                    temp.x_error = analysis.vna.single_photon.fits_flucs_and_angle.sigma(m_dim_1, m_flux, m_gate)*ones(run_params.detunings_expected_number, 1)/1e6;
-
-                    errorbar(temp.x_array, temp.y_array, temp.y_error, temp.y_error, temp.x_error, temp.x_error, ...
-                    'bx-', 'Linewidth', 3, 'DisplayName', ['State 2, rep = ' num2str(m_repetition)])     
-                end    
-                xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
-                ylabel('Time ($\mu$s)', 'interpreter', 'latex')
-                title(['Lifetimes for fit for P$_{\mathrm{in}}$ = ' num2str(run_params.input_power_value) 'dBm' 13 10 ...
-                    '$n_g = $' num2str(run_params.ng_1_value) ', $\Phi_{\mathrm{ext}}$ = ' num2str(run_params.flux_1_value) '$\Phi_0$'], 'interpreter', 'latex')
-                legend show
-
-                if run_params.save_data_and_png_param == 1
-                        save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(run_params.input_power_value) 'dBm_' ...
-                            'ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_lifetimes.png'];
-                        saveas(Lifetime_detuning_plots, save_file_name)
-                        save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(run_params.input_power_value) 'dBm_' ...
-                            'ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_lifetimes.fig'];
-                        saveas(Lifetime_detuning_plots, save_file_name)
-                end
-                clear Lifetime_detuning_plots ...
-                      save_file_name ...
-                      temp
-                close all
-            end
             %% make sure to leave on VNA line at the end
             connect_instruments
             switch_vna_measurement
@@ -848,170 +488,3 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
     end
 end
 clear run_params
-%% Function extract Poissonian lifetimes
-function [lifetime_1_us, lifetime_2_us, std_exp_fit_state_1, std_exp_fit_state_2, theory_values_state_1, theory_values_state_2, time_bin_centers_state_1, lifetime_state_1_hist_data, ...
-    time_bin_centers_state_2,  lifetime_state_2_hist_data, fit_success, flag] =  extract_poissonian_lifetimes(clean_time_data, clean_amp_data, gaussian_1_mean, ...
-                                        gaussian_2_mean, min_switching_number, bin_number, hist_count_state_1, ...
-                                        hist_count_state_2, bin_centers_state_1, bin_centers_state_2)
-
-    clean_time_data = clean_time_data(:);
-    clean_amp_data = clean_amp_data(:);
-    if exist('hist_count_state_1', 'var')
-        hist_count_state_1 = hist_count_state_1(:);
-        hist_count_state_2 = hist_count_state_2(:);
-        bin_centers_state_1 = bin_centers_state_1(:);
-        bin_centers_state_2 = bin_centers_state_2(:);
-    end
-                                    
-    if ~exist('bin_number', 'var') && ~exist('bin_centers', 'var') && ~exist('hist_state_1', 'var') && ~exist('hist_state_2', 'var')
-        bin_number = 25;
-        bin_centers_state_1 = [];
-        bin_centers_state_2 = [];
-        hist_count_state_1 = [];
-        hist_count_state_2 = [];
-    end
-    at_least_so_many_counts = 20; % has to have at least 2 bins with so many counts. if not, reject poisson fit
-    
-    %%%% figures out when the clean_RTS_noise_broadening function starts
-    %%%% spitting out 0 and 1 states it is sure about. 
-    first_sure_time_state_1 = clean_time_data(clean_amp_data == gaussian_1_mean);
-    if ~isempty(first_sure_time_state_1)
-        first_sure_time_state_1 = first_sure_time_state_1(1);
-    end
-    
-    first_sure_time_state_2 = clean_time_data(clean_amp_data == gaussian_2_mean);
-    if ~isempty(first_sure_time_state_2) 
-        first_sure_time_state_2 = first_sure_time_state_2(1);
-    end
-    
-    if isempty(first_sure_time_state_1) || isempty(first_sure_time_state_2)
-        lifetime_1_us = NaN; 
-        lifetime_2_us = NaN;
-        std_exp_fit_state_1 = NaN;
-        std_exp_fit_state_2 = NaN;
-        theory_values_state_1 = NaN;
-        theory_values_state_2 = NaN;
-        time_bin_centers_state_1 = NaN;
-        time_bin_centers_state_2 = NaN;
-        lifetime_state_1_hist_data = NaN;
-        lifetime_state_2_hist_data = NaN;
-        fit_success = 0;
-        flag = '1st sure state undetermined';
-        return
-    end
-    
-    if first_sure_time_state_1 < first_sure_time_state_2
-        analysis_time_data = clean_time_data(clean_time_data > first_sure_time_state_1);
-        analysis_amp_data = clean_amp_data(clean_time_data > first_sure_time_state_1);
-    else
-        analysis_time_data = clean_time_data(clean_time_data > first_sure_time_state_2);
-        analysis_amp_data = clean_amp_data(clean_time_data > first_sure_time_state_2);
-    end
-%%%%%%%%%%%%%
-
-%%%%%%% assign +1 and -1 to states that are definitely known
-    states = zeros(size(analysis_amp_data));
-    states(analysis_amp_data == gaussian_1_mean) = 1;
-    states(analysis_amp_data == gaussian_2_mean) = -1;
-%%%%%%%%%%%%%%%%%%%%%    
-
-%%%%%%%% calculate time points at which state switches
-    switching_points = analysis_time_data(diff(states) ~= 0);
-%%%% calculate time since the last switch, assign as the time in corresponding state     
-    lifetime_both_states = diff(switching_points);
-    if states(1) == 1
-        lifetime_state_1_array = lifetime_both_states(1:2:end);
-        lifetime_state_2_array = lifetime_both_states(2:2:end);
-    elseif states(1) == -1
-        lifetime_state_1_array = lifetime_both_states(2:2:end);
-        lifetime_state_2_array = lifetime_both_states(1:2:end);
-    end
-%%%%%%%%%%%%%%%%%%%%%    
-    
-%%%%%%% calculate histograms of the switching times
-    if isempty(bin_number)
-        [lifetime_state_1_hist_data, time_bin_centers_state_1] = hist(lifetime_state_1_array, bin_centers_state_1 );
-        [lifetime_state_2_hist_data, time_bin_centers_state_2] = hist(lifetime_state_2_array, bin_centers_state_2);
-        lifetime_state_1_hist_data = lifetime_state_1_hist_data(:) + hist_count_state_1(:);
-        lifetime_state_2_hist_data = lifetime_state_2_hist_data(:)+ hist_count_state_2(:);
-    else
-        [lifetime_state_1_hist_data, time_bin_centers_state_1] = hist(lifetime_state_1_array, bin_number);
-        [lifetime_state_2_hist_data, time_bin_centers_state_2] = hist(lifetime_state_2_array, bin_number);
-    end
-    if length(switching_points) < min_switching_number
-        lifetime_1_us = 0;
-        lifetime_2_us = 0;
-        std_exp_fit_state_1 = 0;
-        std_exp_fit_state_2 = 0;
-        theory_values_state_1 = NaN;
-        theory_values_state_2 = NaN;
-        fit_success = 0;
-        flag = ['fewer than ' num2str(min_switching_number) ' switches in run'];
-        return
-    end
-%     
-%     time_bin_centers_state_1(lifetime_state_1_hist_data < 5) = NaN;
-%     lifetime_state_1_hist_data(lifetime_state_1_hist_data < 5) = NaN;
-%     time_bin_centers_state_2(lifetime_state_2_hist_data < 5) = NaN;
-%     lifetime_state_2_hist_data(lifetime_state_2_hist_data < 5) = NaN;
-%     figure
-%     bar(time_bin_centers_state_1(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_1_hist_data(lifetime_state_1_hist_data > 5)))
-%     hold on
-%     bar(time_bin_centers_state_2(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_2_hist_data(lifetime_state_1_hist_data > 5)))
-    if length(lifetime_state_1_hist_data(lifetime_state_1_hist_data > at_least_so_many_counts)) < 4 || length(lifetime_state_2_hist_data(lifetime_state_2_hist_data > at_least_so_many_counts)) < 4 
-        lifetime_1_us = 0;
-        lifetime_2_us = 0;
-        std_exp_fit_state_1 = 0;
-        std_exp_fit_state_2 = 0;
-        theory_values_state_1 = NaN;
-        theory_values_state_2 = NaN;
-        lifetime_state_1_hist_data = NaN;
-        lifetime_state_2_hist_data = NaN;
-        fit_success = 0;
-        flag = '< 4 bins with at least 20 counts';
-        return
-    end
-%%%%% fit straight line to log(hist_count) vs time. (see Staumbaugh PRB 2007)    
-    fit_state_1 = polyfitn(time_bin_centers_state_1(lifetime_state_1_hist_data > 5)*1e6, log(lifetime_state_1_hist_data(lifetime_state_1_hist_data > 5)),1);
-    fit_state_2 = polyfitn(time_bin_centers_state_2(lifetime_state_2_hist_data > 5)*1e6, log(lifetime_state_2_hist_data(lifetime_state_2_hist_data > 5)),1);
-
-%%%%%% slope of line is switching rate out of corresponding state %%%%%%%%    
-    exp_fit_state_1 = fit_state_1.Coefficients;
-    exp_fit_state_2 = fit_state_2.Coefficients;
-
-%%%%% average lifetime is inverse of switching rate    
-    lifetime_1_us = -1*(1/exp_fit_state_1(1));
-    lifetime_2_us = -1*(1/exp_fit_state_2(1));
-
-%%%%% switching time error calculated by polyfitn  function %%%%%     
-    switching_rate_state_1_parameter_error = fit_state_1.ParameterStd(1);
-    switching_rate_state_2_parameter_error = fit_state_2.ParameterStd(1);
-    
-%%%% standard deviation of inverse function - see
-%%%% https://en.wikipedia.org/wiki/Propagation_of_uncertainty
-%%%% example formulae table
-    std_exp_fit_state_1 = abs(switching_rate_state_1_parameter_error*lifetime_1_us^2);
-    std_exp_fit_state_2 = abs(switching_rate_state_2_parameter_error*lifetime_2_us^2);
-    
-%     %%%% incorrect SD of average lifetime calculation %%%%
-   %%%% actually, turns out that this is also quite alright. this is the
-   %%%% same as the wiki one where the wiki has also assumed that 
-   %%%% the s.d << the mean
-%     std_exp_fit_state_1 = [abs(1/exp_fit_state_1(1) - 1/(exp_fit_state_1(1) + switching_rate_state_1_parameter_error)), abs(1/exp_fit_state_1(1) - 1/(exp_fit_state_1(1) - switching_rate_state_1_parameter_error))];
-%     std_exp_fit_state_2 = [abs(1/exp_fit_state_2(1) - 1/(exp_fit_state_2(1) + switching_rate_state_2_parameter_error)), abs(1/exp_fit_state_2(1) - 1/(exp_fit_state_2(1) - switching_rate_state_2_parameter_error))];
-
-    
-    theory_values_state_1 = polyval(exp_fit_state_1, time_bin_centers_state_1*1e6);
-    theory_values_state_2 =  polyval(exp_fit_state_2, time_bin_centers_state_2*1e6);
-    fit_success = 1;
-    flag = 'success';
-%     figure
-%     bar(time_bin_centers_state_1*1e6, log(lifetime_state_1_hist_data))
-%     hold on
-%     plot(time_bin_centers_state_1*1e6, theory_values_state_1)
-%     bar(time_bin_centers_state_2*1e6, log(lifetime_state_2_hist_data))
-%     plot(time_bin_centers_state_2*1e6, theory_values_state_2)
-%     xlabel('Switching time (\mus)')
-%     ylabel('log(count)')
-        
-end        

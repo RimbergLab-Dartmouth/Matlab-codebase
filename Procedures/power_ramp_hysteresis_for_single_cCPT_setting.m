@@ -101,6 +101,10 @@ if vna_data_acquisition == 1
             vna_get_data(vna, 1, 1);
     [~, data.vna.single_photon.fine.phase(m_dim_1, m_flux, m_gate,:)] = ...
             vna_get_data(vna, 1, 2);
+    [~,min_index] = min(squeeze(data.vna.single_photon.fine.amp(m_dim_1, m_flux, m_gate,:)));
+%     rough_resonance = 5.813e9;
+    analysis.vna.single_photon.min_amp_freq (m_dim_1, m_flux, m_gate) = squeeze(data.vna.single_photon.fine.freq(m_dim_1, m_flux, m_gate, min_index));
+    clear min_index
     pause(3);
     vna_turn_output_off(vna)
     %% fit VNA data at single photon powers
@@ -667,32 +671,22 @@ if run_params.awg.files_generation_param == 1
     if contains(file_list, run_params.awg.waveform_name)
         awg_delete_file(awg, run_params.awg.waveform_name)
     end
-    [steady_on_time_axis, steady_on_waveform, steady_on_marker] = ...
-            generate_steady_on_with_defined_markers(input_params.awg.clock, input_params.awg.input_IF_waveform_freq, ...
-                    run_params.awg.output_power, 10, 1);
-    [~] = send_waveform_awg520(awg, steady_on_time_axis, steady_on_waveform, steady_on_marker, ...
-            [num2str(round(run_params.awg.output_power, 2)) 'dBm_10us_steady_marker_on']);
-    clear steady_on_time_axis ...
-          steady_on_waveform ...
-          steady_on_marker
-
-
-    if contains(file_list, run_params.awg.waveform_name)
-        awg_delete_file(awg, run_params.awg.waveform_name)
-    end
-    number_to_repeat_do_nothing_waveform = input_params.awg.continuous_amplitude_down_time * 1e6;
-    number_to_repeat_stabilization_waveform = input_params.awg.stabilization_buffer_time * 1e6;
-    number_to_repeat_steady_on_waveform = ceil(input_params.digitizer.data_collection_time/10e-6);
-    sequence_repeat_array = [number_to_repeat_do_nothing_waveform; number_to_repeat_stabilization_waveform; number_to_repeat_steady_on_waveform; number_to_repeat_do_nothing_waveform];
-    waveform_file_array{1,1} = 'do_nothing_1us';
-    waveform_file_array{1,2} = [num2str(run_params.awg.output_power) 'dBm_1us_steady_marker_off'];
-    waveform_file_array{1,3} = [num2str(run_params.awg.output_power) 'dBm_10us_steady_marker_on'];
-    waveform_file_array{1,4} = 'do_nothing_1us';
-    awg_send_sequence(awg, 4, 1, waveform_file_array, sequence_repeat_array, run_params.awg.waveform_name(1:end-4), 1);
-    clear number_to_repeat_do_nothing_waveform ...
-          number_to_repeat_stabilization_waveform ...
-          number_to_repeat_steady_on_waveform ...
-          sequence_repeat_array waveform_file_array ...
+    run_params.buffer_trigger_number = round(run_params.trigger_lag * input_params.awg.clock); % number of output sampling points by which the trigger preceeds the pulse. 
+    [sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power_chirped_wave_form_ramped_both_ways(input_params.awg.clock, input_params.if_freq, run_params.one_way_ramp_time, ...
+    run_params.down_time, run_params.input_power_start, run_params.input_power_stop, buffer_trigger_time, input_params.digitizer.sample_rate);
+    
+    [~] = send_waveform_awg520(awg, time_axis, sin_wave, markers_data, ...
+            run_params.awg.waveform_name(1:end -4));
+    data.wfm.powers_vp(m_dim_1, m_flux, m_gate, :) = powers_Vp;
+    powers_Vp_while_triggered = powers_Vp(markers_data(:, 2) == 1);
+    data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, :) = powers_Vp_while_triggered(1:input_params.awg.clock/input_params.digitizer.sample_rate:end);
+    data.wfm.sin_wave(m_dim_1, m_flux, m_gate, :) = sin_wave;
+    data.wfm.time_axis(m_dim_1, m_flux, m_gate, :) = time_axis;
+    data.wfm.markers_data(m_dim_1, m_flux, m_gate, :, :) = markers_data;
+    clear time_axis ...
+          sin_wave ...
+          markers_data ...
+          powers_Vp_while_triggered ...
           file_list
 end
 %% set sig gen params
@@ -747,7 +741,7 @@ if boardHandle.Value == 0
 end
 if detuning_point == run_params.detuning_point_start
     [result] = configureBoard(boardHandle, input_params.digitizer.sample_rate, ...
-        input_params.digitizer.trigger_level, convert_dBm_to_Vp(run_params.input_power_value + input_params.fridge_attenuation));
+        input_params.digitizer.trigger_level, convert_dBm_to_Vp(run_params.input_power_stop + input_params.fridge_attenuation));
         % expect ~ 0dB gain from fridge. so the power going to fridge is probably commensurate with the power at insert top
     if ~result
         fprintf('Error: Board configuration failed\n');
@@ -757,43 +751,76 @@ if detuning_point == run_params.detuning_point_start
     end
 end
 clear result
-
+number_samples_per_run = round(input_params.digitizer.data_collection_time * input_params.digitizer.sample_rate);
+mod_number_samples_per_run = mod(number_samples_per_run, 32); % digitizer has a multiple of 32 requirement
+clear number_samples_per_run
 % Acquire data, optionally saving it to a file
 [ret_code, raw_data_array.time, raw_data_array.voltage] = acquireData(boardHandle, input_params.digitizer.sample_rate, input_params.digitizer.data_collection_time, ...
-    run_params.number_repetitions, convert_dBm_to_Vp(run_params.input_power_value + input_params.fridge_attenuation));
+    run_params.number_ramps_to_average, convert_dBm_to_Vp(run_params.input_power_stop + input_params.fridge_attenuation));
 if ~ret_code
     fprintf('Error: Acquisition failed\n');
 end
 clear ret_code
 disp('acquired raw data')
-%% Reshape data for analysis
+%% Reshape data and analyse
 disp('reshaping raw data')
 %%%% get rid of unfilled buffers - since they have all elements 0
 %%%% each buffer is in dimension 1, time and voltage points of that buffer in dimension 2
-amp_row_mean = mean(raw_data_array.voltage, 2);
-mean_matrix = repmat(amp_row_mean, 1, size(raw_data_array.voltage,2));
-raw_data_array.voltage(mean_matrix == 0) = [];
+temp.amp_row_mean = mean(raw_data_array.voltage, 2);
+temp.mean_matrix = repmat(temp.amp_row_mean, 1, size(raw_data_array.voltage,2));
+raw_data_array.voltage(temp.mean_matrix == 0) = [];
 raw_data_array.voltage = reshape(raw_data_array.voltage, [], size(raw_data_array.time, 2));
-raw_data_array.time(mean_matrix == 0) = [];
+raw_data_array.time(temp.mean_matrix == 0) = [];
 raw_data_array.time = reshape(raw_data_array.time, [], size(raw_data_array.voltage, 2));
-clear mean_matrix amp_row_mean
+clear temp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% get rid of CH B data (just noise, but collected to avoid digitizer hanging up 
 raw_data_array.time = raw_data_array.time(:, 1:size(raw_data_array.time,2)/2);
 raw_data_array.voltage = raw_data_array.voltage(:, 1:size(raw_data_array.voltage,2)/2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% prepare to save data for post run analysis
-if ~run_params.analysis_during_acquisition
-    if run_params.save_data_and_png_param == 1
-        if ~exist('m_save_data_counter', 'var')
-            disp('m_save_data_counter doesnt exist. setting to 0 now.')
-            m_save_data_counter = 0;
-            m_save_data_index = 1;
-            m_record = 1;
-        end
-    end
+
+%%%%% getting rid of data included because of the multiple of 32
+%%%%% requirement of the digitizer
+if mod_number_samples_per_run ~=0
+    raw_data_array.time(:, end - 32 + mod_number_samples_per_run + 1 : end) = [];
+    raw_data_array.voltage(:, end - 32 + mod_number_samples_per_run + 1 : end) = [];
 end
+clear mod_number_samples_per_run
+
+temp.size_required = size(raw_data_array.time');
+temp.time_data = reshape(raw_data_array.time', [], 1);
+temp.voltage_data = reshape(raw_data_array.voltage', [], 1);
+
+[temp.amp_extracted, temp.phase_extracted] = get_amp_and_phase(temp.time_data, temp.voltage_data, input_params.if_freq, input_params.digitizer.sample_rate);
+temp.phase_extracted = reshape(temp.phase_extracted', temp.size_required');
+temp.amp_extracted = reshape(temp.amp_extracted', temp.size_required');
+%%% this many points in the acquired trace will be averaged, and contribute
+%%% to a single phase data point. 
+points_to_average_single_phase = input_params.number_readout_IF_waveforms_averaged_into_single_point * ...
+    input_params.digitizer.sample_rate / input_params.if_freq;
+if points_to_average_single_phase == 0
+    points_to_average_single_phase = 1;
+end
+temp.phase_extracted = squeeze(circ_mean(reshape(temp.phase_extracted', points_to_average_single_phase, ...
+                  size(temp.phase_extracted, 2)/points_to_average_single_phase, size(temp.phase_extracted, 1)), [], 1))';
+temp.amp_extracted = squeeze(circ_mean(reshape(temp.amp_extracted', points_to_average_single_phase, ...
+                size(temp.amp_extracted, 2)/points_to_average_single_phase, size(temp.amp_extracted, 1)), [], 1))';
+%%% calculate sampled powers based on the sampling rate of AWG and digitizer
+temp.powers_Vp_sampled = data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, :);
+temp.powers_Vp_with_averaging = mean(reshape(temp.powers_Vp_sampled, points_to_average_single_phase, []), 1);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% take the mean phase over all run_params.number_ramps_to_average ramps
+analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, :) = mean(temp.amp_extracted, 1);
+analysis.std_amp_over_runs(m_dim_1, m_flux, m_gate, :) = std(temp.amp_extracted, 1);
+analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, :) = circ_mean(temp.phase_extracted, [], 1)*180/pi;
+analysis.std_phase_over_runs(m_dim_1, m_flux, m_gate, :) = circ_std(temp.phase_extracted, [], 1)*180/pi;
+analysis.powers_Vp_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, :) = temp.powers_Vp_with_averaging;
+analysis.powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, :) = convert_Vp_to_dBm(temp.powers_Vp_with_averaging);
+
+clear points_to_average_single_phase ...
+      temp ...
+      raw_data_array
 %% turn off sig gens (not AWG unless the last detuning point)
 disp('sig gens are off. AWG still on')
 n5183b_toggle_output(keysight_sg, 'off')
@@ -807,36 +834,6 @@ if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_s
         awg_toggle_output(awg,'off',2)
         awg_run_output_channel_off(awg,'stop')
 end
-%% save only raw data matrix struct for further analysis later 
-if run_params.save_data_and_png_param == 1 && ~run_params.analysis_during_acquisition
-        %     raw_data_matrix.time(m_save_data_counter, :) = raw_data_array.time;
-    raw_data_matrix.voltage(m_save_data_index, :, :) = raw_data_array.voltage;
-    raw_data_matrix.detuning_point_number(m_save_data_index) = m_detuning;
-    raw_data_matrix.detuning_point(m_save_data_index) = detuning_point;
-    raw_data_matrix.input_power_number(m_save_data_index) = m_dim_1;
-    raw_data_matrix.ng_number(m_save_data_index) = m_gate;
-    raw_data_matrix.flux_number(m_save_data_index) = m_flux;
-    raw_data_matrix.bias_point_number(m_save_data_index) = m_bias_point;
-    %     raw_data_matrix.amp_extracted(m_save_data_counter, :) = raw_data.amp_extracted;
-    %     raw_data_matrix.phase_extracted(m_save_data_counter, :) = raw_data.phase_extracted;
-    
-    m_save_data_counter = m_save_data_counter + run_params.number_repetitions;
-    m_save_data_index = m_save_data_index + 1;
-    
-    if m_save_data_counter >= run_params.save_raw_data_frequency ||(detuning_point > run_params.detuning_point_end + run_params.detuning_point_step ...
-            || detuning_point == run_params.detuning_point_end)   
-        disp('saving raw data')
-        save([run_params.data_directory '\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' ...
-            'raw_data_record_' num2str(m_record) '.mat'], 'raw_data_matrix')   
-        m_save_data_counter = 0;
-        m_save_data_index = 1;
-        clear raw_data_matrix
-        disp('saved raw data')
-        m_record = m_record + 1;
-    end
-    clear raw_data_array ...
-          size_required
-end
 %% clear some unrequired variables that will be reloaded next iteration of this function
 clear vna_data_acquisition ...
       res_freq_recorder ...
@@ -845,7 +842,7 @@ clear_alazar_board_variables
 clear_instruments
 %% waveform generation function
 function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power_chirped_wave_form_ramped_both_ways(awg_clock, if_freq, ramp_length, ...
-    length_of_down_time, sin_start_amp_dBm, sin_stop_amp_dBm, directory,awg_handle, buffer_trigger_time, digitizer_sampling_freq)
+    length_of_down_time, sin_start_amp_dBm, sin_stop_amp_dBm, buffer_trigger_time, digitizer_sampling_freq)
     % awg_clock is AWG sampling rate in S/s
     % all times in us.
     % sin wave generated at 84MHz
@@ -866,17 +863,7 @@ function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power
         disp(['start sin amp at insert top = ' num2str(sin_amp_start_Vp*1e3) 'mV, change in voltage amp over 1 IF period = ' num2str(ramp_rate / if_freq) 'uV'])
     else
         ramp_rate = 0;
-    end    
-        
-	awg_change_directory(awg_handle,directory)
-    file_list = awg_list_files(awg_handle);
-    file_match = strfind(file_list, wfm_name);
-    if isempty(file_match)
-        file_exist = 0;
-    else
-        file_exist = 1;
-    end
-    
+    end        
 
     if abs(floor(ramp_length) - (ramp_length)) ~=0 
         disp('pulse time needs to be a whole number (in us)')
