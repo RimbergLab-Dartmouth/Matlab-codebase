@@ -7,8 +7,8 @@ mkdir([cd '/d' input_params.file_name_time_stamp '_error_signal_acquisition']);
 input_params.sig_gen_amp = -25; % dBm
 input_params.center_freq = 5.7845e9; % Hz
 input_params.span = 40; % MHz
-input_params.freq_step = 0.4; % MHz
-input_params.repetition_number = 1; % number repetitions
+input_params.freq_step = 1; % MHz
+input_params.repetition_number = 10; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
 input_params.phase_mod_phase = 0; % degs
@@ -51,9 +51,14 @@ n5183b_toggle_output(keysight_sg, 'on')
 
 % Converts a frequency in GHz to the best control voltage in V for the band
 % pass filter, assuming other voltages are set to the values specified above
-function [cont] = best_control_freq(freq):
-    cont = 3.5251*freq - 17.6458;
-end
+% function [cont] = best_control_freq(freq):
+%     cont = 3.5251*freq - 17.6458;
+% end
+
+%output time estimate
+disp('rough estimate:')
+disp(input_params.span/input_params.freq_step*(1.5+input_params.repetition_number * 5 * input_params.lockin.time_constant)/60)
+disp('minutes')
 
 %initialize arrays 
 data.probe_freq = -input_params.span/2 : input_params.freq_step : input_params.span/2;
@@ -61,8 +66,9 @@ data.lockin_x_quadrature = zeros(length(data.probe_freq), input_params.repetitio
 data.lockin_y_quadrature = data.lockin_x_quadrature;
 
 for m_freq = 1 : length(data.probe_freq)
+    n5183b_set_frequency(keysight_sg, input_params.center_freq+data.probe_freq(m_freq)*1e6);
+    pause(1.5);
     for m_rep = 1 : input_params.repetition_number
-		n5183b_set_frequency(keysight_sg, input_params.center_freq+data.probe_freq(m_freq)*1e6)
         pause(5 * input_params.lockin.time_constant);
         data.lockin_x_quadrature(m_freq, m_rep) = sr844_lockin_query_measured_value(lockin_sr844,'X');
         data.lockin_y_quadrature(m_freq, m_rep) = sr844_lockin_query_measured_value(lockin_sr844,'Y');
