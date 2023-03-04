@@ -10,6 +10,7 @@ n5183b_toggle_pulse_mod(e8257c_sig_gen, 'off')
 n5183b_toggle_modulation(e8257c_sig_gen, 'off')
 %%% turns off AWG only if a new sequence needs to be generated or if it's the first detuning at this bias point, power combo. if using
 %%% previous sequence, AWG stays on throughout
+
 if run_params.awg.files_generation_param == 1 || m_detuning == run_params.detuning_point_start
     awg_toggle_output(awg,'off',1)
     awg_toggle_output(awg,'off',2)

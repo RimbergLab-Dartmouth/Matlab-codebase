@@ -46,7 +46,7 @@ if isfield(input_params.vna, 'smoothing_aperture_phase')
 end
 %%%%%%%%%%%
 
-%%% do flux scan %%%%%%%%%
+%% do flux scan %%%%%%%%%
 number_flux = input_params.number_flux;
 number_gate = 1;
 gate_start = input_params.gate_start + 2;
@@ -72,14 +72,13 @@ plot(flux_values_flux,res_freqs_flux,'o','DisplayName','data')
 xlabel('Flux input voltage (V)')
 ylabel('Resonant Freqs (Hz)')
 title('Raw data, flux sweep')
-
 [flux_scan.fits.flux_period,flux_scan.fits.flux_offset,flux_scan.fits.flux_center_freq_mean, flux_scan.fits.offset_slope] = ...
     identify_flux_period_and_offset_struct(res_freqs_flux,flux_values_flux,gate_value_flux,1);
 
 flux_scan.fits.flux_zero_voltage = flux_scan.fits.flux_offset - (-1)^flux_scan.fits.offset_slope*flux_scan.fits.flux_period/4;
 flux_zero_voltage = flux_scan.fits.flux_zero_voltage;
 
-%%%% do a gate scan %%%%%%%%%
+%% do a gate scan %%%%%%%%%
 number_flux = 1;
 number_gate = input_params.number_gate;
 flux_start = flux_zero_voltage;
