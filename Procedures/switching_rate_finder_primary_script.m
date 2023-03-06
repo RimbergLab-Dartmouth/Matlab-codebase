@@ -21,9 +21,9 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
-run_params.m_flux = 3;
+run_params.m_flux = 1;
 run_params.m_gate = 1;
-run_params.m_power = 5;
+run_params.m_power = 7;
 run_params.number_repetitions = 5;
 
 run_params.detuning_point_start = -25; % in MHz % do not exceed +/- 50MHz
@@ -191,6 +191,8 @@ for m_power = run_params.m_power : run_params.m_power
             if ~isfield(input_params, 'run_number')
                 input_params.run_number = 0;
             elseif run_params.redo_previously_saved_run 
+                disp(['suggested run_number - 1 = ' num2str((m_power - 1)/2 *length(input_params.flux_1_value_list)*length(input_params.ng_1_value_list) ...
+                    + (m_flux - 1) * length(input_params.ng_1_value_list) + m_gate - 1)])
                 input_params.run_number = input('what is the desired run number - 1?');
 %                 input_params.run_number = input_params.run_number - 1;
             end 
