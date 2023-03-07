@@ -21,19 +21,19 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 input_params.input_power_value_list = -130 : 2 : -114;
-run_params.m_flux = 1;
-run_params.m_gate = 4;
+run_params.m_flux = 2;
+run_params.m_gate = 2;
 run_params.m_power = 7;
 run_params.number_repetitions = 5;
 
 run_params.detuning_point_start = -35; % in MHz % do not exceed +/- 50MHz
 run_params.detuning_point_end = -1; % in MHz. 
 run_params.detuning_point_step = 0.5; % in MHz. % typically set to 0.5MHz 
-m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
+m_detuning_start = (run_params.detuning_point_start + 50)/run_params.detuning_point_step + 1;
 %%% deliberately make expected detuning number large so dont have to worry
 %%% about variation in array size. each array point corresponds to -50MHz to
 %%% +50, steps of 0.5
-input_params.detuning_array_number = 2 * 50 / 0.5 + 1;
+input_params.detuning_array_number = 2 * 50 / run_params.detuning_point_step + 1;
 run_params.detunings_expected_number = abs((run_params.detuning_point_start - run_params.detuning_point_end)/ run_params.detuning_point_step) + 1;  
 run_params.save_raw_data_frequency = 10; %%% saves raw data for every so many detunings.
 
