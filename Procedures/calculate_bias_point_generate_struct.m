@@ -120,6 +120,8 @@ start_even_or_odd = input('is the band on the extreme left even (0) or odd (1)?'
 gate_period = gate_period/10;
 gate_offset = gate_offset/10;
 
+proceed_param = input('did the run go through ok, should the useful data be saved? 0/1');
+
 clear_instruments
 
 bias_point.flux_zero_voltage = flux_zero_voltage;
@@ -127,12 +129,15 @@ bias_point.flux_period = flux_scan.fits.flux_period;
 bias_point.gate_offset = gate_offset;
 bias_point.gate_period = gate_period;
 bias_point.flux_center_freq_mean = flux_scan.fits.flux_center_freq_mean;
-clearvars -except gate_scan ...
-    flux_scan ...
-    bias_point ...
-    input_params ...
-    gain_prof
 
-save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
-clearvars -except bias_point input_params
-save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+if proceed_param == 1
+    clearvars -except gate_scan ...
+        flux_scan ...
+        bias_point ...
+        input_params ...
+        gain_prof
+
+    save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
+    clearvars -except bias_point input_params
+    save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+end

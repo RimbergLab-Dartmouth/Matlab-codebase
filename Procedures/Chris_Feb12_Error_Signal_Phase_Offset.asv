@@ -65,7 +65,7 @@ for m_phase = 1:num_phase
         pause(1.5);
         for m_rep = 1 : input_params.repetition_number
             disp(['running m_phase = ' num2str(m_phase) ' of ' num2str(num_phase) ', m_freq = ' num2str(m_freq) ...
-                ' of ' num2str(length(data.probe_freq)) ', m_rep = ' num2str(m_rep) ' of ' num2str(input_params.repetition_number)])
+                ' of ' num2str(length(data.probe_freq)) ', m_rep = ' num2str(m_rep) ' of 
             pause(5 * input_params.lockin.time_constant);
             data.lockin_x_quadrature(m_freq, m_rep, m_phase) = sr844_lockin_query_measured_value(lockin_sr844,'X');
             data.lockin_y_quadrature(m_freq, m_rep, m_phase) = sr844_lockin_query_measured_value(lockin_sr844,'Y');
