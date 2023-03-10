@@ -1,11 +1,11 @@
-cleaif ~exist('gain_prof', 'var')
-    disp('enter directory where gain_prof_struct.mat is saved')
+if ~exist('gain_prof', 'var')
+   disp('enter directory where gain_prof_struct.mat is saved')
    load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
 end
 
-if ~exist('bias_point', 'var')co
+if ~exist('bias_point', 'var')
     disp('enter directory where bias_point_struct.mat is saved')
    load_directory = uigetdir;
    load([load_directory '\bias_point_struct.mat'], 'bias_point')
