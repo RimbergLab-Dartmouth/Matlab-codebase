@@ -936,8 +936,14 @@ for m_power = run_params.m_power : run_params.m_power
                   m_save_data_index ...
                   systemId ...
                   size_required
-            %% save run data
-            if run_params.save_data_and_png_param == 1
+            %% save run data            
+            while save_confirm ~= 1 || save_confirm ~= 101
+                save_confirm = input('did the resonance freq not shift during the run? save data? 0/1');
+                if save_confirm ~=1
+                    save_confirm = input('confirm discard of run (101 to discard, 1 to actually save)');
+                end
+            end
+            if run_params.save_data_and_png_param == 1 && save_confirm == 1
                 disp('saving comprehensive run data')
                 save([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|raw_data_matrix|bias_point|gain_prof)$).')   
                 disp('comprehensive run data saved')

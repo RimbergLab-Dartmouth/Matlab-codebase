@@ -75,8 +75,8 @@ run_params.input_power_start = -140; % dBm at sample
 run_params.input_power_stop = -115; % dBm at sample
 run_params.one_way_ramp_time = 8e-6; % in s
 run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
-% run_params.trigger_lag = 240e-9;
-run_params.trigger_lag = 0;
+run_params.trigger_lag = 240e-9;
+% run_params.trigger_lag = 0;
 % this needs to be appropriately set so the switch in direction of
 % acquisition falls right in the middle of the acquisition window
 
@@ -420,8 +420,10 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
             data.vna.single_photon.final.res_freq_shift_during_run (m_dim_1, m_flux, m_gate)= data.vna.single_photon.final.rough_resonance (m_dim_1, m_flux, m_gate) - ...
                 analysis.vna.single_photon.fits_flucs_and_angle.res_freq(m_dim_1, m_flux, m_gate);
             vna_set_center_span(vna,rough_resonance,input_params.vna.zoom_scan_span,1);
+            
             clear manual_index ...
-                  rough_resonance
+                  rough_resonance ...
+                  res_freq 
             vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
             vna_set_average(vna, input_params.vna.average_number, 1, 1);
             vna_set_sweep_points(vna, input_params.vna.number_points, 1);
@@ -436,12 +438,7 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
             data.vna.single_photon.final.fine.min_amp_freq (m_dim_1, m_flux, m_gate) = squeeze(data.vna.single_photon.final.fine.freq(m_dim_1, m_flux, m_gate, min_index));
             data.vna.single_photon.final.fine.res_freq_shift_during_run (m_dim_1, m_flux, m_gate)= data.vna.single_photon.final.fine.min_amp_freq (m_dim_1, m_flux, m_gate) - ...
                 analysis.vna.single_photon.fits_flucs_and_angle.res_freq(m_dim_1, m_flux, m_gate);
-            disp(['start freq = ' num2str(res_freq/1e9) 'GHz, final freq = ' ...
-                num2str(squeeze(data.vna.single_photon.final.fine.min_amp_freq (m_dim_1, m_flux, m_gate))/1e9) 'GHz. ' 13 10 ...
-                'freq shift during run = ' num2str((res_freq - ...
-                squeeze(data.vna.single_photon.final.fine.min_amp_freq (m_dim_1, m_flux, m_gate)))/1e6) 'MHz'])
-            clear min_index ...
-                  res_freq
+            clear min_index
             pause(3);
             vna_turn_output_off(vna)
             clear_instruments
@@ -467,21 +464,11 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
                   systemId ...
                   size_required
             %% save run data
-            save_confirm = 0;
-            while save_confirm ~= 1 && save_confirm ~= 101
-                save_confirm = input('did the resonance freq stay steady during the run? save data? 0/1');
-                if save_confirm ~=1
-                    save_confirm = input('confirm discard of run (101 to discard, 1 to actually save)');
-                end
-            end
-            if run_params.save_data_and_png_param == 1 && save_confirm == 1
-                clear save_confirm
+            if run_params.save_data_and_png_param == 1
                 disp('saving comprehensive run data')
                 save([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|raw_data_matrix|bias_point|gain_prof)$).')   
                 disp('comprehensive run data saved')
             end
-            %% plot surf plot of detuning vs power and phase diff
-            
         end
     end
 end

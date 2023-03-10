@@ -772,8 +772,9 @@ if boardHandle.Value == 0
   return
 end
 if detuning_point == run_params.detuning_point_start
-    [result] = configureBoard(boardHandle, input_params.digitizer.sample_rate, ...
+    [result, input_range_value] = configureBoard(boardHandle, input_params.digitizer.sample_rate, ...
         input_params.digitizer.trigger_level, convert_dBm_to_Vp(run_params.input_power_value + input_params.fridge_attenuation));
+    input_params.digitizer.input_range_setting(m_power, m_flux, m_gate) = input_range_value;
         % expect ~ 0dB gain from fridge. so the power going to fridge is probably commensurate with the power at insert top
     if ~result
         fprintf('Error: Board configuration failed\n');
@@ -782,7 +783,8 @@ if detuning_point == run_params.detuning_point_start
         disp('Alazar board configure')
     end
 end
-clear result
+clear result ...
+      input_range_value
 
 % Acquire data, optionally saving it to a file
 [ret_code, raw_data_array.time, raw_data_array.voltage] = acquireData(boardHandle, input_params.digitizer.sample_rate, input_params.digitizer.data_collection_time, ...
@@ -930,7 +932,7 @@ end
 %% %% AlazarTech configure board function %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [result] = configureBoard(boardHandle, sample_rate, trigger_level, input_level)
+function [result, input_range_value] = configureBoard(boardHandle, sample_rate, trigger_level, input_level)
 % Configure sample rate, input, and trigger settings
 
 % Call mfile with library definitions
@@ -967,14 +969,18 @@ if retCode ~= ApiSuccess
 end
 % TODO: Select channel A input parameters as required.
 
-if input_level <= .1
+if input_level <= .0045
     input_range = INPUT_RANGE_PM_200_MV;
-elseif input_level > .1 && input_level <= .2
+    input_range_value = 200;
+elseif input_level > .0045 && input_level <= .009
     input_range = INPUT_RANGE_PM_400_MV;
-elseif input_level > .2 && input_level <= .4
+    input_range_value = 400;    
+elseif input_level > .009 && input_level <= .018
     input_range = INPUT_RANGE_PM_800_MV;
-elseif input_level > .4 && input_level <=2
+    input_range_value = 800;    
+elseif input_level > .018 && input_level <= .045
     input_range = INPUT_RANGE_PM_2_V;
+    input_range_value = 2000;    
 else
     disp('input level too high')
     return
@@ -1108,7 +1114,6 @@ end
 % set return code to indicate success
 result = true;
 end
-
 %% AlazarTech acquire data function %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
