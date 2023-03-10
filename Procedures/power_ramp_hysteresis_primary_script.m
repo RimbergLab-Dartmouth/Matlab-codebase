@@ -21,7 +21,7 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
 run_params.m_gate = 1;
-run_params.dim_1_placeholder_number = 1;
+run_params.dim_1_placeholder_number = 1;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 20000;
 
 run_params.detuning_point_start = -5; % in MHz % do not exceed +/- 50MHz
@@ -70,13 +70,21 @@ input_params.additional_attenuation = 31.97; % dB. big fridge setup as of 2/11/2
 %% Input params -  Analysis params - if analysis being done 
 input_params.if_freq = 21e6; % freq to which output signal is mixed down
 input_params.number_readout_IF_waveforms_averaged_into_single_point = 0; % the number of power points in the ramp to be averaged into a single point.
+input_params.analysis.min_phase_difference = 10; % degs - difference less than this is not real
 %% Input params -  AWG and pulse params params
 run_params.input_power_start = -140; % dBm at sample
 run_params.input_power_stop = -115; % dBm at sample
+if mod(run_params.dim_1_placeholder_number, 2) == 0 && run_params.input_power_start< run_params.input_power_stop
+    temp = run_params.input_power_start;
+    run_params.input_power_start = run_params.input_power_stop;
+    run_params.input_power_stop = temp;
+end
+clear temp
+    
 run_params.one_way_ramp_time = 8e-6; % in s
 run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
 % run_params.trigger_lag = 240e-9;
-run_params.trigger_lag = 0;
+run_params.trigger_lag = -218e-9;%0;
 % this needs to be appropriately set so the switch in direction of
 % acquisition falls right in the middle of the acquisition window
 
@@ -445,6 +453,76 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
             pause(3);
             vna_turn_output_off(vna)
             clear_instruments
+            %% plot surf plot of detuning vs power and phase diff
+            temp.detuning_vector = squeeze(data.detunings(m_dim_1, m_flux, m_gate, :));
+            temp.detuning_vector(temp.detuning_vector == 0) = [];            
+            temp.powers_vector = squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, 1,1 : end/2)) ...
+                    - input_params.fridge_attenuation - input_params.additional_attenuation;
+            %%%% plot of phase difference vs detuning and powers for phase
+            %%%% then average
+            if run_params.plot_visible == 1
+                surf_plot_phase_then_average_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+            elseif run_params.plot_visible == 0 
+                surf_plot_phase_then_average_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+            end
+            temp.data_vector = squeeze(analysis.phase_difference_both_ways(m_dim_1, m_flux, m_gate, m_detuning,:));
+            temp.data_vector(temp.data_vector < input_params.analysis.min_phase_difference) = 0;
+            surf(temp.detuning_vector, temp.powers_vector, temp.data_vector)
+            view(0,90)
+            xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
+            ylabel('$P_{\mathrm{in}}$ (dBm)', 'interpreter', 'latex')
+            h = colorbar;
+            caxis([input_params.analysis.min_phase_difference 50])
+            ylabel(h, 'Phase diff ($^\circ$)', 'interpreter', 'latex', 'rotation', 90)    
+            if run_params.save_data_and_png_param == 1
+                save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+                    '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
+                    num2str(run_params.one_way_ramp_time*1e6) 'us_raw_data_from_' ...
+                    num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.png'];
+                saveas(surf_plot_phase_then_average_fig, save_file_name)
+            end
+            if run_params.save_fig_file_param == 1
+                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+                    '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
+                    num2str(run_params.one_way_ramp_time*1e6) 'us_raw_data_from_' ...
+                    num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.fig'];
+                saveas(surf_plot_phase_then_average_fig, save_file_name)
+            end
+            clear raw_data_fig ...
+                  save_file_name
+            %%%% plot of phase difference vs detuning and powers for phase
+            %%%% then average
+            if run_params.plot_visible == 1
+                surf_plot_average_then_phase_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+            elseif run_params.plot_visible == 0 
+                surf_plot_average_then_phase_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+            end
+            temp.data_vector = squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,:));
+            temp.data_vector(temp.data_vector < input_params.analysis.min_phase_difference) = 0;
+            surf(temp.detuning_vector, temp.powers_vector, temp.data_vector)
+            view(0,90)
+            xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
+            ylabel('$P_{\mathrm{in}}$ (dBm)', 'interpreter', 'latex')
+            h = colorbar;
+            caxis([input_params.analysis.min_phase_difference 50])
+            ylabel(h, 'Phase diff ($^\circ$)', 'interpreter', 'latex', 'rotation', 90)    
+            if run_params.save_data_and_png_param == 1
+                save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+                    '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
+                    num2str(run_params.one_way_ramp_time*1e6) 'us_raw_data_from_' ...
+                    num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.png'];
+                saveas(surf_plot_average_then_phase_fig, save_file_name)
+            end
+            if run_params.save_fig_file_param == 1
+                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+                    '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
+                    num2str(run_params.one_way_ramp_time*1e6) 'us_raw_data_from_' ...
+                    num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.fig'];
+                saveas(surf_plot_average_then_phase_fig, save_file_name)
+            end
+            clear surf_plot_average_then_phase_fig ...
+                  save_file_name ...
+                  temp           
             %% make sure to leave on VNA line at the end
             connect_instruments
             switch_vna_measurement
@@ -480,8 +558,6 @@ for m_dim_1 = 1 : run_params.dim_1_placeholder_number
                 save([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|raw_data_matrix|bias_point|gain_prof)$).')   
                 disp('comprehensive run data saved')
             end
-            %% plot surf plot of detuning vs power and phase diff
-            
         end
     end
 end

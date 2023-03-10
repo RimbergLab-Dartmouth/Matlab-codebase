@@ -673,12 +673,12 @@ if run_params.awg.files_generation_param == 1
     end
     run_params.buffer_trigger_number = round(run_params.trigger_lag * input_params.awg.clock); % number of output sampling points by which the trigger preceeds the pulse. 
     [sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power_chirped_wave_form_ramped_both_ways(input_params.awg.clock, input_params.if_freq, run_params.one_way_ramp_time, ...
-    run_params.down_time, run_params.input_power_start, run_params.input_power_stop, run_params.trigger_lag, input_params.digitizer.sample_rate);
+    run_params.down_time, run_params.awg.output_power_start, run_params.awg.output_power_stop, run_params.trigger_lag, input_params.digitizer.sample_rate);
     
     [~] = send_waveform_awg520(awg, time_axis, sin_wave, markers_data, ...
             run_params.awg.waveform_name(1:end -4));
     data.wfm.powers_vp(m_dim_1, m_flux, m_gate, :) = powers_Vp;
-    powers_Vp_while_triggered = powers_Vp(markers_data(:, 2) == 1);
+    powers_Vp_while_triggered = powers_Vp(squeeze(markers_data(2, :)) == 1);
     data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, :) = powers_Vp_while_triggered(1:input_params.awg.clock/input_params.digitizer.sample_rate:end);
     data.wfm.sin_wave(m_dim_1, m_flux, m_gate, :) = sin_wave;
     data.wfm.time_axis(m_dim_1, m_flux, m_gate, :) = time_axis;
@@ -740,8 +740,10 @@ if boardHandle.Value == 0
   return
 end
 if detuning_point == run_params.detuning_point_start
-    [result] = configureBoard(boardHandle, input_params.digitizer.sample_rate, ...
-        input_params.digitizer.trigger_level, convert_dBm_to_Vp(run_params.input_power_stop + input_params.fridge_attenuation));
+    [result, input_range_value] = configureBoard(boardHandle, input_params.digitizer.sample_rate, ...
+        input_params.digitizer.trigger_level, convert_dBm_to_Vp(max(run_params.input_power_stop, run_params.input_power_start) ...
+        + input_params.fridge_attenuation));
+    input_params.digitizer.input_range_setting(m_dim_1, m_flux, m_gate) = input_range_value;
         % expect ~ 0dB gain from fridge. so the power going to fridge is probably commensurate with the power at insert top
     if ~result
         fprintf('Error: Board configuration failed\n');
@@ -756,7 +758,8 @@ mod_number_samples_per_run = mod(number_samples_per_run, 32); % digitizer has a 
 clear number_samples_per_run
 % Acquire data, optionally saving it to a file
 [ret_code, raw_data_array.time, raw_data_array.voltage] = acquireData(boardHandle, input_params.digitizer.sample_rate, input_params.digitizer.data_collection_time, ...
-    run_params.number_ramps_to_average, convert_dBm_to_Vp(run_params.input_power_stop + input_params.fridge_attenuation));
+    run_params.number_ramps_to_average, convert_dBm_to_Vp(max(run_params.input_power_stop, run_params.input_power_start) ...
+        + input_params.fridge_attenuation));
 if ~ret_code
     fprintf('Error: Acquisition failed\n');
 end
@@ -788,13 +791,20 @@ if mod_number_samples_per_run ~=0
 end
 clear mod_number_samples_per_run
 
+%%% calculate average raw data over number repetitions
+analysis.raw_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,:) = mean(raw_data_array.voltage, 1);
+analysis.raw_time_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,:) = mean(raw_data_array.time, 1);
+
+[analysis.waveform_average_then_amp(m_dim_1, m_flux, m_gate, m_detuning,:), analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,:)] = ...
+    get_amp_and_phase(mean(raw_data_array.time, 1), mean(raw_data_array.voltage, 1));
+
 temp.size_required = size(raw_data_array.time');
 temp.time_data = reshape(raw_data_array.time', [], 1);
 temp.voltage_data = reshape(raw_data_array.voltage', [], 1);
 
 [temp.amp_extracted, temp.phase_extracted] = get_amp_and_phase(temp.time_data, temp.voltage_data, input_params.if_freq, input_params.digitizer.sample_rate);
-temp.phase_extracted = reshape(temp.phase_extracted', temp.size_required');
-temp.amp_extracted = reshape(temp.amp_extracted', temp.size_required');
+temp.phase_extracted = reshape(temp.phase_extracted', temp.size_required);
+temp.amp_extracted = reshape(temp.amp_extracted', temp.size_required);
 %%% this many points in the acquired trace will be averaged, and contribute
 %%% to a single phase data point. 
 points_to_average_single_phase = input_params.number_readout_IF_waveforms_averaged_into_single_point * ...
@@ -811,13 +821,19 @@ temp.powers_Vp_sampled = data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, :);
 temp.powers_Vp_with_averaging = mean(reshape(temp.powers_Vp_sampled, points_to_average_single_phase, []), 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% take the mean phase over all run_params.number_ramps_to_average ramps
-analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, :) = mean(temp.amp_extracted, 1);
-analysis.std_amp_over_runs(m_dim_1, m_flux, m_gate, :) = std(temp.amp_extracted, 1);
-analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, :) = circ_mean(temp.phase_extracted, [], 1)*180/pi;
-analysis.std_phase_over_runs(m_dim_1, m_flux, m_gate, :) = circ_std(temp.phase_extracted, [], 1)*180/pi;
-analysis.powers_Vp_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, :) = temp.powers_Vp_with_averaging;
-analysis.powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, :) = convert_Vp_to_dBm(temp.powers_Vp_with_averaging);
-analysis.raw_data_averaged(m_dim_1, m_l
+analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, m_detuning, :) = mean(temp.amp_extracted', 1);
+analysis.std_amp_over_runs(m_dim_1, m_flux, m_gate, m_detuning,:) = std(temp.amp_extracted', 1);
+analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,:) = circ_mean(temp.phase_extracted', [], 1)*180/pi;
+analysis.std_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,:) = circ_std(temp.phase_extracted', [], 1)*180/pi;
+analysis.awg_powers_Vp_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning,:) = temp.powers_Vp_with_averaging;
+analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning,:) = convert_Vp_to_dBm(temp.powers_Vp_with_averaging);
+
+analysis.phase_difference_both_ways(m_dim_1, m_flux, m_gate, m_detuning,:) = abs(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,1:end/2)) - ...
+    squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,1+end/2 : end)));
+
+analysis.waveform_average_then_phase_difference(m_dim_1, m_flux, m_gate, m_detuning,:) = abs(squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,1:end/2)) - ...
+    squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,1+end/2 : end)));
+
 
 clear points_to_average_single_phase ...
       temp ...
@@ -849,25 +865,33 @@ elseif run_params.plot_visible == 0
     raw_data_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
 
-
+plot(squeeze(analysis.raw_time_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,:))*1e6, squeeze(analysis.raw_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,:))*1e3)
+xlabel('Time ($\mu$s)', 'interpreter', 'latex')
+ylabel('Voltage readout (mV)', 'interpreter', 'latex')
+yyaxis right
+plot(squeeze(analysis.raw_time_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,:))*1e6, ...
+    1e3*squeeze(analysis.awg_powers_Vp_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning,:))/ 10^(input_params.additional_attenuation/10))
+ylabel('Input power at fridge top $V_p$ (mV)', 'interpreter', 'latex')
+title(['signal readout averaged over ' num2str(run_params.number_ramps_to_average) ' runs'], 'interpreter', 'latex')
 
 if run_params.save_data_and_png_param == 1
-    save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
-        '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-        num2str(run_params.one_way_ramp_time) 'us_raw_data_from_' ...
+    save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+        '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
+        num2str(run_params.one_way_ramp_time*1e6) 'us_raw_data_from_' ...
         num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.png'];
     saveas(raw_data_fig, save_file_name)
 end
 if run_params.save_fig_file_param == 1
-    save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
-        '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-        num2str(run_params.one_way_ramp_time) 'us_raw_data_from_' ...
+    save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+        '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
+        num2str(run_params.one_way_ramp_time*1e6) 'us_raw_data_from_' ...
         num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.fig'];
     saveas(raw_data_fig, save_file_name)
 end
 clear raw_data_fig ...
       save_file_name ...
       temp
+  
 %%%% plotting hysteresis data at detuning point
 if run_params.plot_visible == 1
     hysteresis_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
@@ -886,38 +910,55 @@ end
 %%% acquisition period - i.e, direction of sweep switched exactly at
 %%% the middle of acquisition period.
 subplot(2, 1, 1)
-plot(squeeze(analysis.powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, 1 : end/2)), ...
-    squeeze(1e3*analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, 1 : end/2)), ...
-    'DisplayName', [temp.first_half_tag ' scan'])
+plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning,1 : end/2)) ...
+    - input_params.fridge_attenuation - input_params.additional_attenuation, ...
+    squeeze(1e3*analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, m_detuning,1 : end/2)), ...
+    'ro', 'markerSize', 8, 'DisplayName', [temp.first_half_tag ' scan'])
 hold on
-plot(squeeze(analysis.powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, 1+end/2 : end)), ...
-    squeeze(1e3*analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, 1+end/2 : end)), ...
-    'DisplayName', [temp.second_half_tag ' scan'])
+plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning,1+end/2 : end)), ...
+    squeeze(1e3*analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)), ...
+    'bx', 'markerSize', 8, 'DisplayName', [temp.second_half_tag ' scan'])
+plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2)), ...
+    squeeze(1e3*analysis.waveform_average_then_amp(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2)), ...
+    'r^', 'markerSize', 8, 'DisplayName', ['average then demod, ' temp.first_half_tag ' scan'])
+plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)), ...
+    squeeze(1e3*analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)), ...
+    'bv', 'markerSize', 8, 'DisplayName', ['average then demod, ' temp.second_half_tag ' scan'])
+
 ylabel('$\vert S_{21} \vert$(mV)', 'interpreter', 'latex')
 subplot(2, 1, 2)
-plot(squeeze(analysis.powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, 1 : end/2)), ...
-    squeeze(1e3*analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, 1 : end/2)), ...
-    'DisplayName', [temp.first_half_tag ' scan'])
+plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2)) ...
+    - input_params.fridge_attenuation - input_params.additional_attenuation, ...
+    squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2)), ...
+    'ro', 'markerSize', 8, 'DisplayName', [temp.first_half_tag ' scan'])
 hold on
-plot(squeeze(analysis.powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, 1+end/2 : end)), ...
-    squeeze(1e3*analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, 1+end/2 : end)), ...
-    'DisplayName', [temp.second_half_tag ' scan'])
-xlabel('AWG power (dBm)', 'interpreter', 'latex')
+plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)) ...
+    - input_params.fridge_attenuation - input_params.additional_attenuation, ...
+    squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)), ...
+    'bx', 'markerSize', 8, 'DisplayName', [temp.second_half_tag ' scan'])
+plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2)), ...
+    50 + squeeze(1e3*analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2)), ...
+    'r^', 'markerSize', 8, 'DisplayName', ['average then demod, ' temp.first_half_tag ' scan'])
+plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)), ...
+    50 + squeeze(1e3*analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)), ...
+    'bv', 'markerSize', 8, 'DisplayName', ['average then demod, ' temp.second_half_tag ' scan'])
+
+xlabel('$P_{\mathrm{in}}$(dBm)', 'interpreter', 'latex')
 ylabel('Phase$(S_{21}) (^\circ)$', 'interpreter', 'latex')
 sgtitle(['Hysteresis for $n_g$ = ' num2str(run_params.ng_1_value) 'elns, flux = ' num2str(run_params.flux_1_value) ...
-        '$\phi_0$.' 13 10 '$\Delta$ = ' num2str(detuning_point) 'MHz']) 
+        '$\phi_0$.' 13 10 '$\Delta$ = ' num2str(detuning_point) 'MHz'], 'interpreter', 'latex') 
 legend show
 
 if run_params.save_data_and_png_param == 1
-    save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
-        '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
+    save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+        '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
         num2str(run_params.one_way_ramp_time) 'us_hysteresis_from_' ...
         num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.png'];
     saveas(hysteresis_fig, save_file_name)
 end
 if run_params.save_fig_file_param == 1
-    save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
-        '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
+    save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+        '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
         num2str(run_params.one_way_ramp_time) 'us_hysteresis_from_' ...
         num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.fig'];
     saveas(hysteresis_fig, save_file_name)
@@ -950,12 +991,12 @@ function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power
         ramp_rate = 0;
     end        
 
-    if abs(floor(ramp_length) - (ramp_length)) ~=0 
+    if abs(floor(ramp_length*1e6) - (ramp_length*1e6)) ~=0 
         disp('pulse time needs to be a whole number (in us)')
         return
     end
 
-    if abs(floor(length_of_down_time) - (length_of_down_time)) ~=0
+    if abs(floor(length_of_down_time*1e6) - (length_of_down_time*1e6)) ~=0
         disp('down time needs to be a whole number (in us)')
         return
     end
@@ -999,7 +1040,7 @@ function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power
 
     marker_1 = zeros(length(time_axis),1);
     marker_2 = marker_1;
-    powers_Vp = (sin_amp_start + ramp_rate.*(time_axis - length_of_down_time/2));
+    powers_Vp = (sin_amp_start_Vp + ramp_rate.*(time_axis - length_of_down_time/2));
     sin_wave = powers_Vp .*sin(2*pi*sin_wave_freq.*(time_axis - length_of_down_time/2)+ pi/180*sin_wave_phase);
     sin_wave(time_axis < length_of_down_time/2) = 0;
     sin_wave(time_axis > last_time_point - length_of_down_time/2 - ramp_length + 1/awg_clock) = 0;
@@ -1035,7 +1076,7 @@ end
 %% %% AlazarTech configure board function %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [result] = configureBoard(boardHandle, sample_rate, trigger_level, input_level)
+function [result, input_range_value] = configureBoard(boardHandle, sample_rate, trigger_level, input_level)
 % Configure sample rate, input, and trigger settings
 
 % Call mfile with library definitions
@@ -1072,14 +1113,18 @@ if retCode ~= ApiSuccess
 end
 % TODO: Select channel A input parameters as required.
 
-if input_level <= .1
+if input_level <= .0045
     input_range = INPUT_RANGE_PM_200_MV;
-elseif input_level > .1 && input_level <= .2
+    input_range_value = 200;
+elseif input_level > .0045 && input_level <= .009
     input_range = INPUT_RANGE_PM_400_MV;
-elseif input_level > .2 && input_level <= .4
+    input_range_value = 400;    
+elseif input_level > .009 && input_level <= .018
     input_range = INPUT_RANGE_PM_800_MV;
-elseif input_level > .4 && input_level <=2
+    input_range_value = 800;    
+elseif input_level > .018 && input_level <= .045
     input_range = INPUT_RANGE_PM_2_V;
+    input_range_value = 2000;    
 else
     disp('input level too high')
     return
@@ -1213,7 +1258,6 @@ end
 % set return code to indicate success
 result = true;
 end
-
 %% AlazarTech acquire data function %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1253,18 +1297,19 @@ saveData = false;
 % TODO: Select if you wish to plot the data to a chart
 drawData = false;
 
-if input_level <= .1
-    input_range = .2;
-elseif input_level > .1 && input_level <= .2
-    input_range = .4;
-elseif input_level > .2 && input_level <= .4
-    input_range = .8;
-elseif input_level > .4 && input_level <=2
-    input_range = 2;
+if input_level <= .0045
+    input_range = INPUT_RANGE_PM_200_MV;
+elseif input_level > .0045 && input_level <= .009
+    input_range = INPUT_RANGE_PM_400_MV;
+elseif input_level > .009 && input_level <= .018
+    input_range = INPUT_RANGE_PM_800_MV;
+elseif input_level > .018 && input_level <= .045
+    input_range = INPUT_RANGE_PM_2_V;
 else
     disp('input level too high')
     return
 end
+
 
 disp(['Digitizer input level set at ' num2str(input_range) 'V'])
 % Calculate the number of enabled channels from the channel mask
