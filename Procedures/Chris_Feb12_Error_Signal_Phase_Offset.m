@@ -9,22 +9,22 @@ input_params.phase_step = 15;
 num_phase = (input_params.phase_end-input_params.phase_start)/input_params.phase_step + 1;
 
 input_params.sig_gen_amp = -45; % dBm
-input_params.center_freq = 5.7844e9; % Hz
-input_params.span = 40; % MHz
+input_params.center_freq = 5.7794e9; % Hz
+input_params.span = 30; % MHz
 input_params.freq_step = 1; % MHz
-input_params.repetition_number = 5; % number repetitions
+input_params.repetition_number = 1; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
-input_params.phase_mod_amp = .1; % Vpp
+input_params.phase_mod_amp = .3; % Vpp
 input_params.phase_mod_phase = 0; % degs
 
 %%%% lockin params
 input_params.lockin.time_constant = 3;%300e-3; % s,
-input_params.lockin.sensitivity = 30e-3;%10; % in mV
+input_params.lockin.sensitivity = 300e-3;%10; % in mV
 input_params.lockin.ref_mode = 'ext';
 input_params.lockin.ref_phase = 0; % degs
 %%%% Novatech params
-input_params.novatech.phase_modulation_channel = 0; % channel number - 0 - 3
-input_params.novatech.lockin_ref_channel = 1; % channel number - 0 - 3
+input_params.novatech.phase_modulation_channel = 1; % channel number - 0 - 3
+input_params.novatech.lockin_ref_channel = 0; % channel number - 0 - 3
 input_params.novatech.lockin_ref_amp = 1; % Vpp
 input_params.novatech.lockin_ref_phase = 0 ; % degs
 
@@ -37,8 +37,10 @@ sr844_lockin_set_ref_mode(lockin_sr844, input_params.lockin.ref_mode);
 sr844_lockin_set_ref_phase_degs(lockin_sr844, input_params.lockin.ref_phase);
 novatech_set_phase(novatech,input_params.phase_mod_phase,input_params.novatech.phase_modulation_channel);
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.phase_modulation_channel);
+novatech_set_amp(novatech, input_params.phase_mod_amp, input_params.novatech.phase_modulation_channel);
 novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.novatech.lockin_ref_channel);
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.lockin_ref_channel);
+novatech_set_amp(novatech, input_params.novatech.lockin_ref_amp, input_params.novatech.lockin_ref_channel);
 n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
 n5183b_toggle_output(keysight_sg, 'on')
    

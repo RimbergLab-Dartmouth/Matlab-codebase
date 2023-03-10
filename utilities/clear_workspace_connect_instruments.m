@@ -26,8 +26,8 @@ fopen(hp_high_freq_sg)
 hp_33120A_AWG = visa('ni','GPIB0::1::INSTR');
 fopen(hp_33120A_AWG)
 
-% ps_2=visa('ni','GPIB0::9::INSTR');
-% fopen(ps_2)
+ps_1=visa('ni','GPIB0::9::INSTR');
+fopen(ps_1)
 ps_2=visa('ni','GPIB0::7::INSTR');
 fopen(ps_2)
 e8257c_sig_gen=visa('ni','GPIB0::19::INSTR');
