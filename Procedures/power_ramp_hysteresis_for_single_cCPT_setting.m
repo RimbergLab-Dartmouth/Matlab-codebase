@@ -671,14 +671,15 @@ if run_params.awg.files_generation_param == 1
     if contains(file_list, run_params.awg.waveform_name)
         awg_delete_file(awg, run_params.awg.waveform_name)
     end
-    run_params.buffer_trigger_number = round(run_params.trigger_lag * input_params.awg.clock); % number of output sampling points by which the trigger preceeds the pulse. 
+    input_params.buffer_trigger_lag(m_dim_1, m_flux, m_gate) = run_params.trigger_lag;
+    input_params.buffer_trigger_number(m_dim_1, m_flux, m_gate) = round(run_params.trigger_lag * input_params.awg.clock); % number of output sampling points by which the trigger preceeds the pulse. 
     [sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power_chirped_wave_form_ramped_both_ways(input_params.awg.clock, input_params.if_freq, run_params.one_way_ramp_time, ...
     run_params.down_time, run_params.awg.output_power_start, run_params.awg.output_power_stop, run_params.trigger_lag, input_params.digitizer.sample_rate);
     
     [~] = send_waveform_awg520(awg, time_axis, sin_wave, markers_data, ...
             run_params.awg.waveform_name(1:end -4));
     data.wfm.powers_vp(m_dim_1, m_flux, m_gate, :) = powers_Vp;
-    powers_Vp_while_triggered = powers_Vp(squeeze(markers_data(2, :)) == 1);
+    powers_Vp_while_triggered = powers_Vp(powers_Vp ~= 0);
     data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, :) = powers_Vp_while_triggered(1:input_params.awg.clock/input_params.digitizer.sample_rate:end);
     data.wfm.sin_wave(m_dim_1, m_flux, m_gate, :) = sin_wave;
     data.wfm.time_axis(m_dim_1, m_flux, m_gate, :) = time_axis;
@@ -687,7 +688,8 @@ if run_params.awg.files_generation_param == 1
           sin_wave ...
           markers_data ...
           powers_Vp_while_triggered ...
-          file_list
+          file_list ...
+          power_Vp
 end
 %% set sig gen params
 disp('setting sig gens. Not AWG.')
@@ -753,11 +755,11 @@ if detuning_point == run_params.detuning_point_start
     end
 end
 clear result
-number_samples_per_run = round(input_params.digitizer.data_collection_time * input_params.digitizer.sample_rate);
+number_samples_per_run = round(run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate);
 mod_number_samples_per_run = mod(number_samples_per_run, 32); % digitizer has a multiple of 32 requirement
 clear number_samples_per_run
 % Acquire data, optionally saving it to a file
-[ret_code, raw_data_array.time, raw_data_array.voltage] = acquireData(boardHandle, input_params.digitizer.sample_rate, input_params.digitizer.data_collection_time, ...
+[ret_code, raw_data_array.time, raw_data_array.voltage] = acquireData(boardHandle, input_params.digitizer.sample_rate, run_params.digitizer.data_collection_time, ...
     run_params.number_ramps_to_average, convert_dBm_to_Vp(max(run_params.input_power_stop, run_params.input_power_start) ...
         + input_params.fridge_attenuation));
 if ~ret_code
@@ -797,6 +799,8 @@ analysis.raw_time_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,:) = mean(ra
 
 [analysis.waveform_average_then_amp(m_dim_1, m_flux, m_gate, m_detuning,:), analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,:)] = ...
     get_amp_and_phase(mean(raw_data_array.time, 1), mean(raw_data_array.voltage, 1), input_params.if_freq, input_params.digitizer.sample_rate);
+analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, :) = analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, :)*180/pi;
+
 
 temp.size_required = size(raw_data_array.time');
 temp.time_data = reshape(raw_data_array.time', [], 1);
@@ -837,7 +841,7 @@ analysis.waveform_average_then_phase_difference(m_dim_1, m_flux, m_gate, m_detun
 
 clear points_to_average_single_phase ...
       temp ...
-      raw_data_array
+      raw_data_array  
 %% turn off sig gens (not AWG unless the last detuning point)
 disp('sig gens are off. AWG still on')
 n5183b_toggle_output(keysight_sg, 'off')
@@ -851,12 +855,6 @@ if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_s
         awg_toggle_output(awg,'off',2)
         awg_run_output_channel_off(awg,'stop')
 end
-%% clear some unrequired variables that will be reloaded next iteration of this function
-clear vna_data_acquisition ...
-      res_freq_recorder ...
-      bias_set_param 
-clear_alazar_board_variables
-clear_instruments
 %% plotting data for run
 %%%% plotting raw voltage data averaged
 if run_params.save_data_and_png_param == 1 || run_params.plot_visible == 1
@@ -927,27 +925,27 @@ if run_params.save_data_and_png_param == 1 || run_params.plot_visible == 1
         'r^', 'markerSize', 8, 'DisplayName', ['average then demod, ' temp.first_half_tag ' scan'])
     plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)) ...
         - input_params.fridge_attenuation - input_params.additional_attenuation, ...
-        squeeze(1e3*analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)), ...
+        squeeze(1e3*analysis.waveform_average_then_amp(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)), ...
         'bv', 'markerSize', 8, 'DisplayName', ['average then demod, ' temp.second_half_tag ' scan'])
 
     ylabel('$\vert S_{21} \vert$(mV)', 'interpreter', 'latex')
     subplot(2, 1, 2)
     plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2)) ...
         - input_params.fridge_attenuation - input_params.additional_attenuation, ...
-        wrapTo360(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2))), ...
+        wrapTo180(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2))), ...
         'ro', 'markerSize', 8, 'DisplayName', [temp.first_half_tag ' scan'])
     hold on
     plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)) ...
         - input_params.fridge_attenuation - input_params.additional_attenuation, ...
-        wrapTo360(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end))), ...
+        wrapTo180(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end))), ...
         'bx', 'markerSize', 8, 'DisplayName', [temp.second_half_tag ' scan'])
     plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2)) ...
         - input_params.fridge_attenuation - input_params.additional_attenuation, ...
-        50 + wrapTo360(squeeze(1e3*analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2))), ...
+        wrapTo180(squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, 1 : end/2))), ...
         'r^', 'markerSize', 8, 'DisplayName', ['average then demod, ' temp.first_half_tag ' scan'])
     plot(squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end)) ...
         - input_params.fridge_attenuation - input_params.additional_attenuation, ...
-        50 + wrapTo360(squeeze(1e3*analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end))), ...
+        wrapTo180(squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, 1+end/2 : end))), ...
         'bv', 'markerSize', 8, 'DisplayName', ['average then demod, ' temp.second_half_tag ' scan'])
 
     xlabel('$P_{\mathrm{in}}$(dBm)', 'interpreter', 'latex')
@@ -974,6 +972,12 @@ if run_params.save_data_and_png_param == 1 || run_params.plot_visible == 1
           save_file_name ...
           temp
 end
+%% clear some unrequired variables that will be reloaded next iteration of this function
+clear vna_data_acquisition ...
+      res_freq_recorder ...
+      bias_set_param 
+clear_alazar_board_variables
+clear_instruments
 %% waveform generation function
 function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power_chirped_wave_form_ramped_both_ways(awg_clock, if_freq, ramp_length, ...
     length_of_down_time, sin_start_amp_dBm, sin_stop_amp_dBm, buffer_trigger_time, digitizer_sampling_freq)
@@ -991,7 +995,7 @@ function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power
     sin_amp_start_Vp = convert_dBm_to_Vp(sin_start_amp_dBm);
     sin_amp_stop_Vp = convert_dBm_to_Vp(sin_stop_amp_dBm); 
     sin_wave_phase = 90; %in degs. 90 degree phase ensures that ramp down is just the ramp up flipped (when length of pulse is a whole number in us).
-    buffer_trigger = buffer_trigger_time * awg_clock / digitizer_sampling_freq; % triggers a little after the actual pulse begins, to accomodate group delay in lines.
+    buffer_trigger = round(buffer_trigger_time * awg_clock); % triggers a little after the actual pulse begins, to accomodate group delay in lines.
     if sin_amp_start_Vp - sin_amp_stop_Vp ~= 0
         ramp_rate = (sin_amp_stop_Vp - sin_amp_start_Vp)/ramp_length;   %length_of_pulse in s
         disp(['start sin amp at insert top = ' num2str(sin_amp_start_Vp*1e3) 'mV, change in voltage amp over 1 IF period = ' num2str(ramp_rate / if_freq) 'uV'])
@@ -1062,7 +1066,7 @@ function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power
     post_ramp_down_section = zeros(1,length(time_axis(time_axis > last_time_point - length_of_down_time/2)));
     sin_wave = 2 *[pre_ramp_down_section, sin_wave_flipped(1:end - 1), post_ramp_down_section];
     % factor of 2 because the AWG seems to output a Vpp of x when the wave is of the form x*sin(omega t), NOT Vp = x.  
-    powers_Vp = 2*[pre_ramp_down_section_powers, powers_flipped(1:end - 1), post_ramp_down_section];
+    powers_Vp = [pre_ramp_down_section_powers, powers_flipped(1:end - 1), post_ramp_down_section];
     pulse_start_point = find(sin_wave ~= 0, 1);
     pulse_end_point = length(sin_wave) - find(flip(sin_wave) ~=0, 1);
     
