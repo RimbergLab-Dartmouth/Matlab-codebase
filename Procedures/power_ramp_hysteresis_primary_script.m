@@ -20,9 +20,9 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
-run_params.m_gate = 1;
+run_params.m_gate = 5;
 run_params.dim_1_placeholder_number = 4;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
-run_params.number_ramps_to_average = 20000;
+run_params.number_ramps_to_average = 5000;
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
 run_params.detuning_point_end = -1; % in MHz. 
@@ -332,7 +332,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             %%% existing arrays
             temp.required_data_length_digitizer = run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate;
             temp.required_data_length_awg = (run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock;
-            temp.current_data_length_digitizer = size(analysis.raw_data_averaged, 5);
+            temp.current_data_length_digitizer = size(analysis.mean_amp_over_runs, 5);
             temp.current_data_length_awg = size(data.wfm.powers_vp, 4);
             if temp.current_data_length_digitizer < temp.required_data_length_digitizer
                 analysis.raw_data_averaged(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
@@ -344,9 +344,9 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
                 analysis.mean_phase_over_runs(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
                 analysis.std_phase_over_runs(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
                 data.sampled_powers_Vp(:, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-
-                analysis.awg_powers_Vp_corresponding_to_phase_data(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
-                analysis.awg_powers_dBm_corresponding_to_phase_data(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
+                analysis.awg_powers_Vp_corresponding_to_phase_data(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                analysis.awg_powers_dBm_corresponding_to_phase_data(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                
                 analysis.phase_difference_both_ways(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
                 analysis.waveform_average_then_phase_difference(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
             end

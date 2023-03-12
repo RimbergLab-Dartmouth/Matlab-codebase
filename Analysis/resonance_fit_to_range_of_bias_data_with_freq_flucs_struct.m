@@ -13,9 +13,9 @@ end
 %extract arrays of data from csv files. files used for extracting gain
 %profile can be different from (broader scan) current data set
 
-freq_data = reshape(data_struct.freq_zoom, [], size(data_struct.freq_zoom, 3));
-log_mag_data = reshape(data_struct.amp_zoom, [], size(data_struct.amp_zoom, 3));
-phase_data = reshape(data_struct.phase_zoom, [], size(data_struct.phase_zoom, 3));
+freq_data = reshape(data_struct.freq_zoom, [], size(data_struct.freq_zoom, length(size(data_struct.freq_zoom))));
+log_mag_data = reshape(data_struct.amp_zoom, [], size(data_struct.amp_zoom, length(size(data_struct.freq_zoom))));
+phase_data = reshape(data_struct.phase_zoom, [], size(data_struct.phase_zoom, length(size(data_struct.freq_zoom))));
 
 % extract arrays of bias data from csv files
 bias_values = reshape(data_struct.dc_bias, [], 2);

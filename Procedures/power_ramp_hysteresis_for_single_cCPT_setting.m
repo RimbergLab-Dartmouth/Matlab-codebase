@@ -362,8 +362,10 @@ if res_freq_recorder == 1
     disp(['res freq set to ' num2str(res_freq/1e9) ' GHz, error compared to theory = ' num2str(round(squeeze(data.peripheral.freq_error_from_Ej_Ec (m_dim_1, m_flux, m_gate))/1e6, 2)) ...
         ' MHz'])
     if run_params.initialize_or_load && size(data.recorded_res_freq_GHz, 1) > 1
-        disp('previous powers res freqs were ')
-        squeeze(data.recorded_res_freq_GHz(:, m_flux, m_gate))
+        if size(data.recorded_res_freq_GHz, 2) > m_flux && size(data.recorded_res_freq_GHz, 3) > m_gate
+            disp('previous powers res freqs were ')
+            squeeze(data.recorded_res_freq_GHz(:, m_flux, m_gate))
+        end
     end
     clear ans
 end
@@ -678,12 +680,12 @@ if run_params.awg.files_generation_param == 1
     
     [~] = send_waveform_awg520(awg, time_axis, sin_wave, markers_data, ...
             run_params.awg.waveform_name(1:end -4));
-    data.wfm.powers_vp(m_dim_1, m_flux, m_gate, :) = powers_Vp;
+    data.wfm.powers_vp(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock) = powers_Vp;
     powers_Vp_while_triggered = powers_Vp(powers_Vp ~= 0);
-    data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, :) = powers_Vp_while_triggered(1:input_params.awg.clock/input_params.digitizer.sample_rate:end);
-    data.wfm.sin_wave(m_dim_1, m_flux, m_gate, :) = sin_wave;
-    data.wfm.time_axis(m_dim_1, m_flux, m_gate, :) = time_axis;
-    data.wfm.markers_data(m_dim_1, m_flux, m_gate, :, :) = markers_data;
+    data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = powers_Vp_while_triggered(1:input_params.awg.clock/input_params.digitizer.sample_rate:end);
+    data.wfm.sin_wave(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock) = sin_wave;
+    data.wfm.time_axis(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock) = time_axis;
+    data.wfm.markers_data(m_dim_1, m_flux, m_gate, :, 1:(run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock) = markers_data;
     clear time_axis ...
           sin_wave ...
           markers_data ...
@@ -794,10 +796,13 @@ end
 clear mod_number_samples_per_run
 
 %%% calculate average raw data over number repetitions
-analysis.raw_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,:) = mean(raw_data_array.voltage, 1);
-analysis.raw_time_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,:) = mean(raw_data_array.time, 1);
+analysis.raw_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = ...
+    mean(raw_data_array.voltage, 1);
+analysis.raw_time_data_averaged(m_dim_1, m_flux, m_gate, m_detuning,1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = ...
+    mean(raw_data_array.time, 1);
 
-[analysis.waveform_average_then_amp(m_dim_1, m_flux, m_gate, m_detuning,:), analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,:)] = ...
+[analysis.waveform_average_then_amp(m_dim_1, m_flux, m_gate, m_detuning,1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate), ...
+    analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate)] = ...
     get_amp_and_phase(mean(raw_data_array.time, 1), mean(raw_data_array.voltage, 1), input_params.if_freq, input_params.digitizer.sample_rate);
 analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, :) = analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning, :)*180/pi;
 
@@ -821,23 +826,32 @@ temp.phase_extracted = squeeze(circ_mean(reshape(temp.phase_extracted', points_t
 temp.amp_extracted = squeeze(circ_mean(reshape(temp.amp_extracted', points_to_average_single_phase, ...
                 size(temp.amp_extracted, 2)/points_to_average_single_phase, size(temp.amp_extracted, 1)), [], 1))';
 %%% calculate sampled powers based on the sampling rate of AWG and digitizer
-temp.powers_Vp_sampled = data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, :);
+temp.powers_Vp_sampled = data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate);
 temp.powers_Vp_with_averaging = mean(reshape(temp.powers_Vp_sampled, points_to_average_single_phase, []), 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% take the mean phase over all run_params.number_ramps_to_average ramps
-analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, m_detuning, :) = mean(temp.amp_extracted', 1);
-analysis.std_amp_over_runs(m_dim_1, m_flux, m_gate, m_detuning,:) = std(temp.amp_extracted', 1);
-analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,:) = circ_mean(temp.phase_extracted', [], 1)*180/pi;
-analysis.std_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,:) = circ_std(temp.phase_extracted', [], 1)*180/pi;
-analysis.awg_powers_Vp_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning,:) = temp.powers_Vp_with_averaging;
-analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning,:) = convert_Vp_to_dBm(temp.powers_Vp_with_averaging);
+analysis.mean_amp_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = ...
+    mean(temp.amp_extracted', 1);
+analysis.std_amp_over_runs(m_dim_1, m_flux, m_gate, m_detuning,1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = ...
+    std(temp.amp_extracted', 1);
+analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = ...
+    circ_mean(temp.phase_extracted', [], 1)*180/pi;
+analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, :) = wrapTo180(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, :) - ...
+    mean(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, :))));
+analysis.std_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = ...
+    circ_std(temp.phase_extracted', [], 1)*180/pi;
+analysis.awg_powers_Vp_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = ...
+    temp.powers_Vp_with_averaging;
+analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = ...
+    convert_Vp_to_dBm(temp.powers_Vp_with_averaging);
 
-analysis.phase_difference_both_ways(m_dim_1, m_flux, m_gate, m_detuning,:) = wrapTo360(abs(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,1:end/2)) - ...
-    flip(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,1+end/2 : end)))));
+analysis.phase_difference_both_ways(m_dim_1, m_flux, m_gate, m_detuning, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate/2) = ...
+    wrapTo180(abs(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate/2)) - ...
+    flip(squeeze(analysis.mean_phase_over_runs(m_dim_1, m_flux, m_gate, m_detuning,1+run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate/2 : run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate)))));
 
-analysis.waveform_average_then_phase_difference(m_dim_1, m_flux, m_gate, m_detuning,:) = wrapTo360(abs(squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,1:end/2)) - ...
-    flip(squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,1+end/2 : end)))));
-
+analysis.waveform_average_then_phase_difference(m_dim_1, m_flux, m_gate, m_detuning,1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate/2) = ...
+    wrapTo180(abs(squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate/2)) - ...
+    flip(squeeze(analysis.waveform_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning,1+run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate/2 : run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate)))));
 
 clear points_to_average_single_phase ...
       temp ...
