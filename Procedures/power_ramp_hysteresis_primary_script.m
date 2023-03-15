@@ -6,11 +6,11 @@
 %%%% and a 'gain_profile_struct' that contains :
 %%%% freq, amp, phase
 run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
-run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
+run_params.initialize_or_load  = 0; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 % run_params.analysis_during_acquisition = 1; % to analyse during acquisition, or analyse separately.
 if run_params.concatenate_runs
-    run_params.data_directory = [cd '\data_hysteresis'];
+    run_params.data_directory = [cd '\data_hysteresis_230314'];
     run_params.file_name = 'hysteresis_comprehensive_data.mat';
 end
 run_params.save_data_and_png_param = 1; % 0/1 - decides whether to save data and figs or not. 
@@ -20,7 +20,7 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
-run_params.m_gate = 5;
+run_params.m_gate = 1;
 run_params.dim_1_placeholder_number = 4;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
 
@@ -69,7 +69,7 @@ input_params.additional_attenuation = 31.97; % dB. big fridge setup as of 2/11/2
 %%%%\\dartfs-hpc\rc\lab\R\RimbergA\cCPT_NR_project\Bhar_measurements\2022_December_Jules_sample\AWG_input_attenuation_calibration
 %% Input params -  Analysis params - if analysis being done 
 input_params.if_freq = 21e6; % freq to which output signal is mixed down
-input_params.number_readout_IF_waveforms_averaged_into_single_point = 0; % the number of power points in the ramp to be averaged into a single point.
+input_params.number_readout_IF_waveforms_averaged_into_single_point = 7; % the number of power points in the ramp to be averaged into a single point (only for data storage, plotting is done with all points).
 input_params.analysis.min_phase_difference = 10; % degs - difference less than this is not real
 %% Input params -  AWG and pulse params params
 run_params.input_power_start = -140; % dBm at sample
@@ -140,7 +140,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             run_params.awg_directory = ['/' run_params.awg_switching_directory_name '/' date(1:7)];
             clear date;
             if run_params.concatenate_runs
-                run_params.fig_directory = [cd '\plots_hysteresis\'];
+                run_params.fig_directory = [cd '\plots_hysteresis_230314\'];
             end
 
             if run_params.concatenate_runs && run_params.initialize_or_load 
@@ -330,33 +330,31 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             end
             %% extend some data arrays if ramp time is longer than
             %%% existing arrays
-            temp.required_data_length_digitizer = run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate;
-            temp.required_data_length_awg = (run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock;
-            temp.current_data_length_digitizer = size(analysis.mean_amp_over_runs, 5);
-            temp.current_data_length_awg = size(data.wfm.powers_vp, 4);
-            if temp.current_data_length_digitizer < temp.required_data_length_digitizer
-                analysis.raw_data_averaged(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.raw_time_data_averaged(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.waveform_average_then_amp(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.waveform_average_then_phase(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.mean_amp_over_runs(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.std_amp_over_runs(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.mean_phase_over_runs(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.std_phase_over_runs(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                data.sampled_powers_Vp(:, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.awg_powers_Vp_corresponding_to_phase_data(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                analysis.awg_powers_dBm_corresponding_to_phase_data(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                
-                analysis.phase_difference_both_ways(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
-                analysis.waveform_average_then_phase_difference(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
+            if exist('analysis', 'var')
+                temp.required_data_length_digitizer = run_params.digitizer.data_collection_time * input_params.number_readout_IF_waveforms_averaged_into_single_point/1e-6;
+                temp.required_data_length_awg = (run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock;
+                temp.current_data_length_digitizer = size(analysis.mean_amp_over_runs, 5);
+                temp.current_data_length_awg = size(data.wfm.powers_vp, 4);
+                if temp.current_data_length_digitizer < temp.required_data_length_digitizer
+                    analysis.raw_data_averaged(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                    analysis.raw_time_data_averaged(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                    analysis.waveform_average_then_amp(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                    analysis.waveform_average_then_phase(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                    data.sampled_powers_Vp(:, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                    analysis.awg_powers_Vp_corresponding_to_averaged_phase_data(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                    analysis.awg_powers_dBm_corresponding_to_averaged_phase_data(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+
+                    analysis.phase_difference_mean_after_demod(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
+                    analysis.waveform_average_then_phase_difference(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
+                end
+                if temp.current_data_length_awg < temp.required_data_length_awg
+                    data.wfm.powers_vp (:, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
+                    data.wfm.sin_wave (:, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
+                    data.wfm.time_axis (:, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
+                    data.wfm.markers_data (:, :, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
+                end
+                clear temp
             end
-            if temp.current_data_length_awg < temp.required_data_length_awg
-                data.wfm.powers_vp (:, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
-                data.wfm.sin_wave (:, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
-                data.wfm.time_axis (:, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
-                data.wfm.markers_data (:, :, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
-            end
-            clear temp
             %% detuning and repetition loop initialization
             detuning_point = run_params.detuning_point_start;
             m_detuning = m_detuning_start;
@@ -525,6 +523,8 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             elseif run_params.plot_visible == 0 
                 surf_plot_average_then_phase_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
             end
+            temp.powers_vector = convert_Vp_to_dBm(squeeze(data.sampled_powers_Vp(m_dim_1, m_flux, m_gate,1 : end/2))) ...
+                    - input_params.fridge_attenuation - input_params.additional_attenuation;
             temp.data_array_average_then_phase = squeeze(analysis.waveform_average_then_phase_difference(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start - 1 + ...
                 length(temp.detuning_vector),:));
             temp.data_array_average_then_phase(temp.data_array_average_then_phase < input_params.analysis.min_phase_difference) = 0;
