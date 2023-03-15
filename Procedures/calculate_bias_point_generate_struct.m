@@ -1,4 +1,4 @@
-if ~exist('gain_prof', 'var')
+caif ~exist('gain_prof', 'var')
    load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory

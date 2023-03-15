@@ -1,5 +1,5 @@
 if ~exist('gain_prof', 'var')
-    disp('enter directory where gain_prof_struct.mat is saved')
+   disp('enter directory where gain_prof_struct.mat is saved')
    load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
