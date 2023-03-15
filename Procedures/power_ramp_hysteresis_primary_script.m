@@ -25,7 +25,7 @@ run_params.dim_1_placeholder_number = 4;  % if this number is odd, does an incre
 run_params.number_ramps_to_average = 5000;
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
-run_params.detuning_point_end = -1; % in MHz. 
+run_params.detuning_point_end = -18; % in MHz. 
 run_params.detuning_point_step = 0.5; % in MHz. % typically set to 0.5MHz 
 m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
 %%% deliberately make expected detuning number large so dont have to worry
@@ -492,7 +492,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             elseif run_params.plot_visible == 0 
                 surf_plot_phase_then_average_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
             end
-            temp.data_array = squeeze(analysis.phase_difference_both_ways(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start - 1+ ...
+            temp.data_array = squeeze(analysis.temp.mean_phase_all_points_after_demod(m_detuning_start:m_detuning_start - 1+ ...
                 length(temp.detuning_vector),:));
             temp.data_array(temp.data_array < input_params.analysis.min_phase_difference) = 0;
             surf(temp.detuning_vector, temp.powers_vector, temp.data_array', 'linestyle', 'none')
