@@ -6,7 +6,7 @@
 %%%% and a 'gain_profile_struct' that contains :
 %%%% freq, amp, phase
 run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
-run_params.initialize_or_load  = 0; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
+run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 % run_params.analysis_during_acquisition = 1; % to analyse during acquisition, or analyse separately.
 if run_params.concatenate_runs
@@ -21,11 +21,11 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
 run_params.m_gate = 1;
-run_params.dim_1_placeholder_number = 4;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
+run_params.dim_1_placeholder_number = 1;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
-run_params.detuning_point_end = -18; % in MHz. 
+run_params.detuning_point_end = 1; % in MHz. 
 run_params.detuning_point_step = 0.5; % in MHz. % typically set to 0.5MHz 
 m_detuning_start = (run_params.detuning_point_start + 50)/0.5 + 1;
 %%% deliberately make expected detuning number large so dont have to worry
@@ -81,10 +81,10 @@ if mod(run_params.dim_1_placeholder_number, 2) == 0 && run_params.input_power_st
 end
 clear temp
     
-run_params.one_way_ramp_time = 24e-6; % in s
+run_params.one_way_ramp_time = 8e-6; % in s
 run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
 % run_params.trigger_lag = 240e-9;
-run_params.trigger_lag = 90e-9;%0;
+run_params.trigger_lag = 230e-9;%0;
 % this needs to be appropriately set so the switch in direction of
 % acquisition falls right in the middle of the acquisition window
 
@@ -331,21 +331,34 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             %% extend some data arrays if ramp time is longer than
             %%% existing arrays
             if exist('analysis', 'var')
-                temp.required_data_length_digitizer = run_params.digitizer.data_collection_time * input_params.number_readout_IF_waveforms_averaged_into_single_point/1e-6;
+                temp.required_data_length_digitizer_all_points = run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate;
+                temp.required_data_length_digitizer_averaged_points = run_params.digitizer.data_collection_time * input_params.if_freq / ...
+                    input_params.number_readout_IF_waveforms_averaged_into_single_point;
                 temp.required_data_length_awg = (run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock;
-                temp.current_data_length_digitizer = size(analysis.mean_amp_over_runs, 5);
+                temp.current_data_length_digitizer_all_points = size(analysis.waveform_average_then_phase, 5);
+                temp.current_data_length_digitizer_averaged_points = size(analysis.awg_powers_Vp_corresponding_to_averaged_phase_data, 5);
                 temp.current_data_length_awg = size(data.wfm.powers_vp, 4);
-                if temp.current_data_length_digitizer < temp.required_data_length_digitizer
-                    analysis.raw_data_averaged(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                    analysis.raw_time_data_averaged(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                    analysis.waveform_average_then_amp(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                    analysis.waveform_average_then_phase(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                    data.sampled_powers_Vp(:, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                    analysis.awg_powers_Vp_corresponding_to_averaged_phase_data(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
-                    analysis.awg_powers_dBm_corresponding_to_averaged_phase_data(:, :, :, :, temp.required_data_length_digitizer - temp.current_data_length_digitizer + 1 : temp.required_data_length_digitizer) = 0;
+                if temp.current_data_length_digitizer_all_points < temp.required_data_length_digitizer_all_points
+                    analysis.raw_data_averaged(:, :, :, :, temp.required_data_length_digitizer_all_points - temp.current_data_length_digitizer_all_points + 1 : ...
+                        temp.required_data_length_digitizer_all_points) = 0;
+                    analysis.raw_time_data_averaged(:, :, :, :, temp.required_data_length_digitizer_all_points - temp.current_data_length_digitizer_all_points + 1 : ...
+                        temp.required_data_length_digitizer_all_points) = 0;
+                    analysis.waveform_average_then_amp(:, :, :, :, temp.required_data_length_digitizer_all_points - temp.current_data_length_digitizer_all_points + 1 : ...
+                        temp.required_data_length_digitizer_all_points) = 0;
+                    analysis.waveform_average_then_phase(:, :, :, :, temp.required_data_length_digitizer_all_points - temp.current_data_length_digitizer_all_points + 1 : ...
+                        temp.required_data_length_digitizer_all_points) = 0;
+                    data.sampled_powers_Vp(:, :, :, temp.required_data_length_digitizer_all_points - temp.current_data_length_digitizer_all_points + 1 : ...
+                        temp.required_data_length_digitizer_all_points) = 0;
+                    analysis.awg_powers_Vp_corresponding_to_averaged_phase_data(:, :, :, :, temp.required_data_length_digitizer_averaged_points - ...
+                        temp.current_data_length_digitizer_averaged_points + 1 : temp.required_data_length_digitizer_averaged_points) = 0;
+                    analysis.awg_powers_dBm_corresponding_to_averaged_phase_data(:, :, :, :, temp.required_data_length_digitizer_averaged_points - ...
+                        temp.current_data_length_digitizer_averaged_points + 1 : temp.required_data_length_digitizer_averaged_points) = 0;
 
-                    analysis.phase_difference_mean_after_demod(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
-                    analysis.waveform_average_then_phase_difference(:, :, :, :, (temp.required_data_length_digitizer - temp.current_data_length_digitizer)/2 + 1 : temp.required_data_length_digitizer/2) = 0;
+                    analysis.phase_difference_mean_after_demod_averaged_points(:, :, :, :, (temp.required_data_length_digitizer_averaged_points - ...
+                        temp.current_data_length_digitizer_averaged_points)/2 + 1 : temp.required_data_length_digitizer_averaged_points/2) = 0;
+                    analysis.waveform_average_then_phase_difference(:, :, :, :, (temp.required_data_length_digitizer_all_points - ...
+                        temp.current_data_length_digitizer_all_points)/2 + 1 : ...
+                        temp.required_data_length_digitizer_all_points/2) = 0;
                 end
                 if temp.current_data_length_awg < temp.required_data_length_awg
                     data.wfm.powers_vp (:, :, :, temp.required_data_length_awg - temp.current_data_length_awg + 1 : temp.required_data_length_awg)= 0;
@@ -482,8 +495,8 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             clear_instruments
             %% plot surf plot of detuning vs power and phase diff
             temp.detuning_vector = squeeze(data.detunings(m_dim_1, m_flux, m_gate, :));
-            temp.detuning_vector(temp.detuning_vector == 0) = [];            
-            temp.powers_vector = squeeze(analysis.awg_powers_dBm_corresponding_to_phase_data(m_dim_1, m_flux, m_gate, m_detuning - 1,1 : end/2)) ...
+            temp.detuning_vector(temp.detuning_vector == 0) = [];       
+            temp.powers_vector = convert_Vp_to_dBm(squeeze(data.sampled_powers_Vp(m_dim_1, m_flux, m_gate,1 : end/2))) ...
                     - input_params.fridge_attenuation - input_params.additional_attenuation;
             %%%% plot of phase difference vs detuning and powers for phase
             %%%% then average
@@ -492,7 +505,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             elseif run_params.plot_visible == 0 
                 surf_plot_phase_then_average_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
             end
-            temp.data_array = squeeze(analysis.temp.mean_phase_all_points_after_demod(m_detuning_start:m_detuning_start - 1+ ...
+            temp.data_array = squeeze(analysis.temp.phase_difference_mean_after_demod_all_points(m_detuning_start:m_detuning_start - 1+ ...
                 length(temp.detuning_vector),:));
             temp.data_array(temp.data_array < input_params.analysis.min_phase_difference) = 0;
             surf(temp.detuning_vector, temp.powers_vector, temp.data_array', 'linestyle', 'none')
@@ -503,20 +516,21 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             caxis([input_params.analysis.min_phase_difference 50])
             ylabel(h, 'Phase diff ($^\circ$)', 'interpreter', 'latex', 'rotation', 90)    
             if run_params.save_data_and_png_param == 1
-                save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+                save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
                     num2str(run_params.one_way_ramp_time*1e6) 'us_phase_then_average.png'];
                 saveas(surf_plot_phase_then_average_fig, save_file_name)
             end
             if run_params.save_fig_file_param == 1
-                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
                     num2str(run_params.one_way_ramp_time*1e6) 'us_phase_then_average.fig'];
                 saveas(surf_plot_phase_then_average_fig, save_file_name)
             end
             clear surf_plot_phase_then_average_fig ...
                   save_file_name
-            %%%% plot of phase difference vs detuning and powers for phase
+              
+            %%% plot of phase difference vs detuning and powers for phase
             %%%% then average
             if run_params.plot_visible == 1
                 surf_plot_average_then_phase_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
@@ -536,21 +550,88 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             caxis([input_params.analysis.min_phase_difference 50])
             ylabel(h, 'Phase diff ($^\circ$)', 'interpreter', 'latex', 'rotation', 90)    
             if run_params.save_data_and_png_param == 1
-                save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+                save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
                     num2str(run_params.one_way_ramp_time*1e6) 'us_average_then_phase.png'];
                 saveas(surf_plot_average_then_phase_fig, save_file_name)
             end
             if run_params.save_fig_file_param == 1
-                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
+                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
                     num2str(run_params.one_way_ramp_time*1e6) 'us_average_then_phase_difference.fig'];
                 saveas(surf_plot_average_then_phase_fig, save_file_name)
             end
             clear surf_plot_average_then_phase_fig ...
                   save_file_name ...
+                  h
+              
+            %%% plot of alternating forward and reverse scans - phase then
+            %%% average
+            if run_params.plot_visible == 1
+                surf_plot_alternating_phase_then_average_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+            elseif run_params.plot_visible == 0 
+                surf_plot_alternating_phase_then_average_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+            end
+            temp.powers_vector = convert_Vp_to_dBm(squeeze(data.sampled_powers_Vp(m_dim_1, m_flux, m_gate,1 : end/2))) ...
+                    - input_params.fridge_attenuation - input_params.additional_attenuation;
+            temp.data_array = squeeze(analysis.temp.phase_alternating_after_demod_all_points(m_detuning_start:m_detuning_start - 1+ ...
+                length(temp.detuning_vector),:));
+            surf(temp.detuning_vector, temp.powers_vector, temp.data_array', 'linestyle', 'none')
+            view(0,90)
+            xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
+            ylabel('$P_{\mathrm{in}}$ (dBm)', 'interpreter', 'latex')
+            h = colorbar;
+            caxis([-30 30])
+            ylabel(h, 'Phase ($^\circ$)', 'interpreter', 'latex', 'rotation', 90)    
+            if run_params.save_data_and_png_param == 1
+                save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
+                    '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
+                    num2str(run_params.one_way_ramp_time*1e6) 'us_alternating_phase_then_average.png'];
+                saveas(surf_plot_alternating_phase_then_average_fig, save_file_name)
+            end
+            if run_params.save_fig_file_param == 1
+                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
+                    '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
+                    num2str(run_params.one_way_ramp_time*1e6) 'us_alternating_phase_then_average.fig'];
+                saveas(surf_plot_alternating_phase_then_average_fig, save_file_name)
+            end
+            clear surf_plot_alternating_phase_then_average_fig ...
+                  save_file_name
+            %%% plot of alternating forward and reverse scan phase vs detuning and powers for phase
+            %%%% then average
+            if run_params.plot_visible == 1
+                surf_plot_alternating_average_then_phase_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+            elseif run_params.plot_visible == 0 
+                surf_plot_alternating_average_then_phase_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
+            end
+            temp.powers_vector = convert_Vp_to_dBm(squeeze(data.sampled_powers_Vp(m_dim_1, m_flux, m_gate,1 : end/2))) ...
+                    - input_params.fridge_attenuation - input_params.additional_attenuation;
+            temp.data_array_average_then_phase = squeeze(analysis.alternating_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start - 1 + ...
+                length(temp.detuning_vector),:));
+            surf(temp.detuning_vector, temp.powers_vector, temp.data_array_average_then_phase', 'linestyle', 'none')
+            view(0,90)
+            xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
+            ylabel('$P_{\mathrm{in}}$ (dBm)', 'interpreter', 'latex')
+            h = colorbar;
+            caxis([-30 30])
+            ylabel(h, 'Phase ($^\circ$)', 'interpreter', 'latex', 'rotation', 90)    
+            if run_params.save_data_and_png_param == 1
+                save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
+                    '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
+                    num2str(run_params.one_way_ramp_time*1e6) 'us_alternating_average_then_phase.png'];
+                saveas(surf_plot_alternating_average_then_phase_fig, save_file_name)
+            end
+            if run_params.save_fig_file_param == 1
+                save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
+                    '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
+                    num2str(run_params.one_way_ramp_time*1e6) 'us_alternating_average_then_phase_difference.fig'];
+                saveas(surf_plot_alternating_average_then_phase_fig, save_file_name)
+            end
+            clear surf_plot_alternating_average_then_phase_fig ...
+                  save_file_name ...
                   temp ...
                   h
+            analysis = rmfield(analysis, 'temp');
             %% make sure to leave on VNA line at the end
             connect_instruments
             switch_vna_measurement
