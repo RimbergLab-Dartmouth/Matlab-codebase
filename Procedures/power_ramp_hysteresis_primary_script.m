@@ -540,7 +540,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             temp.powers_vector = convert_Vp_to_dBm(squeeze(data.sampled_powers_Vp(m_dim_1, m_flux, m_gate,1 : end/2))) ...
                     - input_params.fridge_attenuation - input_params.additional_attenuation;
             temp.data_array_average_then_phase = squeeze(analysis.waveform_average_then_phase_difference(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start - 1 + ...
-                length(temp.detuning_vector),:));
+                length(temp.detuning_vector),1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate/2));
             temp.data_array_average_then_phase(temp.data_array_average_then_phase < input_params.analysis.min_phase_difference) = 0;
             surf(temp.detuning_vector, temp.powers_vector, temp.data_array_average_then_phase', 'linestyle', 'none')
             view(0,90)
@@ -607,7 +607,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             temp.powers_vector = convert_Vp_to_dBm(squeeze(data.sampled_powers_Vp(m_dim_1, m_flux, m_gate,1 : end/2))) ...
                     - input_params.fridge_attenuation - input_params.additional_attenuation;
             temp.data_array_average_then_phase = squeeze(analysis.alternating_average_then_phase(m_dim_1, m_flux, m_gate, m_detuning_start:m_detuning_start - 1 + ...
-                length(temp.detuning_vector),:));
+                length(temp.detuning_vector),1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate/2));
             surf(temp.detuning_vector, temp.powers_vector, temp.data_array_average_then_phase', 'linestyle', 'none')
             view(0,90)
             xlabel('$\Delta$ (MHz)', 'interpreter', 'latex')
