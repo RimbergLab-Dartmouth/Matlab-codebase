@@ -676,16 +676,23 @@ if run_params.awg.files_generation_param == 1
     input_params.buffer_trigger_lag(m_dim_1, m_flux, m_gate) = run_params.trigger_lag;
     input_params.buffer_trigger_number(m_dim_1, m_flux, m_gate) = round(run_params.trigger_lag * input_params.awg.clock); % number of output sampling points by which the trigger preceeds the pulse. 
     [sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power_chirped_wave_form_ramped_both_ways(input_params.awg.clock, input_params.if_freq, run_params.one_way_ramp_time, ...
-    run_params.down_time, run_params.awg.output_power_start, run_params.awg.output_power_stop, run_params.trigger_lag, input_params.digitizer.sample_rate);
+    run_params.down_time, run_params.stab_time_at_start_power, run_params.awg.output_power_start, run_params.awg.output_power_stop, run_params.trigger_lag, ...
+    input_params.digitizer.sample_rate);
     
     [~] = send_waveform_awg520(awg, time_axis, sin_wave, markers_data, ...
             run_params.awg.waveform_name(1:end -4));
-    data.wfm.powers_vp(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock) = powers_Vp;
+    data.wfm.powers_vp(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time + run_params.stab_time_at_start_power) * ...
+        input_params.awg.clock) = powers_Vp;
     powers_Vp_while_triggered = powers_Vp(powers_Vp ~= 0);
-    data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, 1:run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate) = powers_Vp_while_triggered(1:input_params.awg.clock/input_params.digitizer.sample_rate:end);
-    data.wfm.sin_wave(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock) = sin_wave;
-    data.wfm.time_axis(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock) = time_axis;
-    data.wfm.markers_data(m_dim_1, m_flux, m_gate, :, 1:(run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock) = markers_data;
+    powers_Vp_while_triggered(1 : run_params.stab_time_at_start_power * input_params.awg.clock) = [];
+    data.sampled_powers_Vp(m_dim_1, m_flux, m_gate, 1:run_params.digitizer.data_collection_time * ...
+        input_params.digitizer.sample_rate) = powers_Vp_while_triggered(1:input_params.awg.clock/input_params.digitizer.sample_rate:end);
+    data.wfm.sin_wave(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time + run_params.stab_time_at_start_power) * ...
+        input_params.awg.clock) = sin_wave;
+    data.wfm.time_axis(m_dim_1, m_flux, m_gate, 1:(run_params.digitizer.data_collection_time + run_params.down_time + run_params.stab_time_at_start_power) * ...
+        input_params.awg.clock) = time_axis;
+    data.wfm.markers_data(m_dim_1, m_flux, m_gate, :, 1:(run_params.digitizer.data_collection_time + run_params.down_time + run_params.stab_time_at_start_power) * ...
+        input_params.awg.clock) = markers_data;
     clear time_axis ...
           sin_wave ...
           markers_data ...
@@ -908,7 +915,7 @@ if (detuning_point > run_params.detuning_point_end + run_params.detuning_point_s
 end
 %% plotting data for run
 %%%% plotting raw voltage data averaged
-if run_params.save_data_and_png_param == 1 || run_params.plot_visible == 1
+if (run_params.save_data_and_png_param == 1 || run_params.plot_visible == 1) && run_params.plot_each_individual_data_slice
     disp('plotting figs for run')
     if run_params.plot_visible == 1
         raw_data_fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
@@ -928,14 +935,14 @@ if run_params.save_data_and_png_param == 1 || run_params.plot_visible == 1
     if run_params.save_data_and_png_param == 1
         save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
             '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
-            num2str(run_params.one_way_ramp_time*1e6) 'us_raw_data_from_' ...
+            num2str(round(run_params.one_way_ramp_time*1e6)) 'us_raw_data_from_' ...
             num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.png'];
         saveas(raw_data_fig, save_file_name)
     end
     if run_params.save_fig_file_param == 1
         save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
             '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
-            num2str(run_params.one_way_ramp_time*1e6) 'us_raw_data_from_' ...
+            num2str(round(run_params.one_way_ramp_time*1e6)) 'us_raw_data_from_' ...
             num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.fig'];
         saveas(raw_data_fig, save_file_name)
     end
@@ -1011,14 +1018,14 @@ if run_params.save_data_and_png_param == 1 || run_params.plot_visible == 1
     if run_params.save_data_and_png_param == 1
         save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
             '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
-            num2str(run_params.one_way_ramp_time) 'us_hysteresis_from_' ...
+            num2str(round(run_params.one_way_ramp_time*1e6)) 'us_hysteresis_from_' ...
             num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.png'];
         saveas(hysteresis_fig, save_file_name)
     end
     if run_params.save_fig_file_param == 1
         save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) '_' num2str(m_detuning) ...
             '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_detuning_' num2str(detuning_point) 'MHz_1way_ramp_time_' ...
-            num2str(run_params.one_way_ramp_time) 'us_hysteresis_from_' ...
+            num2str(round(run_params.one_way_ramp_time*1e6)) 'us_hysteresis_from_' ...
             num2str(run_params.input_power_start) '_to_' num2str(run_params.input_power_stop) 'dBm.fig'];
         saveas(hysteresis_fig, save_file_name)
     end
@@ -1034,7 +1041,7 @@ clear_alazar_board_variables
 clear_instruments
 %% waveform generation function
 function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power_chirped_wave_form_ramped_both_ways(awg_clock, if_freq, ramp_length, ...
-    length_of_down_time, sin_start_amp_dBm, sin_stop_amp_dBm, buffer_trigger_time, digitizer_sampling_freq)
+    length_of_down_time, length_of_stab_time_at_start_power, sin_start_amp_dBm, sin_stop_amp_dBm, buffer_trigger_time, digitizer_sampling_freq)
     % awg_clock is AWG sampling rate in S/s
     % all times in us.
     % sin wave generated at 84MHz
@@ -1087,7 +1094,7 @@ function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power
         return
     end
 
-    approximate_points_per_sequence = (2*ramp_length + length_of_down_time) * awg_clock; 
+    approximate_points_per_sequence = (2*ramp_length + length_of_down_time + length_of_stab_time_at_start_power) * awg_clock; 
     last_time_point = (approximate_points_per_sequence - 1) * 1/awg_clock ;
 
 
@@ -1106,22 +1113,25 @@ function[sin_wave, time_axis, markers_data, powers_Vp] = function_generate_power
 
     marker_1 = zeros(length(time_axis),1);
     marker_2 = marker_1;
-    powers_Vp = (sin_amp_start_Vp + ramp_rate.*(time_axis - length_of_down_time/2));
+    powers_Vp = (sin_amp_start_Vp + ramp_rate.*(time_axis - length_of_down_time/2 - length_of_stab_time_at_start_power));
+    powers_Vp(time_axis < length_of_down_time/2 + length_of_stab_time_at_start_power) = sin_amp_start_Vp;
     sin_wave = powers_Vp .*sin(2*pi*sin_wave_freq.*(time_axis - length_of_down_time/2)+ pi/180*sin_wave_phase);
     sin_wave(time_axis < length_of_down_time/2) = 0;
     sin_wave(time_axis > last_time_point - length_of_down_time/2 - ramp_length + 1/awg_clock) = 0;
     powers_Vp(sin_wave == 0) = 0;
     sin_wave_flipped = flip(sin_wave(sin_wave~=0));
     powers_flipped = flip(powers_Vp(sin_wave ~=0));
+    sin_wave_flipped(end - length_of_stab_time_at_start_power * awg_clock + 1 : end) = [];
+    powers_flipped(end - length_of_stab_time_at_start_power * awg_clock + 1: end) = [];
     sin_wave_flipped = sin_wave_flipped(2:end); % this is so the peak point doesn't repeat twice in the ramp up and down
     powers_flipped = powers_flipped(2:end); % this is so the peak point doesn't repeat twice in the ramp up and down
-    pre_ramp_down_section = sin_wave(time_axis < (ramp_length + length_of_down_time/2 + 0.5/awg_clock));
-    pre_ramp_down_section_powers = powers_Vp(time_axis < (ramp_length + length_of_down_time/2 + 0.5/awg_clock));
+    pre_ramp_down_section = sin_wave(time_axis < (ramp_length + length_of_down_time/2 + length_of_stab_time_at_start_power + 0.5/awg_clock));
+    pre_ramp_down_section_powers = powers_Vp(time_axis < (ramp_length + length_of_down_time/2 + length_of_stab_time_at_start_power + 0.5/awg_clock));
     post_ramp_down_section = zeros(1,length(time_axis(time_axis > last_time_point - length_of_down_time/2)));
     sin_wave = 2 *[pre_ramp_down_section, sin_wave_flipped(1:end - 1), post_ramp_down_section];
     % factor of 2 because the AWG seems to output a Vpp of x when the wave is of the form x*sin(omega t), NOT Vp = x.  
     powers_Vp = [pre_ramp_down_section_powers, powers_flipped(1:end - 1), post_ramp_down_section];
-    pulse_start_point = find(sin_wave ~= 0, 1);
+    pulse_start_point = find(sin_wave ~= 0, 1) + length_of_stab_time_at_start_power * awg_clock;
     pulse_end_point = length(sin_wave) - find(flip(sin_wave) ~=0, 1);
     
     marker_2(pulse_start_point + buffer_trigger : pulse_end_point) = 1;

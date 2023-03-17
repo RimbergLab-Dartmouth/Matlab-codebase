@@ -15,13 +15,14 @@ if run_params.concatenate_runs
 end
 run_params.save_data_and_png_param = 1; % 0/1 - decides whether to save data and figs or not. 
 run_params.save_fig_file_param = 1; % fig file for actual time trace of phase. usually very large for ms data at high sampling
+run_params.plot_each_individual_data_slice = 1; % decides whether each(averaged)ramp scan should be plotted or not.
 run_params.plot_visible = 0;
 run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in a pre recorded data set.
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
-run_params.m_gate = 1;
-run_params.dim_1_placeholder_number = 2;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
+run_params.m_gate = 7;
+run_params.dim_1_placeholder_number = 10;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
@@ -81,7 +82,8 @@ if mod(run_params.dim_1_placeholder_number, 2) == 0 && run_params.input_power_st
 end
 clear temp
     
-run_params.one_way_ramp_time = 8e-6; % in s
+run_params.stab_time_at_start_power = 2e-6; % in s. stays constant at the start power for this long at the run start, before acquisition and so on.
+run_params.one_way_ramp_time = 24e-6; % in s
 run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
 % run_params.trigger_lag = 240e-9;
 run_params.trigger_lag = 230e-9;%0;
@@ -92,8 +94,8 @@ input_params.awg.clock = 840e6; % the code is designed for this to be at 840MS/s
 input_params.awg.input_IF_waveform_freq = 84e6; % the IF to IQ4509 is at 84MHz, defined in the AWG waveforms
 run_params.awg.output_power_start = run_params.input_power_start + input_params.fridge_attenuation + input_params.additional_attenuation;
 run_params.awg.output_power_stop = run_params.input_power_stop + input_params.fridge_attenuation + input_params.additional_attenuation; 
-run_params.awg.waveform_name = [num2str(round(run_params.input_power_start, 1)) 'dBm_to_' num2str(round(run_params.input_power_stop, 1)) 'dBm_' ...
-    num2str(round(run_params.one_way_ramp_time *1e6, 1)) '_ramp_hyst.wfm'];
+run_params.awg.waveform_name = [num2str(round(run_params.input_power_start, 1)) '_to_' num2str(round(run_params.input_power_stop, 1)) 'dBm_' ...
+    num2str(round(run_params.stab_time_at_start_power*1e6)) '_stab_' num2str(round(run_params.one_way_ramp_time *1e6, 1)) '_ramp_hyst.wfm'];
 %% Input params -  VNA parameter settings
 input_params.vna.average_number = 50;
 input_params.vna.IF_BW = 1e3;
@@ -140,7 +142,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             run_params.awg_directory = ['/' run_params.awg_switching_directory_name '/' date(1:7)];
             clear date;
             if run_params.concatenate_runs
-                run_params.fig_directory = [cd '\plots_hysteresis_230314\'];
+                run_params.fig_directory = [cd '\plots_hysteresis_flux' num2str(run_params.flux_1_value*1000) 'm\'];
             end
 
             if run_params.concatenate_runs && run_params.initialize_or_load 
@@ -334,7 +336,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
                 temp.required_data_length_digitizer_all_points = run_params.digitizer.data_collection_time * input_params.digitizer.sample_rate;
                 temp.required_data_length_digitizer_averaged_points = run_params.digitizer.data_collection_time * input_params.if_freq / ...
                     input_params.number_readout_IF_waveforms_averaged_into_single_point;
-                temp.required_data_length_awg = (run_params.digitizer.data_collection_time + run_params.down_time) * input_params.awg.clock;
+                temp.required_data_length_awg = (run_params.digitizer.data_collection_time + run_params.down_time + run_params.stab_time_at_start_power) * input_params.awg.clock;
                 temp.current_data_length_digitizer_all_points = size(analysis.waveform_average_then_phase, 5);
                 temp.current_data_length_digitizer_averaged_points = size(analysis.awg_powers_Vp_corresponding_to_averaged_phase_data, 5);
                 temp.current_data_length_awg = size(data.wfm.powers_vp, 4);
@@ -402,6 +404,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
                 input_params.input_power_start(m_dim_1, m_flux, m_gate, m_detuning) = run_params.input_power_start;
                 input_params.input_power_stop(m_dim_1, m_flux, m_gate, m_detuning) = run_params.input_power_stop;
                 input_params.one_way_ramp_time(m_dim_1, m_flux, m_gate, m_detuning) = run_params.one_way_ramp_time;
+                input_params.stab_time_at_start_power(m_dim_1, m_flux, m_gate, m_detuning) = run_params.stab_time_at_start_power;
                 data.detunings(m_dim_1, m_flux, m_gate, m_detuning) = detuning_point;
                 data.run_number(m_dim_1, m_flux, m_gate, m_detuning) = input_params.run_number;
                 input_params.run_order(m_dim_1, m_flux, m_gate, m_detuning) = input_params.run_number;
@@ -519,13 +522,13 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             if run_params.save_data_and_png_param == 1
                 save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-                    num2str(run_params.one_way_ramp_time*1e6) 'us_phase_then_average.png'];
+                    num2str(round(run_params.one_way_ramp_time*1e6)) 'us_phase_then_average.png'];
                 saveas(surf_plot_phase_then_average_fig, save_file_name)
             end
             if run_params.save_fig_file_param == 1
                 save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-                    num2str(run_params.one_way_ramp_time*1e6) 'us_phase_then_average.fig'];
+                    num2str(round(run_params.one_way_ramp_time*1e6)) 'us_phase_then_average.fig'];
                 saveas(surf_plot_phase_then_average_fig, save_file_name)
             end
             clear surf_plot_phase_then_average_fig ...
@@ -554,13 +557,13 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             if run_params.save_data_and_png_param == 1
                 save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-                    num2str(run_params.one_way_ramp_time*1e6) 'us_average_then_phase.png'];
+                    num2str(round(run_params.one_way_ramp_time*1e6)) 'us_average_then_phase.png'];
                 saveas(surf_plot_average_then_phase_fig, save_file_name)
             end
             if run_params.save_fig_file_param == 1
                 save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-                    num2str(run_params.one_way_ramp_time*1e6) 'us_average_then_phase_difference.fig'];
+                    num2str(round(run_params.one_way_ramp_time*1e6)) 'us_average_then_phase_difference.fig'];
                 saveas(surf_plot_average_then_phase_fig, save_file_name)
             end
             clear surf_plot_average_then_phase_fig ...
@@ -589,13 +592,13 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             if run_params.save_data_and_png_param == 1
                 save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-                    num2str(run_params.one_way_ramp_time*1e6) 'us_alternating_phase_then_average.png'];
+                    num2str(round(run_params.one_way_ramp_time*1e6)) 'us_alternating_phase_then_average.png'];
                 saveas(surf_plot_alternating_phase_then_average_fig, save_file_name)
             end
             if run_params.save_fig_file_param == 1
                 save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-                    num2str(run_params.one_way_ramp_time*1e6) 'us_alternating_phase_then_average.fig'];
+                    num2str(round(run_params.one_way_ramp_time*1e6)) 'us_alternating_phase_then_average.fig'];
                 saveas(surf_plot_alternating_phase_then_average_fig, save_file_name)
             end
             clear surf_plot_alternating_phase_then_average_fig ...
@@ -622,13 +625,13 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             if run_params.save_data_and_png_param == 1
                 save_file_name = [run_params.fig_directory num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-                    num2str(run_params.one_way_ramp_time*1e6) 'us_alternating_average_then_phase.png'];
+                    num2str(round(run_params.one_way_ramp_time*1e6)) 'us_alternating_average_then_phase.png'];
                 saveas(surf_plot_alternating_average_then_phase_fig, save_file_name)
             end
             if run_params.save_fig_file_param == 1
                 save_file_name = [run_params.fig_directory '\fig_files\' num2str(m_dim_1) '_' num2str(m_flux) '_' num2str(m_gate) ...
                     '_ng_' num2str(run_params.ng_1_value) '_flux_' num2str(run_params.flux_1_value*1000) 'm_1way_ramp_time_' ...
-                    num2str(run_params.one_way_ramp_time*1e6) 'us_alternating_average_then_phase_difference.fig'];
+                    num2str(round(run_params.one_way_ramp_time*1e6)) 'us_alternating_average_then_phase_difference.fig'];
                 saveas(surf_plot_alternating_average_then_phase_fig, save_file_name)
             end
             clear surf_plot_alternating_average_then_phase_fig ...
