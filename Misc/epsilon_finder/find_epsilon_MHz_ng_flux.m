@@ -1,6 +1,6 @@
 function [epsilon_required_MHz, flux_pump_amp_at_sample_in_quanta] = find_epsilon_MHz_ng_flux(ng_value, flux_value, flux_pump_power_dB_at_room_temp)
     
-    load(['D:\Academics\E-Books\Dartmouth\Rimberg Lab\Data\Sample Design\' ...
+    load(['D:\Academics\E-Books\Dartmouth\Rimberg_Lab\Data\Sample Design\' ...
     'epsilon_finder\domega_dphi_data_for_jules_sample.mat'], 'gate_values', 'flux_values', 'domega_dphi_MHz');
 
     ng_value = mod(ng_value,2);
