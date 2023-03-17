@@ -22,7 +22,7 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
 run_params.m_gate = 7;
-run_params.dim_1_placeholder_number = 8;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
+run_params.dim_1_placeholder_number = 14;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
@@ -83,7 +83,7 @@ end
 clear temp
     
 run_params.stab_time_at_start_power = 2e-6; % in s. stays constant at the start power for this long at the run start, before acquisition and so on.
-run_params.one_way_ramp_time = 8e-6; % in s
+run_params.one_way_ramp_time = 4e-6; % in s
 run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
 % run_params.trigger_lag = 240e-9;
 run_params.trigger_lag = 230e-9;%0;
