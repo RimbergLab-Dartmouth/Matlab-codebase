@@ -15,14 +15,14 @@ if run_params.concatenate_runs
 end
 run_params.save_data_and_png_param = 1; % 0/1 - decides whether to save data and figs or not. 
 run_params.save_fig_file_param = 1; % fig file for actual time trace of phase. usually very large for ms data at high sampling
-run_params.plot_each_individual_data_slice = 0; % decides whether each (averaged)ramp scan 
+run_params.plot_each_individual_data_slice = 1; % decides whether each(averaged)ramp scan should be plotted or not.
 run_params.plot_visible = 0;
 run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in a pre recorded data set.
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
 run_params.m_gate = 7;
-run_params.dim_1_placeholder_number = 10;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
+run_params.dim_1_placeholder_number = 13;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
@@ -142,7 +142,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             run_params.awg_directory = ['/' run_params.awg_switching_directory_name '/' date(1:7)];
             clear date;
             if run_params.concatenate_runs
-                run_params.fig_directory = [cd '\plots_hysteresis_230314\'];
+                run_params.fig_directory = [cd '\plots_hysteresis_flux_' num2str(run_params.flux_1_value*1000) 'm\'];
             end
 
             if run_params.concatenate_runs && run_params.initialize_or_load 
