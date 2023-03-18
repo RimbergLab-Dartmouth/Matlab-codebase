@@ -7,7 +7,7 @@
 %%%% freq, amp, phase
 run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to concatenate data to an existing file
 run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
-run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
+run_params.redo_previously_saved_run = 1; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 % run_params.analysis_during_acquisition = 1; % to analyse during acquisition, or analyse separately.
 if run_params.concatenate_runs
     run_params.data_directory = [cd '\data_hysteresis_230314'];
@@ -22,7 +22,7 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 1;
 run_params.m_gate = 7;
-run_params.dim_1_placeholder_number = 13;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
+run_params.dim_1_placeholder_number = 1;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
@@ -83,7 +83,7 @@ end
 clear temp
     
 run_params.stab_time_at_start_power = 2e-6; % in s. stays constant at the start power for this long at the run start, before acquisition and so on.
-run_params.one_way_ramp_time = 24e-6; % in s
+run_params.one_way_ramp_time = 8e-6; % in s
 run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
 % run_params.trigger_lag = 240e-9;
 run_params.trigger_lag = 230e-9;%0;
@@ -145,7 +145,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
                 run_params.fig_directory = [cd '\plots_hysteresis_flux_' num2str(run_params.flux_1_value*1000) 'm\'];
             end
 
-            if run_params.concatenate_runs && run_params.initialize_or_load 
+            if run_params.concatenate_runs && run_params.initialize_or_load && ~exist('analysis', 'var')
                 load([run_params.data_directory '\' run_params.file_name], '-regexp', '^(?!(run_params|bias_point|gain_prof)$).')  
                 disp(['loaded ' run_params.file_name '. Continue?'])
                 pause
@@ -182,7 +182,7 @@ for m_dim_1 = run_params.dim_1_placeholder_number : run_params.dim_1_placeholder
             if ~isfield(input_params, 'run_number')
                 input_params.run_number = 0;
             elseif run_params.redo_previously_saved_run 
-                disp(['suggested run_number - 1 = ' num2str((m_power - 1)/2 *length(input_params.flux_1_value_list)*length(input_params.ng_1_value_list) ...
+                disp(['suggested run_number - 1 = ' num2str((m_dim_1 - 1)/2 *length(input_params.flux_1_value_list)*length(input_params.ng_1_value_list) ...
                     + (m_flux - 1) * length(input_params.ng_1_value_list) + m_gate - 1)])
                 input_params.run_number = input('what is the desired run number - 1?');
     %                 input_params.run_number = input_params.run_number - 1;
