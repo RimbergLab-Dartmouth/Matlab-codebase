@@ -18,14 +18,20 @@ input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 5;
 run_params.m_gate = 7;
-run_params.dim_1_placeholder_number = 5;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
+%%% to keep array sizes tractable, relabel flux array number to 1.
+input_params.flux_1_value_list(1) = input_params.flux_1_value_list(run_params.m_flux);
+run_params.m_flux = 1;
+%%%%%%%%%%%%%
+run_params.dim_1_placeholder_number = 1;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
 
 
 if run_params.concatenate_runs
     run_params.data_directory = [cd '\data_hysteresis_230314'];
+%     run_params.file_name = ['hysteresis_comprehensive_data_flux_' num2str(input_params.flux_1_value_list(run_params.m_flux)*1000) ...
+%         'm_gate_' num2str(input_params.ng_1_value_list(run_params.m_gate)*1000) 'm.mat'];
     run_params.file_name = ['hysteresis_comprehensive_data_flux_' num2str(input_params.flux_1_value_list(run_params.m_flux)*1000) ...
-        'm_gate_' num2str(input_params.ng_1_value_list(run_params.m_gate)*1000) 'm.mat'];
+            'm.mat'];
 end
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
@@ -86,7 +92,7 @@ end
 clear temp
     
 run_params.stab_time_at_start_power = 2e-6; % in s. stays constant at the start power for this long at the run start, before acquisition and so on.
-run_params.one_way_ramp_time = 24e-6; % in s
+run_params.one_way_ramp_time = 4e-6; % in s
 run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
 % run_params.trigger_lag = 240e-9;
 run_params.trigger_lag = 80e-9;%0;
