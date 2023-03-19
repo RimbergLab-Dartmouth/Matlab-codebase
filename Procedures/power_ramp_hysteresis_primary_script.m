@@ -1,4 +1,4 @@
-%% input params start
+            %% input params start
 %%%% ensure that a 'bias_point_struct' is initialized in the workspace which
 %%%% contains :
 %%%% flux_zero_voltage, flux_period, gate_offset, gate_period,
@@ -9,10 +9,6 @@ run_params.concatenate_runs = 1; % 0/1 - decides whether this run is going to co
 run_params.initialize_or_load  = 1; % 0 - initialize, 1 - load old data. run will pause after loading old data. if it doesn't, run not loaded.
 run_params.redo_previously_saved_run = 0; % if this is the same as the previous run, redone for some reason, this will make sure it is overwritten.
 % run_params.analysis_during_acquisition = 1; % to analyse during acquisition, or analyse separately.
-if run_params.concatenate_runs
-    run_params.data_directory = [cd '\data_hysteresis_230314'];
-    run_params.file_name = 'hysteresis_comprehensive_data.mat';
-end
 run_params.save_data_and_png_param = 1; % 0/1 - decides whether to save data and figs or not. 
 run_params.save_fig_file_param = 1; % fig file for actual time trace of phase. usually very large for ms data at high sampling
 run_params.plot_each_individual_data_slice = 1; % decides whether each(averaged)ramp scan should be plotted or not.
@@ -21,9 +17,16 @@ run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in 
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
 run_params.m_flux = 5;
-run_params.m_gate = 1;
-run_params.dim_1_placeholder_number = 1;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
+run_params.m_gate = 7;
+run_params.dim_1_placeholder_number = 5;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
+
+
+if run_params.concatenate_runs
+    run_params.data_directory = [cd '\data_hysteresis_230314'];
+    run_params.file_name = ['hysteresis_comprehensive_data_flux_' num2str(input_params.flux_1_value_list(run_params.m_flux)*1000) ...
+        'm_gate_' num2str(input_params.ng_1_value_list(run_params.m_gate)*1000) 'm.mat'];
+end
 
 run_params.detuning_point_start = -20; % in MHz % do not exceed +/- 50MHz
 run_params.detuning_point_end = 1; % in MHz. 
@@ -83,7 +86,7 @@ end
 clear temp
     
 run_params.stab_time_at_start_power = 2e-6; % in s. stays constant at the start power for this long at the run start, before acquisition and so on.
-run_params.one_way_ramp_time = 4e-6; % in s
+run_params.one_way_ramp_time = 24e-6; % in s
 run_params.down_time = 10e-6; % in s, down time between repeating ramped pulses
 % run_params.trigger_lag = 240e-9;
 run_params.trigger_lag = 80e-9;%0;
