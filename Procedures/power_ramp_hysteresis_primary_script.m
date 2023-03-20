@@ -1,4 +1,4 @@
-            %% input params start
+%% input params start
 %%%% ensure that a 'bias_point_struct' is initialized in the workspace which
 %%%% contains :
 %%%% flux_zero_voltage, flux_period, gate_offset, gate_period,
@@ -16,13 +16,13 @@ run_params.plot_visible = 0;
 run_params.set_with_pre_recorded = 1; %%% verify set res freq with one saved in a pre recorded data set.
 input_params.ng_1_value_list = 0: 0.1:0.7;
 input_params.flux_1_value_list = 0: 0.04 : .24;
-run_params.m_flux = 5;
+run_params.m_flux = 7;
 run_params.m_gate = 7;
 %%% to keep array sizes tractable, relabel flux array number to 1.
 input_params.flux_1_value_list(1) = input_params.flux_1_value_list(run_params.m_flux);
 run_params.m_flux = 1;
 %%%%%%%%%%%%%
-run_params.dim_1_placeholder_number = 1;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
+run_params.dim_1_placeholder_number = 2;  % if this number is odd, does an increasing power ramp first, then a decreasing. if even, vice versa
 run_params.number_ramps_to_average = 5000;
 
 
