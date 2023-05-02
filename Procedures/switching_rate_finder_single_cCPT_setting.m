@@ -1153,13 +1153,13 @@ saveData = false;
 % TODO: Select if you wish to plot the data to a chart
 drawData = false;
 
-if input_level <= .1
+if input_level <= .0045
     input_range = .2;
-elseif input_level > .1 && input_level <= .2
+elseif input_level > .0045 && input_level <= .009
     input_range = .4;
-elseif input_level > .2 && input_level <= .4
+elseif input_level > .009 && input_level <= .018
     input_range = .8;
-elseif input_level > .4 && input_level <=2
+elseif input_level > .018 && input_level <=.045
     input_range = 2;
 else
     disp('input level too high')
