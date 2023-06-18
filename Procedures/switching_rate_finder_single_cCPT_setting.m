@@ -810,6 +810,14 @@ clear mean_matrix amp_row_mean
 %%% get rid of CH B data (just noise, but collected to avoid digitizer hanging up 
 raw_data_array.time = raw_data_array.time(:, 1:size(raw_data_array.time,2)/2);
 raw_data_array.voltage = raw_data_array.voltage(:, 1:size(raw_data_array.voltage,2)/2);
+
+%%%% mid run plotting script
+% [~, temp_phase] = get_amp_and_phase(raw_data_array.time(1, :), raw_data_array.voltage(1,:), input_params.awg.input_IF_waveform_freq, input_params.digitizer.sample_rate);
+% figure
+% plot(raw_data_array.time, raw_data_array.voltage)
+% figure
+% plot(raw_data_array.time, temp_phase)
+%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% prepare to save data for post run analysis
 if ~run_params.analysis_during_acquisition
