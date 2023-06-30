@@ -46,7 +46,7 @@ run_params.i = 1;
 run_params.loop_running = true;
 run_params.last_save_time = 0;
 tic
-figure
+res_freq_fig = figure;
 while run_params.loop_running
     pause(input_params.monitoring_time_spacing)
     %%%% set one marker at the initial res freq
@@ -63,10 +63,14 @@ while run_params.loop_running
     input_params.min_finder.channel_number,input_params.min_finder.trace_number);
     data.time(run_params.i) = toc;
     %%%%%
-    plot(data.time, data.res_freq_array)
+    plot(data.time, data.res_freq_array/1e9)
     drawnow
+    xlabel('Time (s)')
+    ylabel('$\omega_0$ (GHz)', 'interpreter', 'latex')
     if data.time(run_params.i) - run_params.last_save_time > input_params.data_saving_time_interval
         save([input_params.data_directory input_params.file_name '.mat'], '-regexp', '^(?!(run_params)$).')
+        saveas(res_freq_fig ,[input_params.fig_directory input_params.file_name '.png'])
+        saveas(res_freq_fig ,[input_params.fig_directory 'fig_files\' input_params.file_name '.fig'])
     end
     run_params.i = run_params.i + 1;
 end
