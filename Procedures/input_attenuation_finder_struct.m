@@ -6,7 +6,7 @@ input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 %% bias point and power sweep settings
 input_params.ng_value = 0.56;
 input_params.flux_value = 0.53;
-run_params.file_name = ['_fridge_attenuation_ng_0p' num2str(input_params.ng_value*100) '_flux_0p' num2str(input_params.flux_value*100)];
+run_params.file_name = ['fridge_attenuation_ng_0p' num2str(input_params.ng_value*100) '_flux_0p' num2str(input_params.flux_value*100)];
 input_params.constants.planck = 6.626e-34;
 
 input_params.power_start_dBm = -65; % at the insert top
