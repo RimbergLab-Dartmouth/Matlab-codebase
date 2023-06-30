@@ -400,6 +400,7 @@ vna_set_power(vna, -65)
 vna_turn_output_off(vna)
 %% save data before final analysis
 save([run_params.data_directory run_params.file_name '.mat'], '-regexp', '^(?!(run_params)$).')
+%% Final analysis
 [~, analysis.min_freq_points_index] = min(data.zoom.amp, [], 2);
 for m_power = 1 : size(analysis.min_freq_points_index)
     analysis.min_freq_points (m_power) = data.zoom.freq(m_power, analysis.min_freq_points_index(m_power));
