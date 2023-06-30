@@ -203,6 +203,8 @@ if plotting.figs_visible
     xlabel('Gate electrons', 'interpreter', 'latex')    
     ylabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
     title('data', 'interpreter', 'latex')
+%     xlim([-0.6, 0.6])
+%     ylim([-1, 0.1])
     caxis([5.71 5.815])
     view(0,90)
     subplot(1,3,2)
@@ -211,12 +213,16 @@ if plotting.figs_visible
     title(['fit' 13 10 'average error = ' num2str(round(mean(mean(abs(analysis.ej_ec_fit.theory_freqs - squeeze(analysis.flucs_angle.resonance_fits(:, :, 1))))),2)/1e6) 'MHz'] ...
         , 'interpreter', 'latex')
     xlabel('Gate electrons', 'interpreter', 'latex')
+%     xlim([-0.6, 0.6])
+%     ylim([-1, 0.1])
     view(0,90)
     caxis([5.71 5.815])
     subplot(1,3,3)
     surf(input_params.ng_values, input_params.flux_values, squeeze(analysis.ej_ec_ben_values.theory_freqs/1e9), 'linestyle', 'none')
     title(['Ben fit' 13 10 'average error = ' num2str(round(mean(mean(abs(analysis.ej_ec_ben_values.theory_freqs - squeeze(analysis.flucs_angle.resonance_fits(:, :, 1))))),2)/1e6) 'MHz'], ...
         'interpreter', 'latex')
+%     xlim([-0.6, 0.6])
+%     ylim([-1, 0.1])
     xlabel('Gate electrons', 'interpreter', 'latex')
     view(0,90)
     caxis([5.71 5.815])    
@@ -225,8 +231,10 @@ if plotting.figs_visible
     set(hL,'Rotation',90);
     clear c ...
           hL
-    sgtitle(['Fit values : $E_J$ = ' num2str(round(analysis.ej_ec_fit.params(2)/1e9, 2)) ' GHz, $E_C$ = ' num2str(round(analysis.ej_ec_fit.params(3)/1e9, 2)) ' GHz' 13 10 ...
+    sgtitle(['Fit values : $E_J$ = ' num2str(round(analysis.ej_ec_fit.params(2)/1e9, 1)) ' GHz, $E_C$ = ' num2str(round(analysis.ej_ec_fit.params(3)/1e9, 1)) ' GHz' 13 10 ...
         'Ben fit : $E_J$ = 14.8 GHz, $E_C$ = 52.1 GHz' ], 'interpreter', 'latex', 'fontsize', 46)
+    %         ], 'interpreter', 'latex', 'fontsize', 46)
+
     if plotting.save_figures_png
         saveas(gcf, [plotting.png_file_dir 'res_freqs_surf_plots.png'])
     end
@@ -394,28 +402,30 @@ end
 if plotting.figs_visible
     y_axis_start_value = 5.7;
     y_axis_end_value = 5.815;
-    colors = parula(input_params.flux_number);
+    num_to_plot = (input_params.flux_number - 1)/2; %input_params.flux_number
+    colors = parula(num_to_plot);
     figure
     hold on
-    for m_flux = 1:input_params.flux_number
+    for m_flux = 1:num_to_plot
         plot(input_params.ng_values,squeeze(analysis.flucs_angle.resonance_fits(m_flux, :, 1))/1e9, '-x', ...
-        'markersize', 16, 'color', colors(m_flux, :))
+        'markersize', 16, 'color', colors(m_flux, :), 'linewidth', 3)
     end
-    xlabel('Gate electrons', 'interpreter', 'latex')
-    ylabel('$\omega_0/2\pi$(GHz)', 'interpreter', 'latex')
+    xlabel('$n_g$', 'interpreter', 'latex', 'fontsize', 56)
+    ylabel('$\omega_0/2\pi$(GHz)', 'interpreter', 'latex', 'fontsize', 56)
     title('Resonance freqs from fit with flucs and angle', 'interpreter', 'latex')
     axis([input_params.ng_values(1) input_params.ng_values(end) y_axis_start_value y_axis_end_value])
     c = colorbar;
-    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex');     
+    hL = ylabel(c,'$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex', 'fontsize', 56);     
     set(hL,'Rotation',90);
     c.Ticks = linspace(0, 1, 10);
-    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(end), 10), 2);
+    c.TickLabels = round(linspace(input_params.flux_values(1), input_params.flux_values(num_to_plot), 10), 2);
     clear c ...
           hL ...
           m_flux ...
           colors ...
           y_axis_start_value ...
-          y_axis_end_value
+          y_axis_end_value ...
+          num_to_plot
     if plotting.save_figures_png
         saveas(gcf, [plotting.png_file_dir 'res_freq_line_plots_vs_gate.png'])
     end
@@ -628,14 +638,16 @@ if plotting.figs_visible
     hold on
     for m_gate = 1 : input_params.ng_number
         plot(input_params.flux_values,squeeze(analysis.flucs_angle.resonance_fits(:, m_gate, 1))/1e9, '-x', ...
-        'markersize', 16, 'color', colors(m_gate, :))
+        'markersize', 16, 'color', colors(m_gate, :), 'linewidth', 3, 'markersize', 10)
+%         plot(input_params.flux_values,squeeze(analysis.ej_ec_ben_values.theory_freqs(:, m_gate, 1))/1e9, '-', ...
+%         'markersize', 16, 'color', colors(m_gate, :))
     end
-    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex')
-    ylabel('$\omega_0/2\pi$(GHz)', 'interpreter', 'latex')
+    xlabel('$\Phi_{\mathrm{ext}}/\Phi_0$', 'interpreter', 'latex', 'Fontsize', 56)
+    ylabel('$\omega_0/2\pi$(GHz)', 'interpreter', 'latex','Fontsize', 56)
     title('Resonance freqs from fit with flucs and angle', 'interpreter', 'latex')
     axis([input_params.flux_values(1) input_params.flux_values(end) y_axis_start_value y_axis_end_value])
     c = colorbar;
-    hL = ylabel(c,'gate electrons', 'interpreter', 'latex');     
+    hL = ylabel(c,'$n_g$', 'interpreter', 'latex','Fontsize', 56);     
     set(hL,'Rotation',90);
     c.Ticks = linspace(0, 1, 10);
     c.TickLabels = round(linspace(input_params.ng_values(1), input_params.ng_values(end), 10), 2);
