@@ -15,7 +15,7 @@ input_params.vna.rough_center = 5.76e9;
 input_params.vna.rough_span = 250e6;
 input_params.vna.rough_IF_BW = 10e3;
 input_params.vna.rough_number_points = 1601;
-input_params.vna.zoom_span = 20e6;
+input_params.vna.zoom_span = 30e6;
 input_params.vna.zoom_IF_BW = 1e3;
 input_params.vna.zoom_average_number = 50;
 input_params.vna.zoom_number_points = 301;
@@ -64,6 +64,11 @@ while run_params.loop_running
     data.time(run_params.i) = toc;
     %%%%%
     plot(data.time, data.res_freq_array/1e9)
+    if run_params.i > 2
+        hold on
+        plot([data.time(1), data.time(run_params.i)], data.res_freq_array(2)*ones(1,2)/1e9, 'displayname', 'Initial res freq')
+        hold off
+    end
     drawnow
     xlabel('Time (s)')
     ylabel('$\omega_0$ (GHz)', 'interpreter', 'latex')
