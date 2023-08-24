@@ -32,7 +32,7 @@ function[flux_period,flux_offset,center_freq, offset_slope]=identify_flux_period
         flux_offset = flux_period + flux_offset;
     end
     while flux_offset > max(flux_values)
-        flux_offset = flux_period - flux_offset;
+        flux_offset = -(flux_period - flux_offset);
     end
 
     flux_values_theory = linspace(min(flux_values),max(flux_values),60);
