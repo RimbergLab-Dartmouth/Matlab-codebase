@@ -108,25 +108,26 @@ sigmas_gate = gate_scan.fits.resonance_fits_gate(:,4);
 flux_value_gate = mean(squeeze(gate_scan.dc_bias(:,:,2)))*input_params.flux_series_resistor;
 gate_values_gate = squeeze(gate_scan.dc_bias(:,:,1));
 
+gate_start_over = 1; % repeats the analysis until satisfied.
+while (gate_start_over == 1)
 
-figure
-plot(gate_values_gate,res_freqs_gate,'o','DisplayName','data')
-hold on
-plot(gate_values_gate, 5.802e9*gate_values_gate./gate_values_gate, '--', 'displayName', 'cutoff for fit')
-xlabel('Gate input Voltage (V)')
-ylabel('Resonant Freqs (Hz)')
-title('Raw data, gate sweep')
-legend show
+    figure
+    plot(gate_values_gate,res_freqs_gate,'o','DisplayName','data')
+    hold on
+    plot(gate_values_gate, 5.802e9*gate_values_gate./gate_values_gate, '--', 'displayName', 'cutoff for fit')
+    xlabel('Gate input Voltage (V)')
+    ylabel('Resonant Freqs (Hz)')
+    title('Raw data, gate sweep')
+    legend show
 
-gate_start_over = 1;
-while (gate_star_over == 1)
+
     number_even = input('how many even bands do you see?');
     number_odd = input('how many odd bands do you see?');
     start_even_or_odd = input('is the band on the extreme left even (0) or odd (1)?');
 
     [gate_scan.qp.resonance_freqs_no_qp,gate_scan.qp.gate_values_no_qp]=identify_qp_region_single_flux_bias_struct(res_freqs_gate,gate_values_gate, number_odd, start_even_or_odd);
 
-    ommit = input('ommit endpoints yes (1) or no (0)');
+    ommit = input('ommit endpoints yes (1) or no (0)'); % ommit the bands with too few data points(ruins the fit)
 
     if ommit == 1
         ommit_left = input('number of points to ommit on the left');
@@ -135,11 +136,12 @@ while (gate_star_over == 1)
         if (ommit_left == 0 || ommit_right == 0)
             ommited_bands = 1;
         end
-        [gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp(ommit_left + 1:end - ommit_right),ones(length(gate_scan.qp.resonance_freqs_no_qp)-ommit_left-ommit_right,1), ...
-        flux_value_gate, gate_scan.qp.gate_values_no_qp(ommit_left + 1:end - ommit_right), flux_scan.fits.flux_center_freq_mean,number_even - ommited_bands,1);
+        [gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp(ommit_left + 1:end - ommit_right),...
+        ones(length(gate_scan.qp.resonance_freqs_no_qp) - ommit_left - ommit_right, 1), flux_value_gate, gate_scan.qp.gate_values_no_qp(ommit_left + 1:end - ommit_right),...
+        flux_scan.fits.flux_center_freq_mean, number_even - ommited_bands, 1);
     else
         [gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp,ones(length(gate_scan.qp.resonance_freqs_no_qp),1), ...
-        flux_value_gate, gate_scan.qp.gate_values_no_qp, flux_scan.fits.flux_center_freq_mean,number_even,1);
+        flux_value_gate, gate_scan.qp.gate_values_no_qp, flux_scan.fits.flux_center_freq_mean,number_even, 1);
     end
 
 
@@ -149,7 +151,6 @@ while (gate_star_over == 1)
 
     gate_start_over = input('start over gate analysis? yes(1) or (0)');
 end
-%   aaa
 
 proceed_param = input('did the run go through ok, should the useful data be saved? 0/1');
 
