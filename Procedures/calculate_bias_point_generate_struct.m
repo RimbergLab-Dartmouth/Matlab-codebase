@@ -73,8 +73,8 @@ xlabel('Flux input voltage (V)')
 ylabel('Resonant Freqs (Hz)')
 title('Raw data, flux sweep')
 
-flux_start_over = 1;
-while (flux_start_over == 1)
+flux_start_over = 0;
+while (flux_start_over == 0)
 
     [flux_scan.fits.flux_period,flux_scan.fits.flux_offset,flux_scan.fits.flux_center_freq_mean, flux_scan.fits.offset_slope] = ...
         identify_flux_period_and_offset_struct(res_freqs_flux,flux_values_flux,gate_value_flux,1);
@@ -82,7 +82,7 @@ while (flux_start_over == 1)
     flux_scan.fits.flux_zero_voltage = flux_scan.fits.flux_offset - (-1)^flux_scan.fits.offset_slope*flux_scan.fits.flux_period/4;
     flux_zero_voltage = flux_scan.fits.flux_zero_voltage;
     
-    flux_start_over = input('start over flux analysis? yes(1) or (0)');
+    flux_start_over = input('Flux analysis: finish(1) or start over (0)?');
 
 end
 
@@ -108,8 +108,8 @@ sigmas_gate = gate_scan.fits.resonance_fits_gate(:,4);
 flux_value_gate = mean(squeeze(gate_scan.dc_bias(:,:,2)))*input_params.flux_series_resistor;
 gate_values_gate = squeeze(gate_scan.dc_bias(:,:,1));
 
-gate_start_over = 1; % repeats the analysis until satisfied.
-while (gate_start_over == 1)
+gate_start_over = 0; % repeats the analysis until satisfied.
+while (gate_start_over == 0)
 
     figure
     plot(gate_values_gate,res_freqs_gate,'o','DisplayName','data')
@@ -149,7 +149,7 @@ while (gate_start_over == 1)
     gate_period = gate_period/10;
     gate_offset = gate_offset/10;
 
-    gate_start_over = input('start over gate analysis? yes(1) or (0)');
+    gate_start_over = input('Gate analysis: finish(1) or start over (0)?');
 end
 
 proceed_param = input('did the run go through ok, should the useful data be saved? 0/1');
