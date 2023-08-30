@@ -1,6 +1,8 @@
 clc
 clear_workspace_connect_instruments
 
+%test
+
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 mkdir([cd '/d' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
