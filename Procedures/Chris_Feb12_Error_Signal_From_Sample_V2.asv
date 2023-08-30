@@ -46,8 +46,7 @@ n5183b_toggle_output(keysight_sg, 'on')
 % Imperial data for the tunable band pass filter obtained on 08/29/23,
 % voltage and the center frequency of the passing band is as the following:
 % v = [2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9] in volts
-% f_center = [5.645 5.675 5.707 5.738 5.768 5.801 5.830 5.859 5.896] in GHz
-% range of flatness: ~65 MHz
+% f_center = [5.645 5.675 5.707 5.738 5.768 5.745 5.774 5.796 5.83 5.857 5.884] in GHz
 % based on this: 
 
 % Converts a frequency in GHz to the best control voltage in V for the band
