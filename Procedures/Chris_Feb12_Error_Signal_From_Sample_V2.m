@@ -1,7 +1,4 @@
-clc
 clear_workspace_connect_instruments
-
-%test
 
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 mkdir([cd '/d' input_params.file_name_time_stamp '_error_signal_acquisition']);
@@ -9,14 +6,14 @@ mkdir([cd '/d' input_params.file_name_time_stamp '_error_signal_acquisition']);
 input_params.sig_gen_amp = -25; % dBm
 input_params.center_freq = 5.7845e9; % Hz
 input_params.span = 40; % MHz
-input_params.freq_step = 1; % MHz
+input_params.freq_step = 5; % MHz
 input_params.repetition_number = 10; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
 input_params.phase_mod_phase = 0; % degs
 
 %%%% lockin params
-input_params.lockin.time_constant = 300e-3; % s,
+input_params.lockin.time_constant = 1000e-3; % s,
 input_params.lockin.sensitivity = 10; % in mV
 input_params.lockin.ref_mode = 'ext';
 input_params.lockin.ref_phase = 0; % degs
