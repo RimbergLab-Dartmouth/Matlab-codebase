@@ -44,7 +44,7 @@ input_params.flux_stop_voltage = input_params.flux_stop_voltage_struct.desired_f
 input_params.gate_start_voltage = input_params.gate_start_voltage_struct.desired_gate_voltage;
 input_params.gate_stop_voltage = input_params.gate_stop_voltage_struct.desired_gate_voltage;
 
-switch_vna_measurement(ps_2)
+switch_vna_measurement
 vna_set_average(vna, input_params.vna.average_number, 1)
 vna_set_IF_BW(vna, input_params.vna.IF_BW, 1)
 vna_set_sweep_points(vna, input_params.vna.number_points, 1)
@@ -65,16 +65,15 @@ save([cd '/d' input_params.file_name_time_stamp '_qp_traces/flux_scan_data.mat']
 data.freq = squeeze(freq_measured);
 data.amp = squeeze(amp_measured);
 data.phase = squeeze(phase_measured);
-gain_prof_freq_data = gain_prof.freq;
-gain_prof_amp = gain_prof.amp;
-gain_prof_phase = gain_prof.phase;
 
-clearvars -except input_params data
+clearvars -except input_params data gain_prof
 save([cd '/d' input_params.file_name_time_stamp '_qp_traces/qp_data.mat'])
-
 colors = parula(input_params.num_to_plot);
 %%
 if input_params.plot_display == 1
+        gain_prof_freq_data = gain_prof.freq;
+        gain_prof_amp = gain_prof.amp;
+        gain_prof_phase = gain_prof.phase;
         disp('plotting')
         figure
         subplot(2,1,1)

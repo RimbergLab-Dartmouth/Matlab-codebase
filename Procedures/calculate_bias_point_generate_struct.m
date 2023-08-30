@@ -3,6 +3,7 @@ if ~exist('gain_prof', 'var')
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
 end
+   
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 mkdir([cd '/d' input_params.file_name_time_stamp '_bias_point']);
 input_params.number_gate = 30;
