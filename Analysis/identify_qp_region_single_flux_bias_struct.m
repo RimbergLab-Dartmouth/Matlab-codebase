@@ -92,5 +92,6 @@ function [resonance_freqs_no_qp,gate_values_no_qp]=identify_qp_region_single_flu
      end
      pause
      close all
-     
-end
+
+     end
+    

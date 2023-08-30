@@ -1,4 +1,4 @@
-caif ~exist('gain_prof', 'var')
+if ~exist('gain_prof', 'var')
    load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
@@ -76,6 +76,7 @@ title('Raw data, flux sweep')
 [flux_scan.fits.flux_period,flux_scan.fits.flux_offset,flux_scan.fits.flux_center_freq_mean, flux_scan.fits.offset_slope] = ...
     identify_flux_period_and_offset_struct(res_freqs_flux,flux_values_flux,gate_value_flux,1);
 
+%%%formula is below%%%
 flux_scan.fits.flux_zero_voltage = flux_scan.fits.flux_offset - (-1)^flux_scan.fits.offset_slope*flux_scan.fits.flux_period/4;
 flux_zero_voltage = flux_scan.fits.flux_zero_voltage;
 
