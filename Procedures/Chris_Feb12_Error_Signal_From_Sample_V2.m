@@ -47,13 +47,9 @@ n5183b_toggle_output(keysight_sg, 'on')
 % v = [2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9] in volts
 % f_center = [5.645 5.675 5.707 5.738 5.768 5.801 5.830 5.859 5.896] in GHz
 % range of flatness: ~65 MHz
-% based on this: 
+% based on this: recommanded voltage for 5.7845GHz is 2.55
+% hp_6612c_set_voltage(ps_1,2.55,'on');
 
-% Converts a frequency in GHz to the best control voltage in V for the band
-% pass filter, assuming other voltages are set to the values specified above
-% function [cont] = best_control_freq(freq):
-%     cont = 3.5251*freq - 17.6458;
-% end
 
 %output time estimate
 disp('rough estimate:')
