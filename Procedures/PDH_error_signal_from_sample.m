@@ -12,6 +12,9 @@ input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
 input_params.phase_mod_phase = 0; % degs
 
+%%%% Tunable Bandpass Filter params
+input_params.TBF.control_voltage = 2.55; % 0-10V
+
 %%%% lockin params
 input_params.lockin.time_constant = 1000e-3; % s,
 input_params.lockin.sensitivity = 10; % in mV
@@ -36,6 +39,7 @@ novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.lockin_ref_channel);
 n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
 n5183b_toggle_output(keysight_sg, 'on')
+hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage,'on');
 
 %% notes on the tunable band pass filter
 % voltage supply (pin 4) set to -15V
@@ -47,13 +51,9 @@ n5183b_toggle_output(keysight_sg, 'on')
 % v = [2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9] in volts
 % f_center = [5.645 5.675 5.707 5.738 5.768 5.801 5.830 5.859 5.896] in GHz
 % range of flatness: ~65 MHz
-% based on this: 
+% based on this: recommanded voltage for 5.7845GHz is 2.55
+% hp_6612c_set_voltage(ps_1,2.55,'on');
 
-% Converts a frequency in GHz to the best control voltage in V for the band
-% pass filter, assuming other voltages are set to the values specified above
-% function [cont] = best_control_freq(freq):
-%     cont = 3.5251*freq - 17.6458;
-% end
 
 %output time estimate
 disp('rough estimate:')

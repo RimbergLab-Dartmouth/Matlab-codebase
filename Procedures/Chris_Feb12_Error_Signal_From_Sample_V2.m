@@ -12,6 +12,9 @@ input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
 input_params.phase_mod_phase = 0; % degs
 
+%%%% Tunable Bandpass Filter params
+input_params.TBF.control_voltage = 2.55; % 0-10V
+
 %%%% lockin params
 input_params.lockin.time_constant = 1000e-3; % s,
 input_params.lockin.sensitivity = 10; % in mV
@@ -36,6 +39,7 @@ novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.lockin_ref_channel);
 n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
 n5183b_toggle_output(keysight_sg, 'on')
+hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage,'on');
 
 %% notes on the tunable band pass filter
 % voltage supply (pin 4) set to -15V
