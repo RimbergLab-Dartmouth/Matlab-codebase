@@ -6,7 +6,7 @@ mkdir([cd '/d' input_params.file_name_time_stamp '_error_signal_acquisition']);
 input_params.sig_gen_amp = -25; % dBm
 input_params.center_freq = 5.7839e9; % Hz
 input_params.span = 60; % MHz
-input_params.freq_step = 0.5; % MHz
+input_params.freq_step = 1; % MHz
 input_params.repetition_number = 10; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
