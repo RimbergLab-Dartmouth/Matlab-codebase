@@ -1,18 +1,13 @@
-if (input('verify current directory is where you want to save data\nproceed(1) or quit(0)'))
-else
-    return;
-end
-
 clear_workspace_connect_instruments
 
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
 input_params.sig_gen_amp = -25; % dBm
-input_params.center_freq = 5.7840e9; % Hz
-input_params.span = 20; % MHz
-input_params.freq_step = .1; % MHz
-input_params.repetition_number = 10; % number repetitions
+input_params.center_freq = 5.7839e9; % Hz
+input_params.span = 60; % MHz
+input_params.freq_step = 1; % MHz
+input_params.repetition_number = 1; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
 input_params.phase_mod_phase = 0; % degs
@@ -93,7 +88,7 @@ p.MarkerSize = 20;
 xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
 ylabel('X (mV)', 'interpreter', 'latex')
 % savefig(freq_vs_x_quad_fig, 'freq_vs_x_quadrature.fig')
-saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/x.fig'])
+saveas(gcf,[cd '/d' input_params.file_name_time_stamp '_error_signal_acquisition/x.fig'])
 
 freq_vs_y_quad_fig = figure;
 p = plot(data.probe_freq, analysis.lockin_y_mean/1e3, '.');

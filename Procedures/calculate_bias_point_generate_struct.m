@@ -1,10 +1,15 @@
+if (input('verify current directory is where you want to save data\nproceed(1) or quit(0)'))
+else
+    return;
+end
+
 if ~exist('gain_prof', 'var')
    load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
 end
-input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
-mkdir([cd '/d' input_params.file_name_time_stamp '_bias_point']);
+input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
+mkdir([cd '/' input_params.file_name_time_stamp '_bias_point']);
 input_params.number_gate = 30;
 input_params.number_flux = 14;
 input_params.gate_start = -5;
@@ -178,7 +183,7 @@ if proceed_param == 1
         input_params ...
         gain_prof
 
-    save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
+    save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
     clearvars -except bias_point input_params
-    save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+    save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
 end
