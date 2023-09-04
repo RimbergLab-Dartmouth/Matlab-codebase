@@ -10,15 +10,21 @@ mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
 input_params.sig_gen_amp = -25; % dBm
 input_params.center_freq = 5.7840e9; % Hz
-input_params.span = 20; % MHz
-input_params.freq_step = .1; % MHz
-input_params.repetition_number = 10; % number repetitions
+input_params.span = 140; % MHz
+input_params.freq_step = 0.1; % MHz
+input_params.repetition_number = 5; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
 input_params.phase_mod_phase = 0; % degs
 
 %%%% Tunable Bandpass Filter params
-input_params.TBF.control_voltage = 2.55; % 0-10V
+% V = 2.32 flat range: 5.679 - 5.749 GHz
+% V = 2.55 flat range: 5.746 - 5.820 GHz
+% V = 2.77 flat range: 5.812 - 5.887 GHz
+
+input_params.TBF.control_voltage_left = 2.32; %0 - 10V
+input_params.TBF.control_voltage_mid = 2.55;
+input_params.TBF.control_voltage_right = 2.77;
 
 %%%% lockin params
 input_params.lockin.time_constant = 1000e-3; % s,
@@ -44,7 +50,7 @@ novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.lockin_ref_channel);
 n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
 n5183b_toggle_output(keysight_sg, 'on')
-hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage,'on');
+hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_mid,'on');
 
 %% notes on the tunable band pass filter
 % voltage supply (pin 4) set to -15V
@@ -62,7 +68,7 @@ hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage,'on');
 
 %output time estimate
 disp('rough estimate:')
-disp(input_params.span/input_params.freq_step*(input_params.repetition_number * 5 * input_params.lockin.time_constant)/60)
+disp(1.2*input_params.span/input_params.freq_step*(input_params.repetition_number * 5 * input_params.lockin.time_constant)/60)
 disp('minutes')
 
 %initialize arrays 
@@ -71,12 +77,21 @@ data.lockin_x_quadrature = zeros(length(data.probe_freq), input_params.repetitio
 data.lockin_y_quadrature = data.lockin_x_quadrature;
 
 for m_rep = 1 : input_params.repetition_number
+    tic
     for m_freq = 1 : length(data.probe_freq)
+        if data.probe_freq(m_freq) < -35 % set TBF to appropriate range
+            hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_left,'on');
+        elseif data.probe_freq(m_freq) <= 35
+            hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_mid,'on');
+        else
+            hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_right,'on');
+        end
         n5183b_set_frequency(keysight_sg, input_params.center_freq+data.probe_freq(m_freq)*1e6);
         pause(5 * input_params.lockin.time_constant);
         data.lockin_x_quadrature(m_freq, m_rep) = sr844_lockin_query_measured_value(lockin_sr844,'X');
         data.lockin_y_quadrature(m_freq, m_rep) = sr844_lockin_query_measured_value(lockin_sr844,'Y');
     end
+    fprintf('rep %i: ellapsed time is %.3g minutes \n', m_rep, toc/60);
 end
 
 %%%% mean of repetitions
@@ -94,6 +109,7 @@ xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
 ylabel('X (mV)', 'interpreter', 'latex')
 % savefig(freq_vs_x_quad_fig, 'freq_vs_x_quadrature.fig')
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/x.fig'])
+saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/x.png'])
 
 freq_vs_y_quad_fig = figure;
 p = plot(data.probe_freq, analysis.lockin_y_mean/1e3, '.');
@@ -102,6 +118,7 @@ xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
 ylabel('Y (mV)', 'interpreter', 'latex')
 % savefig(freq_vs_y_quad_fig, 'freq_vs_y_quadrature.fig')
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/y.fig'])
+saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/y.png'])
 
 %%
 x_quad_fig_vs_y_quad = figure;
@@ -113,3 +130,4 @@ end
 xlabel('X (mV)', 'interpreter', 'latex')
 ylabel('Y (mV)', 'interpreter', 'latex')
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.fig'])
+saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.png'])
