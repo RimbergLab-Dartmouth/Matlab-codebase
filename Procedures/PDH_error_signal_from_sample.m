@@ -9,8 +9,8 @@ input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
 input_params.sig_gen_amp = -25; % dBm
-input_params.center_freq = 5.7840e9; % Hz
-input_params.span = 140; % MHz
+input_params.center_freq = 5.7836e9; % Hz
+input_params.span = 80; % MHz
 input_params.freq_step = 0.2; % MHz
 input_params.repetition_number = 5; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
@@ -30,7 +30,7 @@ input_params.TBF.control_voltage_right = 2.77;
 input_params.lockin.time_constant = 1000e-3; % s,
 input_params.lockin.sensitivity = 10; % in mV
 input_params.lockin.ref_mode = 'ext';
-input_params.lockin.ref_phase = 0; % degs
+input_params.lockin.ref_phase = 45; % degs
 %%%% Novatech params
 input_params.novatech.phase_modulation_channel = 0; % channel number - 0 - 3
 input_params.novatech.lockin_ref_channel = 1; % channel number - 0 - 3

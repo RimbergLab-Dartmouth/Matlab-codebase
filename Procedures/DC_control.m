@@ -7,7 +7,7 @@ function[] = DC_control(desired_gate_voltage,desired_flux_voltage)
     addAnalogOutputChannel(daq_handle,'Dev1','ao0','Voltage');
     addAnalogOutputChannel(daq_handle,'Dev1','ao1','Voltage');
     outputSingleScan(daq_handle,[desired_gate_voltage desired_flux_voltage]);
-    pause(3);
+    pause(1);
     dmm_1 = evalin('base', 'dmm_1');
     dmm_2 = evalin('base', 'dmm_2');
     flux_voltage_status = dmm_get_voltage(dmm_2);
