@@ -8,5 +8,5 @@ function[message] = sr844_lockin_set_filter_slope(lockin_handle, slope_dB_per_oc
             num2str(filter_slope_array(filter_slope_index)) 'dB/oct'])
     end
     message = ['OFSL ' num2str(filter_slope_index - 1)];
-    fprintf(lockin_handle, message)
+    %fprintf(lockin_handle, message)
 end

@@ -11,8 +11,8 @@ mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 input_params.sig_gen_amp = -25; % dBm
 input_params.center_freq = 5.7836e9; % Hz
 input_params.span = 80; % MHz
-input_params.freq_step = 0.2; % MHz
-input_params.repetition_number = 5; % number repetitions
+input_params.freq_step = 1; % MHz
+input_params.repetition_number = 1; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
 input_params.phase_mod_phase = 0; % degs
@@ -27,10 +27,14 @@ input_params.TBF.control_voltage_mid = 2.55;
 input_params.TBF.control_voltage_right = 2.77;
 
 %%%% lockin params
-input_params.lockin.time_constant = 1000e-3; % s,
-input_params.lockin.sensitivity = 10; % in mV
-input_params.lockin.ref_mode = 'ext';
+input_params.lockin.time_constant = 1000e-3; % [10, 30, 100, 300, 1000, 3000]*1e-3 s,
+input_params.lockin.filter_slope = 12; % [0, 6, 12, 18, 24] dB/Octave; higher is faster
+input_params.lockin.wide_reserve = 'norm'; % 'high','norm','low'; use low if possible
+input_params.lockin.sensitivity = 3; % [1, 3, 10, 30, 100] mV
+input_params.lockin.close_reserve = 'norm'; % 'high','norm','low'; use low if possible
 input_params.lockin.ref_phase = 45; % degs
+input_params.lockin.ref_mode = 'ext';
+
 %%%% Novatech params
 input_params.novatech.phase_modulation_channel = 0; % channel number - 0 - 3
 input_params.novatech.lockin_ref_channel = 1; % channel number - 0 - 3
@@ -44,6 +48,11 @@ sr844_lockin_set_time_constant(lockin_sr844, input_params.lockin.time_constant);
 sr844_lockin_set_sensitivity(lockin_sr844, input_params.lockin.sensitivity);
 sr844_lockin_set_ref_mode(lockin_sr844, input_params.lockin.ref_mode);
 sr844_lockin_set_ref_phase_degs(lockin_sr844, input_params.lockin.ref_phase);
+sr844_lockin_set_filter_slope(lockin_sr844, input_params.lockin.filter_slope);
+sr844_lockin_set_wide_reserve_mode(lockin_sr844, input_params.lockin.wide_reserve);
+sr844_lockin_set_close_reserve_mode(lockin_sr844, input_params.lockin.close_reserve);
+
+
 novatech_set_phase(novatech,input_params.phase_mod_phase,input_params.novatech.phase_modulation_channel);
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.phase_modulation_channel);
 novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.novatech.lockin_ref_channel);
