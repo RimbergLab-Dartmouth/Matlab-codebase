@@ -2,7 +2,7 @@ if (input('verify current directory is where you want to save data\nproceed(1) o
 else
     return;
 end
-
+connect_instruments;
 if ~exist('gain_prof', 'var')
    load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')

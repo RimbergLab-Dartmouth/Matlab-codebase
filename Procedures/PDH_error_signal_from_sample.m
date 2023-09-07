@@ -5,13 +5,17 @@ end
 
 clear_workspace_connect_instruments
 
+for ref_test = [15, 25, 35, 45, 55, 65, 75, 85]
+
+connect_instruments;
+    
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
 input_params.sig_gen_amp = -25; % dBm
-input_params.center_freq = 5.7836e9; % Hz
+input_params.center_freq = 5.7840e9; % Hz
 input_params.span = 80; % MHz
-input_params.freq_step = 1; % MHz
+input_params.freq_step = 40; % MHz
 input_params.repetition_number = 1; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .1; % Vpp
@@ -30,9 +34,10 @@ input_params.TBF.control_voltage_right = 2.77;
 input_params.lockin.time_constant = 1000e-3; % [10, 30, 100, 300, 1000, 3000]*1e-3 s,
 input_params.lockin.filter_slope = 12; % [0, 6, 12, 18, 24] dB/Octave; higher is faster
 input_params.lockin.wide_reserve = 'norm'; % 'high','norm','low'; use low if possible
-input_params.lockin.sensitivity = 3; % [1, 3, 10, 30, 100] mV
+input_params.lockin.sensitivity = 10; % [1, 3, 10, 30, 100] mV
 input_params.lockin.close_reserve = 'norm'; % 'high','norm','low'; use low if possible
-input_params.lockin.ref_phase = 45; % degs
+% input_params.lockin.ref_phase = 60; % degs
+input_params.lockin.ref_phase = ref_test;
 input_params.lockin.ref_mode = 'ext';
 
 %%%% Novatech params
@@ -74,7 +79,6 @@ hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_mid,'on');
 % based on this: recommanded voltage for 5.7845GHz is 2.55
 % hp_6612c_set_voltage(ps_1,2.55,'on');
 
-
 %output time estimate
 disp('rough estimate:')
 disp(1.2*input_params.span/input_params.freq_step*(input_params.repetition_number * 5 * input_params.lockin.time_constant)/60)
@@ -110,6 +114,7 @@ analysis.lockin_y_mean = mean(data.lockin_y_quadrature, 2);
 clear_instruments
 
 save([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/error_signal_data.mat'])
+% save([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/error_signal_data_phase_' ref_test '.mat'])
 
 freq_vs_x_quad_fig = figure;
 p = plot(data.probe_freq, analysis.lockin_x_mean/1e3, '.');
@@ -140,3 +145,5 @@ xlabel('X (mV)', 'interpreter', 'latex')
 ylabel('Y (mV)', 'interpreter', 'latex')
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.fig'])
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.png'])
+
+end
