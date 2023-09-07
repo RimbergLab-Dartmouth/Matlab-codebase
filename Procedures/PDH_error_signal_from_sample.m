@@ -4,10 +4,6 @@ else
 end
 
 clear_workspace_connect_instruments
-
-for ref_test = [15, 25, 35, 45, 55, 65, 75, 85]
-
-connect_instruments;
     
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
@@ -35,9 +31,8 @@ input_params.lockin.time_constant = 1000e-3; % [10, 30, 100, 300, 1000, 3000]*1e
 input_params.lockin.filter_slope = 12; % [0, 6, 12, 18, 24] dB/Octave; higher is faster
 input_params.lockin.wide_reserve = 'norm'; % 'high','norm','low'; use low if possible
 input_params.lockin.sensitivity = 10; % [1, 3, 10, 30, 100] mV
-input_params.lockin.close_reserve = 'norm'; % 'high','norm','low'; use low if possible
-% input_params.lockin.ref_phase = 60; % degs
-input_params.lockin.ref_phase = ref_test;
+input_params.lockin.close_reserve = 'low'; % 'high','norm','low'; use low if possible
+input_params.lockin.ref_phase = 75; % degs
 input_params.lockin.ref_mode = 'ext';
 
 %%%% Novatech params
@@ -114,7 +109,6 @@ analysis.lockin_y_mean = mean(data.lockin_y_quadrature, 2);
 clear_instruments
 
 save([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/error_signal_data.mat'])
-% save([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/error_signal_data_phase_' ref_test '.mat'])
 
 freq_vs_x_quad_fig = figure;
 p = plot(data.probe_freq, analysis.lockin_x_mean/1e3, '.');
@@ -146,4 +140,3 @@ ylabel('Y (mV)', 'interpreter', 'latex')
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.fig'])
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.png'])
 
-end
