@@ -4,6 +4,9 @@ else
 end
 
 clear_workspace_connect_instruments
+
+for modulation_amplitude_test = [.1, .3, .5, .7, .9]
+connect_instruments;
     
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
@@ -14,7 +17,8 @@ input_params.span = 80; % MHz
 input_params.freq_step = 0.2; % MHz
 input_params.repetition_number = 1; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
-input_params.phase_mod_amp = .1; % Vpp
+% input_params.phase_mod_amp = .1; % Vpp
+input_params.phase_mod_amp = modulation_amplitude_test; % Vpp
 input_params.phase_mod_phase = 0; % degs
 
 %%%% Tunable Bandpass Filter params
@@ -140,3 +144,4 @@ ylabel('Y (mV)', 'interpreter', 'latex')
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.fig'])
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.png'])
 
+end
