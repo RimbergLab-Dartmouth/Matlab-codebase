@@ -5,7 +5,7 @@ end
 
 clear_workspace_connect_instruments
 
-for modulation_amplitude_test = [.1, .3, .5, .7, .9]
+for modulation_amplitude_test = [.1, .5, .9, 1.3, 1.7]
 connect_instruments;
     
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
@@ -61,7 +61,7 @@ novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.loc
 novatech_set_phase(novatech,input_params.phase_mod_phase,input_params.novatech.phase_modulation_channel);
 novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.novatech.lockin_ref_channel);
 novatech_set_amp(novatech, input_params.phase_mod_amp, input_params.novatech.phase_modulation_channel, 'Vpp');
-novatech_set_amp(novatech, input_params.lockin_ref_amp, input_params.novatech.lockin_ref_channel, 'Vpp');
+novatech_set_amp(novatech, input_params.novatech.lockin_ref_amp, input_params.novatech.lockin_ref_channel, 'Vpp');
 
 n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
 n5183b_toggle_output(keysight_sg, 'on')
