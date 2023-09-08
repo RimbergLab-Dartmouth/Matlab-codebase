@@ -61,6 +61,7 @@ novatech_set_phase(novatech,input_params.phase_mod_phase,input_params.novatech.p
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.phase_modulation_channel);
 novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.novatech.lockin_ref_channel);
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.lockin_ref_channel);
+novatech_set_amp(novatech, input_params.phase_mod_amp, 0, 'vpp');
 n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
 n5183b_toggle_output(keysight_sg, 'on')
 hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_mid,'on');

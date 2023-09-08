@@ -19,5 +19,5 @@ function[message] = novatech_set_amp(novatech_handle, amplitude, channel_number,
         amplitude_in_10_bit = 1023;
     end
     message = ['V' num2str(channel_number) ' ' num2str(amplitude_in_10_bit)];
-    writeline(novatech_handle, message)
+    % writeline(novatech_handle, message)
 end
