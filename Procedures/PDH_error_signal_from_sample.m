@@ -40,8 +40,8 @@ input_params.lockin.ref_phase = 75; % degs
 input_params.lockin.ref_mode = 'ext';
 
 %%%% Novatech params
-input_params.novatech.phase_modulation_channel = 0; % channel number - 0 - 3
-input_params.novatech.lockin_ref_channel = 1; % channel number - 0 - 3
+input_params.novatech.phase_modulation_channel = 1; % channel number - 0 - 3
+input_params.novatech.lockin_ref_channel = 0; % channel number - 0 - 3
 input_params.novatech.lockin_ref_amp = 1; % Vpp
 input_params.novatech.lockin_ref_phase = 0 ; % degs
 
@@ -56,12 +56,13 @@ sr844_lockin_set_filter_slope(lockin_sr844, input_params.lockin.filter_slope);
 sr844_lockin_set_wide_reserve_mode(lockin_sr844, input_params.lockin.wide_reserve);
 sr844_lockin_set_close_reserve_mode(lockin_sr844, input_params.lockin.close_reserve);
 
-
-novatech_set_phase(novatech,input_params.phase_mod_phase,input_params.novatech.phase_modulation_channel);
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.phase_modulation_channel);
-novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.novatech.lockin_ref_channel);
 novatech_set_freq(novatech,input_params.phase_mod_freq,input_params.novatech.lockin_ref_channel);
-novatech_set_amp(novatech, input_params.phase_mod_amp, 0, 'vpp');
+novatech_set_phase(novatech,input_params.phase_mod_phase,input_params.novatech.phase_modulation_channel);
+novatech_set_phase(novatech,input_params.novatech.lockin_ref_phase,input_params.novatech.lockin_ref_channel);
+novatech_set_amp(novatech, input_params.phase_mod_amp, input_params.novatech.phase_modulation_channel, 'Vpp');
+novatech_set_amp(novatech, input_params.lockin_ref_amp, input_params.novatech.lockin_ref_channel, 'Vpp');
+
 n5183b_set_amplitude(keysight_sg, input_params.sig_gen_amp)
 n5183b_toggle_output(keysight_sg, 'on')
 hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_mid,'on');
