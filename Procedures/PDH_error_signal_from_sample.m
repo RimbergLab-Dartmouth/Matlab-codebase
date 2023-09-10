@@ -5,7 +5,7 @@ end
 
 clear_workspace_connect_instruments
 
-for modulation_amplitude_test = [.1, .5, .9, 1.3, 1.7]
+for time_const_test = [300e-3, 1000e-3, 3000e-3]
 connect_instruments;
     
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
@@ -17,8 +17,7 @@ input_params.span = 80; % MHz
 input_params.freq_step = 0.2; % MHz
 input_params.repetition_number = 1; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
-% input_params.phase_mod_amp = .1; % Vpp
-input_params.phase_mod_amp = modulation_amplitude_test; % Vpp
+input_params.phase_mod_amp = .1; % Vpp
 input_params.phase_mod_phase = 0; % degs
 
 %%%% Tunable Bandpass Filter params
@@ -31,7 +30,8 @@ input_params.TBF.control_voltage_mid = 2.55;
 input_params.TBF.control_voltage_right = 2.77;
 
 %%%% lockin params
-input_params.lockin.time_constant = 1000e-3; % [10, 30, 100, 300, 1000, 3000]*1e-3 s,
+% input_params.lockin.time_constant = 1000e-3; % [10, 30, 100, 300, 1000, 3000]*1e-3 s,
+input_params.lockin.time_constant = time_const_test; % [10, 30, 100, 300, 1000, 3000]*1e-3 s,
 input_params.lockin.filter_slope = 12; % [0, 6, 12, 18, 24] dB/Octave; higher is faster
 input_params.lockin.wide_reserve = 'norm'; % 'high','norm','low'; use low if possible
 input_params.lockin.sensitivity = 10; % [1, 3, 10, 30, 100] mV
@@ -82,7 +82,7 @@ hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_mid,'on');
 
 %output time estimate
 disp('rough estimate:')
-disp(1.2*input_params.span/input_params.freq_step*(input_params.repetition_number * 5 * input_params.lockin.time_constant)/60)
+disp(1.0*input_params.span/input_params.freq_step*(input_params.repetition_number * 5 * input_params.lockin.time_constant)/60)
 disp('minutes')
 
 %initialize arrays 
