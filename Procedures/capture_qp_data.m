@@ -4,7 +4,7 @@ mkdir([cd '/d' input_params.file_name_time_stamp '_qp_traces']);
 input_params.vna.power = -65;
 input_params.vna.average_number = 50;
 input_params.vna.IF_BW = 10e3;
-input_params.vna.number_points = 1601;
+input_params.vna.number_points = 1601; %initially 1601
 input_params.vna.center = 5.76e9;
 input_params.vna.span = 250e6;
 input_params.vna.electrical_delay = 62.6e-9; 
