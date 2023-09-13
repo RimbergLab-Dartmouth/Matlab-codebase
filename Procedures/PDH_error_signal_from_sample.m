@@ -15,11 +15,11 @@ connect_instruments;
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
-input_params.sig_gen_amp = -50; % dBm
-input_params.center_freq = 5.7840e9; % Hz
-input_params.span = 80; % MHz
+input_params.sig_gen_amp = -30; % dBm
+input_params.center_freq = 5.7836e9; % Hz
+input_params.span = 70; % MHz
 input_params.freq_step = .2; % MHz
-input_params.repetition_number = 10; % number repetitions
+input_params.repetition_number = 1; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .36; % Vpp
 input_params.phase_mod_phase = 0; % degs
@@ -34,10 +34,10 @@ input_params.TBF.control_voltage_mid = 2.55;
 input_params.TBF.control_voltage_right = 2.77;
 
 %%%% lockin params
-input_params.lockin.time_constant = 1000e-3; % [10, 30, 100, 300, 1000, 3000]*1e-3 s,
+input_params.lockin.time_constant = 300e-3; % [10, 30, 100, 300, 1000, 3000]*1e-3 s,
 input_params.lockin.filter_slope = 6; % [0, 6, 12, 18, 24] dB/Octave; higher is faster
 input_params.lockin.wide_reserve = 'norm'; % 'high','norm','low'; use low if possible
-input_params.lockin.sensitivity = 1; % [1, 3, 10, 30, 100] mV
+input_params.lockin.sensitivity = 10; % [1, 3, 10, 30, 100] mV
 input_params.lockin.close_reserve = 'norm'; % 'high','norm','low'; use low if possible
 input_params.lockin.ref_phase = 75; % degs
 input_params.lockin.ref_mode = 'ext';
@@ -45,7 +45,7 @@ input_params.lockin.ref_mode = 'ext';
 %%%% Novatech params
 input_params.novatech.phase_modulation_channel = 1; % channel number - 0 - 3
 input_params.novatech.lockin_ref_channel = 0; % channel number - 0 - 3
-input_params.novatech.lockin_ref_amp = .18; % Vpp
+input_params.novatech.lockin_ref_amp = .52; % Vpp
 input_params.novatech.lockin_ref_phase = 0 ; % degs
 
 switch_PDH_measurement(keysight_sg, ps_2)
@@ -96,13 +96,20 @@ data.lockin_y_quadrature = data.lockin_x_quadrature;
 for m_rep = 1 : input_params.repetition_number
     tic
     for m_freq = 1 : length(data.probe_freq)
-        if data.probe_freq(m_freq) < -35 % set TBF to appropriate range
+        if data.probe_freq(m_freq) < -36 % set TBF to appropriate range
             hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_left,'on');
-        elseif data.probe_freq(m_freq) <= 35
+        elseif data.probe_freq(m_freq) <= 36
             hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_mid,'on');
         else
             hp_6612c_set_voltage(ps_1,input_params.TBF.control_voltage_right,'on');
         end
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % gradient power_in test
+        test_amp = input_params.sig_gen_amp - m_freq * 0.03;
+        n5183b_set_amplitude(keysight_sg, test_amp);
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
         n5183b_set_frequency(keysight_sg, input_params.center_freq+data.probe_freq(m_freq)*1e6);
         pause(5 * input_params.lockin.time_constant);
         data.lockin_x_quadrature(m_freq, m_rep) = sr844_lockin_query_measured_value(lockin_sr844,'X');
@@ -120,7 +127,7 @@ clear_instruments
 save([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/error_signal_data.mat'])
 
 freq_vs_x_quad_fig = figure;
-p = plot(data.probe_freq, analysis.lockin_x_mean/1e3, '.');
+p = plot(data.probe_freq, analysis.lockin_x_mean * 1e3, '.');
 p.MarkerSize = 20;
 xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
 ylabel('X (mV)', 'interpreter', 'latex')
@@ -129,7 +136,7 @@ saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/x.png'])
 
 freq_vs_y_quad_fig = figure;
-p = plot(data.probe_freq, analysis.lockin_y_mean/1e3, '.');
+p = plot(data.probe_freq, analysis.lockin_y_mean * 1e3, '.');
 p.MarkerSize = 20;
 xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
 ylabel('Y (mV)', 'interpreter', 'latex')
@@ -142,7 +149,7 @@ x_quad_fig_vs_y_quad = figure;
 hold on
 colors = parula(length(analysis.lockin_x_mean));
 for m_test = 1 : length(colors)
-    plot(analysis.lockin_x_mean(m_test)/1e3, analysis.lockin_y_mean(m_test)/1e3, 'o', 'color', colors(m_test, :))
+    plot(analysis.lockin_x_mean(m_test) * 1e3, analysis.lockin_y_mean(m_test) * 1e3, 'o', 'color', colors(m_test, :))
 end
 xlabel('X (mV)', 'interpreter', 'latex')
 ylabel('Y (mV)', 'interpreter', 'latex')
