@@ -1,3 +1,4 @@
+
 function[]=vna_set_average(vna_handle,average_number,channel_number,average_time)
     if ~exist('channel_number','var')
         channel_number=str2double(query(vna_handle,':serv:chan:act?'));
