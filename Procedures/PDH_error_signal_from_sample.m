@@ -45,7 +45,7 @@ input_params.lockin.ref_mode = 'ext';
 %%%% Novatech params
 input_params.novatech.phase_modulation_channel = 1; % channel number - 0 - 3
 input_params.novatech.lockin_ref_channel = 0; % channel number - 0 - 3
-input_params.novatech.lockin_ref_amp = .52; % Vpp
+input_params.novatech.lockin_ref_amp = 1.2; % Vpp
 input_params.novatech.lockin_ref_phase = 0 ; % degs
 
 switch_PDH_measurement(keysight_sg, ps_2)
