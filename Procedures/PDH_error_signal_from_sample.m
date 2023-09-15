@@ -9,7 +9,7 @@ if comment == ""
 end
 clear_workspace_connect_instruments
 
-for test_power = [-27, -28, -29, -30, -31, -32, -33, -34, -35, -36, -37, -38]
+for test_power = [-38]
 connect_instruments;
     
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
@@ -108,7 +108,7 @@ for m_rep = 1 : input_params.repetition_number
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % gradient power_in test
-        test_amp = input_params.sig_gen_amp - m_freq * 0.03;
+        test_amp = input_params.sig_gen_amp + m_freq * 0.03;
         n5183b_set_amplitude(keysight_sg, test_amp);
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         

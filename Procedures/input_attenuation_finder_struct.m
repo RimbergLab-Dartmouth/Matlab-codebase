@@ -1,3 +1,13 @@
+if (input('verify current directory is where you want to save data\nproceed(1) or quit(0)'))
+else
+    return;
+end
+
+comment = input('comment:', 's');
+if comment == ""
+    comment = 'none';
+end
+
 run_params.plot_visible = 0;
 run_params.save_data_and_png_param = 1;
 run_params.save_fig_param = 1;
