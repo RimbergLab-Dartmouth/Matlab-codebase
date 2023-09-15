@@ -9,15 +9,13 @@ if comment == ""
 end
 clear_workspace_connect_instruments
 
-for test_power = [-27, -28, -29, -30, -31, -32, -33, -34, -35, -36, -37, 38]
+for 
 connect_instruments;
     
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
-
-input_params.sig_gen_amp = test_power; % dBm
-% input_params.sig_gen_amp = -30; % dBm
+input_params.sig_gen_amp = -30; % dBm
 input_params.center_freq = 5.7836e9; % Hz
 input_params.span = 70; % MHz
 input_params.freq_step = .2; % MHz
@@ -39,7 +37,7 @@ input_params.TBF.control_voltage_right = 2.77;
 input_params.lockin.time_constant = 300e-3; % [10, 30, 100, 300, 1000, 3000]*1e-3 s,
 input_params.lockin.filter_slope = 6; % [0, 6, 12, 18, 24] dB/Octave; higher is faster
 input_params.lockin.wide_reserve = 'norm'; % 'high','norm','low'; use low if possible
-input_params.lockin.sensitivity = 30; % [1, 3, 10, 30, 100] mV
+input_params.lockin.sensitivity = 10; % [1, 3, 10, 30, 100] mV
 input_params.lockin.close_reserve = 'norm'; % 'high','norm','low'; use low if possible
 input_params.lockin.ref_phase = 75; % degs
 input_params.lockin.ref_mode = 'ext';
@@ -157,5 +155,3 @@ xlabel('X (mV)', 'interpreter', 'latex')
 ylabel('Y (mV)', 'interpreter', 'latex')
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.fig'])
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.png'])
-
-end
