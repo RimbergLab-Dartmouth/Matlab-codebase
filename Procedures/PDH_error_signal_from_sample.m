@@ -18,7 +18,7 @@ mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
 input_params.sig_gen_amp = test_power; % dBm
 % input_params.sig_gen_amp = -30; % dBm
-input_params.center_freq = 5.7836e9; % Hz
+input_params.center_freq = 5.7841e9; % Hz
 input_params.span = 70; % MHz
 input_params.freq_step = .2; % MHz
 input_params.repetition_number = 1; % number repetitions
