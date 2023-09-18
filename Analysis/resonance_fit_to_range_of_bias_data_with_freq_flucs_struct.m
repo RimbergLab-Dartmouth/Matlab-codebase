@@ -93,49 +93,57 @@ gain_prof_phase_interp = gain_prof_amp_interp;
 %extract lin mag and phase in degs based on theory fits
     [theory_lin_mag,theory_phase_radians]=extract_lin_mag_phase_from_real_imag(theory_real,theory_imag,freq_data);
     [theory_log_mag,theory_phase_degs]=extract_log_mag_phase_degs(theory_lin_mag,theory_phase_radians);
-  
+   
     % plots the resonance circles for 10 random bias points and the one with
 % the worst error
-    if plot_display==1
+    if (plot_display == 1) || (plot_display == 2)%2 for fitting one point
         %%%%%%%%%%%%%check this section for plots of gain profiles%%%%%%
-        figure
-        subplot(2,1,1)
-        plot(gain_prof_freq_data(1,:),gain_prof_amp);
-        title('gain profile log mag')
-        subplot(2,1,2)
-        plot(gain_prof_freq_data(1,:),gain_prof_phase);
-        title('gain profile phase')
-        
-        figure
-        subplot(1,3,1)
-        [~,b]=max(err);
-        scatter(data_real(b,:),data_imag(b,:))
-        pbaspect([1 1 1])
-        hold on;
-        scatter(theory_real(b,:),theory_imag(b,:))
-        title(['this was the worst fit @ gate: ' 10 num2str(bias_values(b,1)) 'mV and flux: ' num2str(bias_values(b,2)) 'mV.' 13 10 '\gamma_{int} = ' num2str(resonance_fits(b,2)/1e6)...
-            ' MHz and \gamma_{ext} = ' num2str(resonance_fits(b,3)/1e6) 'MHz, \sigma_{\omega_0} = ' num2str(resonance_fits(b,4)/1e6) 'MHz']);
+        if (plot_display == 1)
+            figure
+            subplot(2,1,1)
+            plot(gain_prof_freq_data(1,:),gain_prof_amp);
+            title('gain profile log mag')
+            subplot(2,1,2)
+            plot(gain_prof_freq_data(1,:),gain_prof_phase);
+            title('gain profile phase')
 
-        [~,b]=min(err);
-        subplot(1,3,2)
-        scatter(data_real(b,:),data_imag(b,:))
-        pbaspect([1 1 1])
-        hold on;
-        scatter(theory_real(b,:),theory_imag(b,:))
-        title(['this was the best fit @ gate: ' 10 num2str(bias_values(b,1)) 'mV and flux: ' num2str(bias_values(b,2)) 'mV.' 13 10 '\gamma_{int} = ' num2str(resonance_fits(b,2)/1e6)...
-            ' MHz and \gamma_{ext} = ' num2str(resonance_fits(b,3)/1e6) 'MHz, \sigma_{\omega_0} = ' num2str(resonance_fits(b,4)/1e6) 'MHz']);
+            figure
+            subplot(1,3,1)
+            [~,b]=max(err);
+            scatter(data_real(b,:),data_imag(b,:))
+            pbaspect([1 1 1])
+            hold on;
+            scatter(theory_real(b,:),theory_imag(b,:))
+            title(['this was the worst fit @ gate: ' 10 num2str(bias_values(b,1)) 'mV and flux: ' num2str(bias_values(b,2)) 'mV.' 13 10 '\gamma_{int} = ' num2str(resonance_fits(b,2)/1e6)...
+                ' MHz and \gamma_{ext} = ' num2str(resonance_fits(b,3)/1e6) 'MHz, \sigma_{\omega_0} = ' num2str(resonance_fits(b,4)/1e6) 'MHz']);
 
-        deviation=abs(err-mean(err));
-        [~,p]=min(deviation);
-        subplot(1,3,3)
-        scatter(data_real(p,:),data_imag(p,:))
-        pbaspect([1 1 1])
-        hold on;
-        scatter(theory_real(p,:),theory_imag(p,:))
-        title(['the average fit looks like this one @ gate: ' 10  num2str(bias_values(p,1)) 'mV and flux: ' num2str(bias_values(p,2)) 'mV.' 13 10 '\gamma_{int} = ' num2str(resonance_fits(p,2)/1e6)...
-            ' MHz and \gamma_{ext} = ' num2str(resonance_fits(p,3)/1e6) 'MHz, \sigma_{\omega_0} = ' num2str(resonance_fits(b,4)/1e6) 'MHz']);            
+            [~,b]=min(err);
+            subplot(1,3,2)
+            scatter(data_real(b,:),data_imag(b,:))
+            pbaspect([1 1 1])
+            hold on;
+            scatter(theory_real(b,:),theory_imag(b,:))
+            title(['this was the best fit @ gate: ' 10 num2str(bias_values(b,1)) 'mV and flux: ' num2str(bias_values(b,2)) 'mV.' 13 10 '\gamma_{int} = ' num2str(resonance_fits(b,2)/1e6)...
+                ' MHz and \gamma_{ext} = ' num2str(resonance_fits(b,3)/1e6) 'MHz, \sigma_{\omega_0} = ' num2str(resonance_fits(b,4)/1e6) 'MHz']);
 
-        for j=1:10
+            deviation=abs(err-mean(err));
+            [~,p]=min(deviation);
+            subplot(1,3,3)
+            scatter(data_real(p,:),data_imag(p,:))
+            pbaspect([1 1 1])
+            hold on;
+            scatter(theory_real(p,:),theory_imag(p,:))
+            title(['the average fit looks like this one @ gate: ' 10  num2str(bias_values(p,1)) 'mV and flux: ' num2str(bias_values(p,2)) 'mV.' 13 10 '\gamma_{int} = ' num2str(resonance_fits(p,2)/1e6)...
+                ' MHz and \gamma_{ext} = ' num2str(resonance_fits(p,3)/1e6) 'MHz, \sigma_{\omega_0} = ' num2str(resonance_fits(b,4)/1e6) 'MHz']);
+        end
+                    
+        if (plot_display == 1)
+            rand_rep = 10;
+        else
+            rand_rep = 1;
+        end
+        for j = 1 : rand_rep
+            [~,b]=min(err);
             x=randi(num_bias_points);
     %         figure
     %         plot(freq_data(x,:),subtracted_log_mag(x,:))
@@ -149,11 +157,11 @@ gain_prof_phase_interp = gain_prof_amp_interp;
             scatter(theory_real(x,:),theory_imag(x,:))
             xlabel('\Gamma_{real}')
             ylabel('\Gamma_{imag}')
-            title(['resonance circles for ' num2str(bias_values(x,1)) 'mV gate bias, ' num2str(bias_values(x,2)) 'mV flux bias.' 13 10 '\gamma_{int} = ' num2str(resonance_fits(x,2)/1e6)...
-            ' MHz and \gamma_{ext} = ' num2str(resonance_fits(x,3)/1e6) 'MHz, \sigma_{\omega_0} = ' num2str(resonance_fits(b,4)/1e6) 'MHz']);
+            title({['resonance circles for '] [ num2str(bias_values(x,1)) 'mV gate bias, ' num2str(bias_values(x,2)/1e3*11.2e3) 'mV flux bias.'] [' \gamma_{int} = ' num2str(resonance_fits(x,2)/1e6)...
+            ' MHz and \gamma_{ext} = ' num2str(resonance_fits(x,3)/1e6) 'MHz, '] ['\sigma_{\omega_0} = ' num2str(resonance_fits(b,4)/1e6) 'MHz']});
             subplot(1,3,2)
             plot(freq_data(x,:),subtracted_log_mag(x,:),'.',freq_data(x,:),theory_log_mag(x,:));
-            title('subtracted amplitude and fit')
+            title({['subtracted amplitude and fit'] ['resonance at ' num2str(resonance_fits(x,1)/1e9) 'GHz']})
             xlabel('Freq (Hz)')
             ylabel('S21 (dB)')
             subplot(1,3,3)
@@ -161,13 +169,13 @@ gain_prof_phase_interp = gain_prof_amp_interp;
             xlabel('Freq (Hz)')
             ylabel('S21 (degs)')
         end
+
+       
     end   
-    if plot_display
-        user=input('continue?. 0/1');
-        if user == 1
-            close all
-            return
-        end
+    user=input('continue?. 0/1');
+    if user == 1
+        close all
+        return
     end
     
     %%% reshape output structures to original bias point dimensions if flux

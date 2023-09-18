@@ -63,111 +63,110 @@ end
 gate_value = input_params.gate_voltage_status * 100;
 flux_value = input_params.flux_voltage_status;
 
-disp('running scan')
 [flux_scan.freq, flux_scan.amp, flux_scan.phase, flux_scan.freq_zoom, flux_scan.amp_zoom, flux_scan.phase_zoom, flux_scan.dc_bias]=...
 flux_gate_scan_zoom_resonance_struct(vna,dmm_2,dmm_1,flux_value,flux_value + 1, 1,...
 gate_value, gate_value + 1, 1, gain_prof, input_params.vna);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 [flux_scan.fits.resonance_fits,flux_scan.fits.data_real,flux_scan.fits.data_imag,flux_scan.fits.theory_real,flux_scan.fits.theory_imag,~,flux_scan.fits.err] = ...
-    resonance_fit_to_range_of_bias_data_with_freq_flucs_struct (flux_scan,gain_prof,1);
+    resonance_fit_to_range_of_bias_data_with_freq_flucs_struct (flux_scan,gain_prof,2);
 
-res_freqs_flux = flux_scan.fits.resonance_fits(:,1);
-gamma_ints_flux = flux_scan.fits.resonance_fits(:,2);
-gamma_exts_flux = flux_scan.fits.resonance_fits(:,3);
-sigmas_flux = flux_scan.fits.resonance_fits(:,4);
-flux_values_flux = squeeze(flux_scan.dc_bias(:,:,2))*input_params.flux_series_resistor/1e6; % convert from uA to V
-gate_value_flux = mean(squeeze(flux_scan.dc_bias(:,:,1)))/10;
-
-figure
-plot(flux_values_flux,res_freqs_flux,'o','DisplayName','data')
-xlabel('Flux input voltage (V)')
-ylabel('Resonant Freqs (Hz)')
-title('Raw data, flux sweep')
-
-flux_start_over = 0;
-while (flux_start_over == 0)
-
-    [flux_scan.fits.flux_period,flux_scan.fits.flux_offset,flux_scan.fits.flux_center_freq_mean, flux_scan.fits.offset_slope] = ...
-        identify_flux_period_and_offset_struct(res_freqs_flux,flux_values_flux,gate_value_flux,1);
-
-    flux_scan.fits.flux_zero_voltage = flux_scan.fits.flux_offset - (-1)^flux_scan.fits.offset_slope*flux_scan.fits.flux_period/4;
-    flux_zero_voltage = flux_scan.fits.flux_zero_voltage;
-    
-    flux_start_over = input('Flux analysis: finish(1) or start over (0)?');
-
-end
-
-%%%% do a gate scan %%%%%%%%%
-number_flux = 1;
-number_gate = input_params.number_gate;
-flux_start = flux_zero_voltage;
-flux_stop = flux_zero_voltage+1;
-disp('running gate period calculator')
-
-[gate_scan.freq, gate_scan.amp, gate_scan.phase, gate_scan.freq_zoom, gate_scan.amp_zoom, gate_scan.phase_zoom, gate_scan.dc_bias]= ...
-flux_gate_scan_zoom_resonance_struct(vna,dmm_2,dmm_1,flux_start,flux_stop,(flux_stop - flux_start)/number_flux,...
-input_params.gate_start,input_params.gate_stop,(input_params.gate_stop - input_params.gate_start)/number_gate, gain_prof, input_params.vna);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[gate_scan.fits.resonance_fits_gate,gate_scan.fits.data_real_gate,gate_scan.fits.data_imag_gate,gate_scan.fits.theory_real_gate,gate_scan.fits.theory_imag_gate,~,gate_scan.fits.err_gate] = ...
-    resonance_fit_to_range_of_bias_data_with_freq_flucs_struct (gate_scan, gain_prof, 1);
-
-res_freqs_gate = gate_scan.fits.resonance_fits_gate(:,1);
-gamma_ints_gate = gate_scan.fits.resonance_fits_gate(:,2);
-gamma_exts_gate = gate_scan.fits.resonance_fits_gate(:,3);
-sigmas_gate = gate_scan.fits.resonance_fits_gate(:,4);
-flux_value_gate = mean(squeeze(gate_scan.dc_bias(:,:,2)))*input_params.flux_series_resistor;
-gate_values_gate = squeeze(gate_scan.dc_bias(:,:,1));
-
-gate_start_over = 0; % repeats the analysis until satisfied.
-while (gate_start_over == 0)
-
-    figure
-    % plot points with number labels
-    labels = string(1:length(gate_values_gate));
-    plot(gate_values_gate,res_freqs_gate,'o','DisplayName','data')
-    text(gate_values_gate,res_freqs_gate,labels,'VerticalAlignment','Top')
-    
-    hold on
-    % cut off is no-longer needed if
-    % identify_qp_region_single_flux_bias_struct_simplified is used
-    % plot(gate_values_gate, 5.802e9*gate_values_gate./gate_values_gate, '--', 'displayName', 'cutoff for fit')
-    xlabel('Gate input Voltage (V)')
-    ylabel('Resonant Freqs (Hz)')
-    title('Raw data, gate sweep')
-    legend show
-
-
-    number_even = input('how many even bands do you see?');
-
-    [gate_scan.qp.resonance_freqs_no_qp,gate_scan.qp.gate_values_no_qp]=identify_qp_region_single_flux_bias_struct_simplified(res_freqs_gate,gate_values_gate);
-    [gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp,ones(length(gate_scan.qp.resonance_freqs_no_qp),1), ...
-    flux_value_gate, gate_scan.qp.gate_values_no_qp, flux_scan.fits.flux_center_freq_mean,number_even, 1);
-    gate_period = gate_period/10;
-    gate_offset = gate_offset/10;
-
-    gate_start_over = input('Gate analysis: finish(1) or start over (0)?');
-end
-
-proceed_param = input('did the run go through ok, should the useful data be saved? 0/1');
-
-clear_instruments
-
-bias_point.flux_zero_voltage = flux_zero_voltage;
-bias_point.flux_period = flux_scan.fits.flux_period;
-bias_point.gate_offset = gate_offset;
-bias_point.gate_period = gate_period;
-bias_point.flux_center_freq_mean = flux_scan.fits.flux_center_freq_mean;
-
-if proceed_param == 1
-    clearvars -except gate_scan ...
-        flux_scan ...
-        bias_point ...
-        input_params ...
-        gain_prof
-
-    save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
-    clearvars -except bias_point input_params
-    save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
-end
+% res_freqs_flux = flux_scan.fits.resonance_fits(:,1);
+% gamma_ints_flux = flux_scan.fits.resonance_fits(:,2);
+% gamma_exts_flux = flux_scan.fits.resonance_fits(:,3);
+% sigmas_flux = flux_scan.fits.resonance_fits(:,4);
+% flux_values_flux = squeeze(flux_scan.dc_bias(:,:,2))*input_params.flux_series_resistor/1e6; % convert from uA to V
+% gate_value_flux = mean(squeeze(flux_scan.dc_bias(:,:,1)))/10;
+% 
+% figure
+% plot(flux_values_flux,res_freqs_flux,'o','DisplayName','data')
+% xlabel('Flux input voltage (V)')
+% ylabel('Resonant Freqs (Hz)')
+% title('Raw data, flux sweep')
+% 
+% flux_start_over = 0;
+% while (flux_start_over == 0)
+% 
+%     [flux_scan.fits.flux_period,flux_scan.fits.flux_offset,flux_scan.fits.flux_center_freq_mean, flux_scan.fits.offset_slope] = ...
+%         identify_flux_period_and_offset_struct(res_freqs_flux,flux_values_flux,gate_value_flux,1);
+% 
+%     flux_scan.fits.flux_zero_voltage = flux_scan.fits.flux_offset - (-1)^flux_scan.fits.offset_slope*flux_scan.fits.flux_period/4;
+%     flux_zero_voltage = flux_scan.fits.flux_zero_voltage;
+%     
+%     flux_start_over = input('Flux analysis: finish(1) or start over (0)?');
+% 
+% end
+% 
+% %%%% do a gate scan %%%%%%%%%
+% number_flux = 1;
+% number_gate = input_params.number_gate;
+% flux_start = flux_zero_voltage;
+% flux_stop = flux_zero_voltage+1;
+% disp('running gate period calculator')
+% 
+% [gate_scan.freq, gate_scan.amp, gate_scan.phase, gate_scan.freq_zoom, gate_scan.amp_zoom, gate_scan.phase_zoom, gate_scan.dc_bias]= ...
+% flux_gate_scan_zoom_resonance_struct(vna,dmm_2,dmm_1,flux_start,flux_stop,(flux_stop - flux_start)/number_flux,...
+% input_params.gate_start,input_params.gate_stop,(input_params.gate_stop - input_params.gate_start)/number_gate, gain_prof, input_params.vna);
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% [gate_scan.fits.resonance_fits_gate,gate_scan.fits.data_real_gate,gate_scan.fits.data_imag_gate,gate_scan.fits.theory_real_gate,gate_scan.fits.theory_imag_gate,~,gate_scan.fits.err_gate] = ...
+%     resonance_fit_to_range_of_bias_data_with_freq_flucs_struct (gate_scan, gain_prof, 1);
+% 
+% res_freqs_gate = gate_scan.fits.resonance_fits_gate(:,1);
+% gamma_ints_gate = gate_scan.fits.resonance_fits_gate(:,2);
+% gamma_exts_gate = gate_scan.fits.resonance_fits_gate(:,3);
+% sigmas_gate = gate_scan.fits.resonance_fits_gate(:,4);
+% flux_value_gate = mean(squeeze(gate_scan.dc_bias(:,:,2)))*input_params.flux_series_resistor;
+% gate_values_gate = squeeze(gate_scan.dc_bias(:,:,1));
+% 
+% gate_start_over = 0; % repeats the analysis until satisfied.
+% while (gate_start_over == 0)
+% 
+%     figure
+%     % plot points with number labels
+%     labels = string(1:length(gate_values_gate));
+%     plot(gate_values_gate,res_freqs_gate,'o','DisplayName','data')
+%     text(gate_values_gate,res_freqs_gate,labels,'VerticalAlignment','Top')
+%     
+%     hold on
+%     % cut off is no-longer needed if
+%     % identify_qp_region_single_flux_bias_struct_simplified is used
+%     % plot(gate_values_gate, 5.802e9*gate_values_gate./gate_values_gate, '--', 'displayName', 'cutoff for fit')
+%     xlabel('Gate input Voltage (V)')
+%     ylabel('Resonant Freqs (Hz)')
+%     title('Raw data, gate sweep')
+%     legend show
+% 
+% 
+%     number_even = input('how many even bands do you see?');
+% 
+%     [gate_scan.qp.resonance_freqs_no_qp,gate_scan.qp.gate_values_no_qp]=identify_qp_region_single_flux_bias_struct_simplified(res_freqs_gate,gate_values_gate);
+%     [gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp,ones(length(gate_scan.qp.resonance_freqs_no_qp),1), ...
+%     flux_value_gate, gate_scan.qp.gate_values_no_qp, flux_scan.fits.flux_center_freq_mean,number_even, 1);
+%     gate_period = gate_period/10;
+%     gate_offset = gate_offset/10;
+% 
+%     gate_start_over = input('Gate analysis: finish(1) or start over (0)?');
+% end
+% 
+% proceed_param = input('did the run go through ok, should the useful data be saved? 0/1');
+% 
+% clear_instruments
+% 
+% bias_point.flux_zero_voltage = flux_zero_voltage;
+% bias_point.flux_period = flux_scan.fits.flux_period;
+% bias_point.gate_offset = gate_offset;
+% bias_point.gate_period = gate_period;
+% bias_point.flux_center_freq_mean = flux_scan.fits.flux_center_freq_mean;
+% 
+% if proceed_param == 1
+%     clearvars -except gate_scan ...
+%         flux_scan ...
+%         bias_point ...
+%         input_params ...
+%         gain_prof
+% 
+%     save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
+%     clearvars -except bias_point input_params
+%     save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+% end
