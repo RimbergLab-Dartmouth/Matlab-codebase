@@ -9,15 +9,15 @@ if comment == ""
 end
 clear_workspace_connect_instruments
 
-for test_power = [-33, -34, -35, -36, -37, -38, -39, -40]
+for test_power = -40:-1:-50
 connect_instruments;
     
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
 
-input_params.sig_gen_amp = test_power; % dBm
-% input_params.sig_gen_amp = -30; % dBm
+% input_params.sig_gen_amp = test_power; % dBm
+input_params.sig_gen_amp = -25; % dBm
 input_params.center_freq = 5.7841e9; % Hz
 input_params.span = 70; % MHz
 input_params.freq_step = .2; % MHz
