@@ -172,6 +172,9 @@ gain_prof_phase_interp = gain_prof_amp_interp;
 
        
     end   
+    if plot_display == 2
+        return
+    end
     user=input('continue?. 0/1');
     if user == 1
         close all
