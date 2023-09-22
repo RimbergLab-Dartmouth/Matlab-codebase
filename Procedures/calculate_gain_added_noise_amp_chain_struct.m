@@ -192,7 +192,11 @@ if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 
 else
     added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
-surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.added_noise_photons_average')
+numRows = 10; %Specify the number of rows- add by mw
+numCols = num1(analysis.added_noise_photons_average, numRows, numCols);%added by me
+% Call surf with the reshaped data
+surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, reshapedData);
+%surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.added_noise_photons_average')
 colorbar
 view(0,90)
 caxis([1 5])
