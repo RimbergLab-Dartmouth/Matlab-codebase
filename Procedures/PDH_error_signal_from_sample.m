@@ -9,22 +9,23 @@ if comment == ""
 end
 clear_workspace_connect_instruments
 
-for test_power = -40:-1:-50
+for test_phase = 0:10:180
+
 connect_instruments;
     
 input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
 
 
-% input_params.sig_gen_amp = test_power; % dBm
-input_params.sig_gen_amp = -25; % dBm
-input_params.center_freq = 5.7841e9; % Hz
+input_params.sig_gen_amp = -30; % dBm
+input_params.center_freq = 5.7420e9; % Hz typically 5.7840
 input_params.span = 70; % MHz
 input_params.freq_step = .2; % MHz
 input_params.repetition_number = 1; % number repetitions
 input_params.phase_mod_freq = 30; % MHz, modulation freq
 input_params.phase_mod_amp = .36; % Vpp
-input_params.phase_mod_phase = 0; % degs
+% input_params.phase_mod_phase = 0; % degs
+input_params.phase_mod_phase = test_phase; % degs
 
 %%%% Tunable Bandpass Filter params
 % V = 2.32 flat range: 5.679 - 5.749 GHz
@@ -32,7 +33,8 @@ input_params.phase_mod_phase = 0; % degs
 % V = 2.77 flat range: 5.812 - 5.887 GHz
 
 input_params.TBF.control_voltage_left = 2.32; %0 - 10V
-input_params.TBF.control_voltage_mid = 2.55;
+% input_params.TBF.control_voltage_mid = 2.55;
+input_params.TBF.control_voltage_mid = 2.41;
 input_params.TBF.control_voltage_right = 2.77;
 
 %%%% lockin params
@@ -41,7 +43,7 @@ input_params.lockin.filter_slope = 6; % [0, 6, 12, 18, 24] dB/Octave; higher is 
 input_params.lockin.wide_reserve = 'norm'; % 'high','norm','low'; use low if possible
 input_params.lockin.sensitivity = 30; % [1, 3, 10, 30, 100] mV
 input_params.lockin.close_reserve = 'norm'; % 'high','norm','low'; use low if possible
-input_params.lockin.ref_phase = 75; % degs
+input_params.lockin.ref_phase = 70; % degs
 input_params.lockin.ref_mode = 'ext';
 
 %%%% Novatech params
