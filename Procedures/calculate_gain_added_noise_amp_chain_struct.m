@@ -1,3 +1,4 @@
+%test
 run_params.file_name = 'gain_added_noise_TWPA_667M_-2p33';
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 input_params.file_directory = [cd '/d' input_params.file_name_time_stamp run_params.file_name];
