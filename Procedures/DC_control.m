@@ -12,8 +12,9 @@ function[] = DC_control(desired_gate_voltage,desired_flux_voltage)
     dmm_2 = evalin('base', 'dmm_2');
     flux_voltage_status = dmm_get_voltage(dmm_2);
     gate_voltage_status = dmm_get_voltage(dmm_1);
-    fprintf('desired flux voltage is: %.4g mV, actual flux voltage is: %.4gmV \n',desired_flux_voltage*1e3, flux_voltage_status*1e3);
     fprintf('desired gate voltage is: %.4g mV, actual gate voltage is: %.4gmV \n',desired_gate_voltage*10, gate_voltage_status*1e3);
+    fprintf('desired flux voltage is: %.4g mV, actual flux voltage is: %.4gmV \n',desired_flux_voltage*1e3, flux_voltage_status*1e3);
+    fprintf('desired resonant frequency is: %.5g GHz \n',expected_res_freq_test(desired_gate_voltage, desired_flux_voltage));
     
     
 end
