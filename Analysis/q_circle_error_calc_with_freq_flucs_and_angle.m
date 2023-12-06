@@ -10,11 +10,11 @@ function[err]=q_circle_error_calc_with_freq_flucs_and_angle(variable_params,data
 %      data_real=data_lin_mag.*cos(2*pi*data_phase/360);
 %      data_imag=data_lin_mag.*sin(2*pi*data_phase/360);
      
-     if freq_res_guess>6e9
-         err=1e9;
+%      if freq_res_guess>6e9
+%          err=1e9;
 %          disp('resonance too high')
-         return
-     end
+%          return
+%      end
      if gamma_int_guess<1e5
          err=1e9;
 %          disp('gamma int too low')
