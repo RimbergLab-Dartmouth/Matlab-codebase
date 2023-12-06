@@ -1,14 +1,18 @@
+if (input('verify current directory is where you want to save data\nproceed(1) or quit(0)'))
+else
+    return;
+end
+connect_instruments;
 if ~exist('gain_prof', 'var')
    load_directory = uigetdir('enter directory where gain_prof_struct.mat is saved');
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
 end
-   
-input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
-mkdir([cd '/d' input_params.file_name_time_stamp '_bias_point']);
+input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
+mkdir([cd '/' input_params.file_name_time_stamp '_bias_point']);
 input_params.number_gate = 30;
 input_params.number_flux = 14;
-input_params.gate_start = -5;
+input_params.gatae_start = -5;
 input_params.gate_stop = 5;
 input_params.flux_start = -.7;
 input_params.flux_stop = .3;
@@ -74,12 +78,18 @@ xlabel('Flux input voltage (V)')
 ylabel('Resonant Freqs (Hz)')
 title('Raw data, flux sweep')
 
-[flux_scan.fits.flux_period,flux_scan.fits.flux_offset,flux_scan.fits.flux_center_freq_mean, flux_scan.fits.offset_slope] = ...
-    identify_flux_period_and_offset_struct(res_freqs_flux,flux_values_flux,gate_value_flux,1);
+flux_start_over = 0;
+while (flux_start_over == 0)
 
-%%%formula is below%%%
-flux_scan.fits.flux_zero_voltage = flux_scan.fits.flux_offset - (-1)^flux_scan.fits.offset_slope*flux_scan.fits.flux_period/4;
-flux_zero_voltage = flux_scan.fits.flux_zero_voltage;
+    [flux_scan.fits.flux_period,flux_scan.fits.flux_offset,flux_scan.fits.flux_center_freq_mean, flux_scan.fits.offset_slope] = ...
+        identify_flux_period_and_offset_struct(res_freqs_flux,flux_values_flux,gate_value_flux,1);
+
+    flux_scan.fits.flux_zero_voltage = flux_scan.fits.flux_offset - (-1)^flux_scan.fits.offset_slope*flux_scan.fits.flux_period/4;
+    flux_zero_voltage = flux_scan.fits.flux_zero_voltage;
+    
+    flux_start_over = input('Flux analysis: finish(1) or start over (0)?');
+
+end
 
 %%%% do a gate scan %%%%%%%%%
 number_flux = 1;
@@ -103,24 +113,60 @@ sigmas_gate = gate_scan.fits.resonance_fits_gate(:,4);
 flux_value_gate = mean(squeeze(gate_scan.dc_bias(:,:,2)))*input_params.flux_series_resistor;
 gate_values_gate = squeeze(gate_scan.dc_bias(:,:,1));
 
-figure
-plot(gate_values_gate,res_freqs_gate,'o','DisplayName','data')
-hold on
-plot(gate_values_gate, 5.802e9*gate_values_gate./gate_values_gate, '--', 'displayName', 'cutoff for fit')
-xlabel('Gate input Voltage (V)')
-ylabel('Resonant Freqs (Hz)')
-title('Raw data, gate sweep')
-legend show
-number_even = input('how many even bands do you see?');
-number_odd = input('how many odd bands do you see?');
-start_even_or_odd = input('is the band on the extreme left even (0) or odd (1)?');
+gate_start_over = 0; % repeats the analysis until satisfied.
+while (gate_start_over == 0)
 
-[gate_scan.qp.resonance_freqs_no_qp,gate_scan.qp.gate_values_no_qp]=identify_qp_region_single_flux_bias_struct(res_freqs_gate,gate_values_gate, number_odd, start_even_or_odd);
+    figure
+    % plot points with number labels
+    labels = string(1:length(gate_values_gate));
+    plot(gate_values_gate,res_freqs_gate,'o','DisplayName','data')
+    text(gate_values_gate,res_freqs_gate,labels,'VerticalAlignment','Top')
+    
+    hold on
+    % cut off is no-longer needed if
+    % identify_qp_region_single_flux_bias_struct_simplified is used
+    % plot(gate_values_gate, 5.802e9*gate_values_gate./gate_values_gate, '--', 'displayName', 'cutoff for fit')
+    xlabel('Gate input Voltage (V)')
+    ylabel('Resonant Freqs (Hz)')
+    title('Raw data, gate sweep')
+    legend show
 
-[gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp,ones(length(gate_scan.qp.resonance_freqs_no_qp),1), ...
-    flux_value_gate, gate_scan.qp.gate_values_no_qp, flux_scan.fits.flux_center_freq_mean,number_even,1);
-gate_period = gate_period/10;
-gate_offset = gate_offset/10;
+
+    number_even = input('how many even bands do you see?');
+%     number_odd = input('how many odd bands do you see?');
+%     start_even_or_odd = input('is the band on the extreme left even (0) or odd (1)?');
+
+%     [gate_scan.qp.resonance_freqs_no_qp,gate_scan.qp.gate_values_no_qp]=identify_qp_region_single_flux_bias_struct(res_freqs_gate,gate_values_gate, number_odd, start_even_or_odd);
+% 
+%     ommit = input('ommit endpoints yes (1) or no (0)'); % ommit the bands with too few data points(ruins the fit)
+% 
+%     if ommit == 1
+%         ommit_left = input('number of points to ommit on the left');
+%         ommit_right = input('number of points to ommit on the right');
+%         ommited_bands = 2;
+%         if (ommit_left == 0 || ommit_right == 0)
+%             ommited_bands = 1;
+%         end
+%         [gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp(ommit_left + 1:end - ommit_right),...
+%         ones(length(gate_scan.qp.resonance_freqs_no_qp) - ommit_left - ommit_right, 1), flux_value_gate, gate_scan.qp.gate_values_no_qp(ommit_left + 1:end - ommit_right),...
+%         flux_scan.fits.flux_center_freq_mean, number_even - ommited_bands, 1);
+%     else
+%         [gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp,ones(length(gate_scan.qp.resonance_freqs_no_qp),1), ...
+%         flux_value_gate, gate_scan.qp.gate_values_no_qp, flux_scan.fits.flux_center_freq_mean,number_even, 1);
+%     end
+
+% use simplified version of identify_qp_region_single_flux_bias_struct
+% instead.
+    [gate_scan.qp.resonance_freqs_no_qp,gate_scan.qp.gate_values_no_qp]=identify_qp_region_single_flux_bias_struct_simplified(res_freqs_gate,gate_values_gate);
+    [gate_period,gate_offset,vertex_offset,concavity]=identify_gate_period_and_offset_struct(gate_scan.qp.resonance_freqs_no_qp,ones(length(gate_scan.qp.resonance_freqs_no_qp),1), ...
+    flux_value_gate, gate_scan.qp.gate_values_no_qp, flux_scan.fits.flux_center_freq_mean,number_even, 1);
+    gate_period = gate_period/10;
+    gate_offset = gate_offset/10;
+
+    gate_start_over = input('Gate analysis: finish(1) or start over (0)?');
+end
+
+proceed_param = input('did the run go through ok, should the useful data be saved? 0/1');
 
 clear_instruments
 
@@ -129,12 +175,15 @@ bias_point.flux_period = flux_scan.fits.flux_period;
 bias_point.gate_offset = gate_offset;
 bias_point.gate_period = gate_period;
 bias_point.flux_center_freq_mean = flux_scan.fits.flux_center_freq_mean;
-clearvars -except gate_scan ...
-    flux_scan ...
-    bias_point ...
-    input_params ...
-    gain_prof
 
-save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
-clearvars -except bias_point input_params
-save([cd '/d' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+if proceed_param == 1
+    clearvars -except gate_scan ...
+        flux_scan ...
+        bias_point ...
+        input_params ...
+        gain_prof
+
+    save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
+    clearvars -except bias_point input_params
+    save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+end
