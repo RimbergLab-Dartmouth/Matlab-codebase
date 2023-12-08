@@ -1,6 +1,5 @@
-%changes made
-if (input('verify current directory is where you want to save data\nproceed(1) or quit(0)'))
-else
+save_location = input('save data in default directory(1), current directory(2), or quit(0)');
+if (save_location == 0)
     return;
 end
 
@@ -20,8 +19,12 @@ end
 
 connect_instruments;
 
-input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
-mkdir([cd '/' input_params.file_name_time_stamp '_single_q_circle']);
+input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM');
+if (save_location == 2)
+    mkdir([cd '/' input_params.file_name_time_stamp '_single_q_circle']);
+else
+    mkdir(['C:\Users\rimberg-lab\Desktop\Chris\White Board\' input_params.file_name_time_stamp '_single_q_circle']);
+end
 input_params.number_gate = 1;
 input_params.number_flux = 1;
 input_params.gate_voltage_status = dmm_get_voltage(dmm_1);
@@ -74,3 +77,15 @@ saveas(gcf,[cd '/' input_params.file_name_time_stamp '_single_q_circle/single_q_
 saveas(gcf,[cd '/' input_params.file_name_time_stamp '_single_q_circle/single_q_circle.png'])
 save([cd '/' input_params.file_name_time_stamp '_single_q_circle/input_params.mat'], 'input_params')
 save([cd '/' input_params.file_name_time_stamp '_single_q_circle/scan.mat'], 'scan')
+
+if (save_location == 2)
+    saveas(gcf,[cd '/' input_params.file_name_time_stamp '_single_q_circle/single_q_circle.fig'])
+    saveas(gcf,[cd '/' input_params.file_name_time_stamp '_single_q_circle/single_q_circle.png'])
+    save([cd '/' input_params.file_name_time_stamp '_single_q_circle/input_params.mat'], 'input_params')
+    save([cd '/' input_params.file_name_time_stamp '_single_q_circle/scan.mat'], 'scan')
+else
+    saveas(gcf,['C:\Users\rimberg-lab\Desktop\Chris\White Board\' input_params.file_name_time_stamp '_single_q_circle/single_q_circle.fig'])
+    saveas(gcf,['C:\Users\rimberg-lab\Desktop\Chris\White Board\' input_params.file_name_time_stamp '_single_q_circle/single_q_circle.png'])
+    save(['C:\Users\rimberg-lab\Desktop\Chris\White Board\' input_params.file_name_time_stamp '_single_q_circle/input_params.mat'], 'input_params')
+    save(['C:\Users\rimberg-lab\Desktop\Chris\White Board\' input_params.file_name_time_stamp '_single_q_circle/scan.mat'], 'scan')
+end

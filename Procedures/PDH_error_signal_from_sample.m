@@ -1,5 +1,6 @@
-if (input('verify current directory is where you want to save data\nproceed(1) or quit(0)'))
-else
+clear_workspace_connect_instruments
+save_location = input('save data in default directory(1), current directory(2), or quit(0)');
+if (save_location == 0)
     return;
 end
 
@@ -7,14 +8,18 @@ comment = input('comment:', 's');
 if comment == ""
     comment = 'none';
 end
-clear_workspace_connect_instruments
+
 
 
 connect_instruments;
     
-input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
-mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
+input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM');
 
+if (save_location == 2)
+    mkdir([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition']);
+else
+    mkdir(['C:\Users\rimberg-lab\Desktop\Chris\Error Signal\' input_params.file_name_time_stamp '_error_signal_acquisition']);
+end
 
 input_params.sig_gen_amp = -25; % dBm
 input_params.center_freq = 5.7784e9; % Hz typically 5.7884 for (0,0)
@@ -127,25 +132,37 @@ analysis.lockin_y_mean = mean(data.lockin_y_quadrature, 2);
 
 clear_instruments
 
-save([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/error_signal_data.mat'])
+if (save_location == 2)
+    save([cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/error_signal_data.mat'])
+else
+    save(['C:\Users\rimberg-lab\Desktop\Chris\Error Signal\' input_params.file_name_time_stamp '_error_signal_acquisition/error_signal_data.mat'])
+end
 
 freq_vs_x_quad_fig = figure;
 p = plot(data.probe_freq, analysis.lockin_x_mean * 1e3, '.');
 p.MarkerSize = 20;
 xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
 ylabel('X (mV)', 'interpreter', 'latex')
-% savefig(freq_vs_x_quad_fig, 'freq_vs_x_quadrature.fig')
-saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/x.fig'])
-saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/x.png'])
+if (save_location == 2)
+    saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/x.fig'])
+    saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/x.png'])
+else
+    saveas(gcf,['C:\Users\rimberg-lab\Desktop\Chris\Error Signal\' input_params.file_name_time_stamp '_error_signal_acquisition/x.fig'])
+    saveas(gcf,['C:\Users\rimberg-lab\Desktop\Chris\Error Signal\' input_params.file_name_time_stamp '_error_signal_acquisition/x.png'])
+end
 
 freq_vs_y_quad_fig = figure;
 p = plot(data.probe_freq, analysis.lockin_y_mean * 1e3, '.');
 p.MarkerSize = 20;
 xlabel('$\omega_c - \omega_0$ (MHz)', 'interpreter', 'latex')
 ylabel('Y (mV)', 'interpreter', 'latex')
-% savefig(freq_vs_y_quad_fig, 'freq_vs_y_quadrature.fig')
-saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/y.fig'])
-saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/y.png'])
+if (save_location == 2)
+    saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/y.fig'])
+    saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/y.png'])
+else
+    saveas(gcf,['C:\Users\rimberg-lab\Desktop\Chris\Error Signal\' input_params.file_name_time_stamp '_error_signal_acquisition/y.fig'])
+    saveas(gcf,['C:\Users\rimberg-lab\Desktop\Chris\Error Signal\' input_params.file_name_time_stamp '_error_signal_acquisition/y.png'])
+end
 
 %%
 x_quad_fig_vs_y_quad = figure;
@@ -156,5 +173,10 @@ for m_test = 1 : length(colors)
 end
 xlabel('X (mV)', 'interpreter', 'latex')
 ylabel('Y (mV)', 'interpreter', 'latex')
-saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.fig'])
-saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.png'])
+if (save_location == 2)
+    saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.fig'])
+    saveas(gcf,[cd '/' input_params.file_name_time_stamp '_error_signal_acquisition/xy.png'])
+else
+    saveas(gcf,['C:\Users\rimberg-lab\Desktop\Chris\Error Signal\' input_params.file_name_time_stamp '_error_signal_acquisition/xy.fig'])
+    saveas(gcf,['C:\Users\rimberg-lab\Desktop\Chris\Error Signal\' input_params.file_name_time_stamp '_error_signal_acquisition/xy.png'])
+end

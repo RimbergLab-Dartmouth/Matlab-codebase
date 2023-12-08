@@ -1,5 +1,5 @@
-if (input('verify current directory is where you want to save data\nproceed(1) or quit(0)'))
-else
+save_location = input('save data in default directory(1), current directory(2), or quit(0)');
+if (save_location == 0)
     return;
 end
 connect_instruments;
@@ -8,8 +8,12 @@ if ~exist('gain_prof', 'var')
    load([load_directory '\gain_prof_struct.mat'], 'gain_prof')
    clear load_directory
 end
-input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
-mkdir([cd '/' input_params.file_name_time_stamp '_bias_point']);
+input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM');
+if (save_location == 2)
+    mkdir([cd '/' input_params.file_name_time_stamp '_bias_point']);
+else
+    mkdir(['C:\Users\rimberg-lab\Desktop\Chris\Bias Point\' input_params.file_name_time_stamp '_bias_point']);
+end
 input_params.number_gate = 30;
 input_params.number_flux = 14;
 input_params.gate_start = -5;
@@ -182,8 +186,15 @@ if proceed_param == 1
         bias_point ...
         input_params ...
         gain_prof
-
-    save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
+    if (save_location == 2)
+        save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
+    else
+        save(['C:\Users\rimberg-lab\Desktop\Chris\Bias Point\' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
+    end
     clearvars -except bias_point input_params
-    save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+    if (save_location == 2)
+        save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+    else
+        save(['C:\Users\rimberg-lab\Desktop\Chris\Bias Point\' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
+    end
 end
