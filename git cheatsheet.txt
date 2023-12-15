@@ -1,0 +1,9 @@
+Check if a file is tracked, returns error if not tracked
+
+git ls-files --error-unmatch <file name>
+
+
+
+stage all files (new, deleted, modified)
+
+git add -A
