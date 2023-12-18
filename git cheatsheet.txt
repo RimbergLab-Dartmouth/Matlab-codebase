@@ -1,0 +1,16 @@
+*** stage all files (new, deleted, modified)
+git add -A
+
+
+*** reset all modifications and deletion and clean all untracked files
+when you want to get rid of today's work (anything that hasn't been commited yet)
+git reset --hard
+git clean -f -d
+
+
+*** Check if a file is tracked, returns error if not tracked
+git ls-files --error-unmatch <file name>
+
+
+*** Ultimate reset:
+delete the directory and git clone + url again, this should work in theory but is untested
