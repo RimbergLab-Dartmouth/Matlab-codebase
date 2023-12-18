@@ -13,5 +13,3 @@ git ls-files --error-unmatch <file name>
 
 *** Ultimate reset:
 delete the directory and git clone + url again, this should work in theory but is untested
-
-changes
