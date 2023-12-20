@@ -18,7 +18,7 @@ input_params.file_name_time_stamp = datestr(now, 'mm.dd.yyyy_HH.MM.SS');
 mkdir([cd '/' input_params.file_name_time_stamp '_bias_point']);
 input_params.number_gate = 30;
 input_params.number_flux = 14;
-input_params.gatae_start = -5;
+input_params.gate_start = -5;
 input_params.gate_stop = 5;
 input_params.flux_start = -.7;
 input_params.flux_stop = .3;
