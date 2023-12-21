@@ -192,21 +192,24 @@ if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 
 else
     added_noise_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1],'visible','off');
 end
-numRows = 10; %Specify the number of rows- add by mw
-numCols = num1(analysis.added_noise_photons_average, numRows, numCols);%added by me
-% Call surf with the reshaped data
-surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, reshapedData);
-%surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, analysis.added_noise_photons_average')
-colorbar
-view(0,90)
-caxis([1 5])
-xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
-ylabel('Pump power (dBm)', 'interpreter', 'latex')
-title('Average added noise photons')
-if input_params.save_figures == 1
-    saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.fig'])
-    saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.png'])
-end
+
+%-----------------------------
+ numRows = 10; %--Specify the number of rows- add by mw
+ [numRows, numCols] = size(analysis.added_noise_photons_average);%--added by me
+ %-- Call surf with the reshaped data
+%  surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, reshapedData);
+surf(input_params.twpa_pump.freqs/1e9, input_params.twpa_pump.powers, 'analysis.added_noise_photons_average');
+ colorbar
+ view(0,90)
+ caxis([1 5])
+ xlabel('Pump Freq (GHz)', 'interpreter', 'latex')
+ ylabel('Pump power (dBm)', 'interpreter', 'latex')
+ title('Average added noise photons')
+ if input_params.save_figures == 1
+     saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.fig'])
+     saveas(added_noise_figure, [input_params.file_directory '/added_noise_vs_twpa_pump.png'])
+ end
+%---------------------------
 
 if input_params.figures_visible == 1 && input_params.twpa_pump.power_number > 1 && input_params.twpa_pump.freq_number > 1
     gain_figure = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
