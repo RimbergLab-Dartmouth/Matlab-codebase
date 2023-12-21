@@ -3,7 +3,8 @@ function [best_fit,theory_fit, goodness_fit]=fit_sin_struct(x_data,y_data)
     offset_guess=mean(y_data);
     [~,IL]=mink(abs(y_data-offset_guess),4);
     [I,] = mink(IL,2);
-    period_guess=abs((x_data(I(1))-x_data(I(2)))*2);
+%     period_guess=abs((x_data(I(1))-x_data(I(2)))*2);
+    period_guess=0.52;
     phase_guess=2*pi*mod(x_data(I(1)),period_guess)/period_guess;
     if phase_guess > pi
         phase_guess = phase_guess - pi;

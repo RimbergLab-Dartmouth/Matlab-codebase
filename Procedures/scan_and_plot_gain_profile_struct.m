@@ -56,7 +56,7 @@ data.freq = freq_measured;
 data.amp = amp_measured;
 data.phase = phase_measured;
 
-clearvars -except rough_gain_prof input_params data
+clearvars -except rough_gain_prof input_params data save_location
 if (save_location == 2)
     save([cd '/' input_params.file_name_time_stamp '_gain_profile/rough_gain_profile_and_data.mat'])
 else
@@ -76,7 +76,7 @@ end
 
 
 
-clearvars -except gain_prof input_params
+clearvars -except gain_prof input_params save_location
 
 if (save_location == 2)
     save([cd '/' input_params.file_name_time_stamp '_gain_profile/gain_prof_struct.mat'])

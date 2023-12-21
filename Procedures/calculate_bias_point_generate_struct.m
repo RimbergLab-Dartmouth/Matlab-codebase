@@ -16,8 +16,10 @@ else
 end
 input_params.number_gate = 30;
 input_params.number_flux = 14;
-input_params.gate_start = -5;
-input_params.gate_stop = 5;
+% input_params.gate_start = -5;
+% input_params.gate_stop = 5;
+input_params.gate_start = -2.5;
+input_params.gate_stop = 7.5;
 input_params.flux_start = -.7;
 input_params.flux_stop = .3;
 input_params.flux_series_resistor = 11.2e3;
@@ -185,13 +187,14 @@ if proceed_param == 1
         flux_scan ...
         bias_point ...
         input_params ...
-        gain_prof
+        gain_prof ...
+        save_location
     if (save_location == 2)
         save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
     else
         save(['C:\Users\rimberg-lab\Desktop\Chris\Bias Point\' input_params.file_name_time_stamp '_bias_point/bias_point_calculator_data.mat'])
     end
-    clearvars -except bias_point input_params
+    clearvars -except bias_point input_params save_location
     if (save_location == 2)
         save([cd '/' input_params.file_name_time_stamp '_bias_point/bias_point_struct.mat'])
     else
