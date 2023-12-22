@@ -56,9 +56,9 @@ function[flux_period,flux_offset,center_freq, offset_slope]=identify_flux_period
         end
         if user == 1
             [~,closest_flux_value_index] = min(abs(flux_values - flux_offset));
-            if resonance_freqs(closest_flux_value_index) - resonance_freqs(closest_flux_value_index + 1) < 0
+            if resonance_freqs(closest_flux_value_index-1) - resonance_freqs(closest_flux_value_index) < 0
                 offset_slope = 1;
-            elseif resonance_freqs(closest_flux_value_index) - resonance_freqs(closest_flux_value_index + 1) > 0
+            elseif resonance_freqs(closest_flux_value_index-1) - resonance_freqs(closest_flux_value_index) > 0
                 offset_slope = 0;
             end
             figure
