@@ -1,4 +1,4 @@
-%% input params
+%% input params test
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 mkdir([cd '/d' input_params.file_name_time_stamp '_qp_traces']);
 input_params.vna.power = -65;
