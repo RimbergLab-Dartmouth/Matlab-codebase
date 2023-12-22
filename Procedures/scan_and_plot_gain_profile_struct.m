@@ -1,3 +1,30 @@
+% Check the current folder
+currentFolder = pwd;
+disp(['Current folder: ', currentFolder]);
+
+% Ask the user if they want to change the current folder
+userChoice = input('Do you want to change the current folder? (y/n): ', 's');
+
+if strcmpi(userChoice, 'y')
+    % Ask the user to select a new folder
+    newFolder = uigetdir('Select a new folder', 'Choose the new folder');
+    
+    % Check if the user canceled the operation
+    if isequal(newFolder, 0)
+        disp('User canceled folder selection. Current folder remains unchanged.');
+    else
+        % Change the current folder to the new folder
+        cd(newFolder);
+        disp(['Current folder set to: ', pwd]);
+    end
+else
+    disp('Current folder remains unchanged.');
+end
+%===========================================
+
+
+
+
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 mkdir([cd '/d' input_params.file_name_time_stamp '_gain_profile']);
 input_params.vna.power = -65;
