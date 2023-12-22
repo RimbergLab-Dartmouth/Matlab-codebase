@@ -13,7 +13,7 @@ git ls-files --error-unmatch <file name>
 *** Reset to previous commit
 git log --oneline     and find the disired HEAD, or use github website
 git reset 94515b9 --hard
-git push origin dev_Chris --hard
+git push origin dev_Chris --force
 WARNING: the hard push is necessary because the HEAD of local is behind remote. 
 This will remove all commit records after the recent reverted one 94515b9
 
