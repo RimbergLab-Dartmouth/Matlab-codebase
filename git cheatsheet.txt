@@ -3,13 +3,20 @@ git add -A
 
 
 *** reset all modifications and deletion and clean all untracked files
-when you want to get rid of today's work (anything that hasn't been commited yet)
 git reset --hard
 git clean -f -d
 
 
 *** Check if a file is tracked, returns error if not tracked
 git ls-files --error-unmatch <file name>
+
+*** Reset to previous commit
+git log --oneline     and find the disired HEAD, or use github website
+git reset 94515b9 --hard
+git push origin dev_Chris --force
+WARNING: the hard push is necessary because the HEAD of local is behind remote. 
+This will remove all commit records after the recent reverted one 94515b9
+
 
 
 *** Ultimate reset:
