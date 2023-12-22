@@ -10,6 +10,12 @@ git clean -f -d
 *** Check if a file is tracked, returns error if not tracked
 git ls-files --error-unmatch <file name>
 
+*** Reset to previous commit
+git log --oneline     and find the disired HEAD
+git reset 94515b9 --hard
+make some changes to become ahead then remote
+
+
 
 *** Ultimate reset:
 delete the directory and git clone + url again, this should work in theory but is untested
