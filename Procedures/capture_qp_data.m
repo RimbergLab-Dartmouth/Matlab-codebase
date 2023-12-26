@@ -1,28 +1,3 @@
-% Check the current folder
-currentFolder = pwd;
-disp(['Current folder: ', currentFolder]);
-
-% Ask the user if they want to change the current folder
-userChoice = input('Do you want to change the current folder? (y/n): ', 's');
-
-if strcmpi(userChoice, 'y')
-    % Ask the user to select a new folder
-    newFolder = uigetdir('Select a new folder', 'Choose the new folder');
-    
-    % Check if the user canceled the operation
-    if isequal(newFolder, 0)
-        disp('User canceled folder selection. Current folder remains unchanged.');
-    else
-        % Change the current folder to the new folder
-        cd(newFolder);
-        disp(['Current folder set to: ', pwd]);
-    end
-else
-    disp('Current folder remains unchanged.');
-end
-
-
-
 %% input params test
 input_params.file_name_time_stamp = datestr(now, 'yymmdd_HHMMSS');
 mkdir([cd '/d' input_params.file_name_time_stamp '_qp_traces']);
@@ -37,7 +12,7 @@ input_params.flux_start_phi_ext = 0;   % phi_ext values
 input_params.flux_stop_phi_ext = 0.1;
 input_params.flux_points = 1;
 input_params.gate_start_ng = 0.6;  % ng values 
-input_params.gate_stop_ng = 0.65;
+input_params.gate_stop_ng = 0.75;
 input_params.gate_points = 21;
 input_params.fine_gain_profile_exclude_span = 15e6; % span around resonance to omit in extracting gain
 input_params.plot_display = 1;
@@ -112,7 +87,8 @@ if input_params.plot_display == 1
         c = colorbar;
         c.Ticks = linspace(0, 1, 10);
         c.TickLabels = round(linspace(input_params.gate_start_ng, input_params.gate_stop_ng, 10), 2);
-        hL = ylabel(c,'$n_g$', 'interpreter', 'latex');     
+        hL = ylabel(c,'$n_g$', 'interpreter', 'latex'); 
+        %ylim([-6, 0]); %added by Najla
         subplot(2,1,2)
         hold on
         for i = 1: min(input_params.num_to_plot, size(data.amp, 1))
